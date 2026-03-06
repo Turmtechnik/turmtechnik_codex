@@ -36,9 +36,6 @@ public class NebenUhrThread extends Thread {
         stunden_24_save = calendar.get(Calendar.HOUR_OF_DAY);
         stunden_12_save = calendar.get(Calendar.HOUR);
 
-        // WICHTIG: Nebenuhr-Konfiguration wird jetzt aus der Datenbank gelesen, nicht mehr aus Excel!
-        // Excel wird nur noch als Fallback verwendet, wenn Datenbank leer ist
-        
         // Lade Konfigurationen aus Datenbank
         PlatinenDatabaseHelper dbHelper = PlatinenDatabaseHelper.getInstance(TurmtechnikActivity.turmtechnikContext);
         nebenuhrA_config = dbHelper.getNebenuhrByZeile(3); // Zeile 3 = Uhr A
@@ -63,24 +60,6 @@ public class NebenUhrThread extends Thread {
             StaticVariable.uhrD_lastRelaisA = nebenuhrD_config.lastRelaisA;
             StaticVariable.uhrD_mondphaseIst = nebenuhrD_config.mondphaseIst;
         }
-        // Monduhr D: Wenn nicht in DB, Standard-Konfiguration anlegen (kein Excel)
-        if (nebenuhrD_config == null) {
-            nebenuhrD_config = new PlatinenDatabaseHelper.NebenuhrConfig();
-            nebenuhrD_config.uhrName = "D";
-            nebenuhrD_config.zeile = 6;
-            nebenuhrD_config.relaisA = 16;
-            nebenuhrD_config.relaisB = 17;
-            nebenuhrD_config.impulsDauer1 = 100;
-            nebenuhrD_config.impulsDauer2 = 50;
-            nebenuhrD_config.uhrNameDisplay = "Monduhr D";
-            nebenuhrD_config.modus = "MOND";
-            nebenuhrD_config.angezeigteZeit = 0;
-            nebenuhrD_config.mondphaseIst = 0;
-            nebenuhrD_config.lastRelaisA = false;
-            nebenuhrD_config.aktiv = true;
-            dbHelper.saveNebenuhr(nebenuhrD_config);
-        }
-
         incrementUhren(); // incrementiert alle 1 Minute in Echtzeit die
         // echtzeit Minutenzähler der Nebenuhren A,B,C
         // und startet den zugehörigen Impuls-Task
@@ -440,38 +419,31 @@ public class NebenUhrThread extends Thread {
     }
 
     private int impulsDauerA() {
-        // Lese aus Datenbank-Konfiguration (in Sekunden, für Anzeige)
         if (nebenuhrA_config != null) {
             return nebenuhrA_config.impulsDauer1 + nebenuhrA_config.impulsDauer2;
         }
-        // Fallback: Standard-Wert (2 Sekunden)
-        return 2;
+        return 0;
     }
 
     private int impulsDauerB() {
-        // Lese aus Datenbank-Konfiguration (in Sekunden, für Anzeige)
         if (nebenuhrB_config != null) {
             return nebenuhrB_config.impulsDauer1 + nebenuhrB_config.impulsDauer2;
         }
-        // Fallback: Standard-Wert (2 Sekunden)
-        return 2;
+        return 0;
     }
 
     private int impulsDauerC() {
-        // Lese aus Datenbank-Konfiguration (in Sekunden, für Anzeige)
         if (nebenuhrC_config != null) {
             return nebenuhrC_config.impulsDauer1 + nebenuhrC_config.impulsDauer2;
         }
-        // Fallback: Standard-Wert (2 Sekunden)
-        return 2;
+        return 0;
     }
 
     private int impulsDauerD() {
-        // Lese aus Datenbank-Konfiguration (in Sekunden, für Anzeige) – analog zu impulsDauerA/B/C
         if (nebenuhrD_config != null) {
             return nebenuhrD_config.impulsDauer1 + nebenuhrD_config.impulsDauer2;
         }
-        return 2;
+        return 0;
     }
 
     int differenzBeimWarten;

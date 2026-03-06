@@ -29,30 +29,13 @@ public class NebenUhrD_thread extends Thread {
     private static final long SERIAL_NOT_OK_LOG_INTERVAL_MS = 30000; // 30 Sekunden
 
     public void run() {
-        // WICHTIG: Nebenuhr-Konfiguration wird jetzt aus der Datenbank gelesen, nicht mehr aus Excel!
         PlatinenDatabaseHelper dbHelper = PlatinenDatabaseHelper.getInstance(TurmtechnikActivity.turmtechnikContext);
         PlatinenDatabaseHelper.NebenuhrConfig config = dbHelper.getNebenuhrByZeile(6); // Zeile 6 = Uhr D (Monduhr)
-        
-        // Fallback: Wenn Datenbank leer, versuche Excel (nur für Migration)
         if (config == null) {
-            Log.w("NebenUhrD_thread", "Monduhr D nicht in Datenbank gefunden, erstelle Standard-Konfiguration");
-            config = new PlatinenDatabaseHelper.NebenuhrConfig();
-            config.uhrName = "D";
-            config.zeile = 6;
-            config.relaisA = 16;
-            config.relaisB = 17;
-            config.impulsDauer1 = 1;
-            config.impulsDauer2 = 1;
-            config.uhrNameDisplay = "Monduhr D";
-            config.modus = "MOND";
-            config.angezeigteZeit = 0;
-            config.mondphaseIst = 0;
-            config.lastRelaisA = false;
-            config.aktiv = true;
-            dbHelper.saveNebenuhr(config);
+            Log.w("NebenUhrD_thread", "Monduhr D nicht in Datenbank gefunden. Bitte über Web-UI konfigurieren.");
+            return;
         }
-        
-        this.nebenuhrConfig = config; // Speichere Konfiguration für makeOneImpuls()
+        this.nebenuhrConfig = config;
         
         // Lade lastRelaisA aus Datenbank
         StaticVariable.uhrD_lastRelaisA = config.lastRelaisA;

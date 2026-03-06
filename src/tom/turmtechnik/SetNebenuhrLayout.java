@@ -1,9 +1,6 @@
 package tom.turmtechnik;
 
 import android.content.Context;
-import android.graphics.BitmapFactory;
-import android.graphics.Color;
-import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.util.DisplayMetrics;
 import android.view.Gravity;
@@ -13,19 +10,13 @@ import android.widget.DigitalClock;
 import android.widget.FrameLayout;
 import android.widget.TextView;
 
-import java.io.IOException;
 import java.util.List;
 import java.util.Vector;
-
-import jxl.read.biff.BiffException;
 
 public class SetNebenuhrLayout {
 
 
-    private final String sourceFileName = "SetNebenuhrLayout";
     private final float buchstabenGroesseTimeButton;
-
-    private ExcelRead excelreadTastenbeschriftung;
 
 
     public Button pfeilLinksButton;
@@ -53,18 +44,7 @@ public class SetNebenuhrLayout {
     private float buchstabenGroesseTastenText;
     private int[] buchstabenXY;
 
-    private final int TASTEN_GROESSE_SHEET = 1;
-
-    private String benutzerMelodienPathAndFilename;
-
-
     private int buchstabenGroesse;
-    private int buchstabenGroesseExcellTimeButton;
-
-    private String timeButtonHintergrundGrafikName;
-
-    private Drawable time_button_drawable;
-
 
     private String[] uhrName = {"A", "B", "C", "D"};
 
@@ -72,30 +52,6 @@ public class SetNebenuhrLayout {
         setTimeLocal();
 
         this.context = context;
-
-        benutzerMelodienPathAndFilename = TurmtechnikActivity.benutzerMelodienFileString;
-
-        excelreadTastenbeschriftung = new ExcelRead();
-
-        try {
-            excelreadTastenbeschriftung.openXlsSheet(benutzerMelodienPathAndFilename, TASTEN_GROESSE_SHEET);
-        } catch (BiffException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-            new LogExcelError(-1, -1, benutzerMelodienPathAndFilename, TASTEN_GROESSE_SHEET, sourceFileName, 79);
-        } catch (IOException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
-
-        try {
-            String buchstabenGroesseString = excelreadTastenbeschriftung.getCellString(1, 7);
-            buchstabenGroesseExcellTimeButton = Integer.parseInt(buchstabenGroesseString);
-            timeButtonHintergrundGrafikName = excelreadTastenbeschriftung.getCellString(1, 6);
-        } catch (Exception e) {
-            buchstabenGroesseExcellTimeButton = 22; // Fallback, damit Button-Text auf Nebenuhr-Seite sichtbar bleibt
-        }
-        excelreadTastenbeschriftung.closeWorkbook();
 
 
         framelayout = new FrameLayout(context);
@@ -118,8 +74,7 @@ public class SetNebenuhrLayout {
         buchstabenGroesseInfoText = (buchstabenXY[2] / metrics.density + 0.5f);
         buchstabenGroesseTastenText = ((buchstabenXY[12] / metrics.density + 0.5f));
 
-        float timeButtonSp = (buchstabenGroesseExcellTimeButton > 0 ? buchstabenGroesseExcellTimeButton : 22) / (metrics.density + 0.5f);
-        buchstabenGroesseTimeButton = Math.max(timeButtonSp, 14f); // Mindestgröße 14sp, damit Text immer lesbar ist
+        buchstabenGroesseTimeButton = buchstabenGroesseTastenText;
 
 
         //	setTimeLocal() ;
@@ -281,20 +236,6 @@ public class SetNebenuhrLayout {
                 new FrameLayout.LayoutParams(width, height);
         buttons.elementAt(index).setLayoutParams(flayoutParams);
 
-        android.graphics.Bitmap bmp = null;
-        if (TurmtechnikActivity.sdCardPath != null && timeButtonHintergrundGrafikName != null && !timeButtonHintergrundGrafikName.trim().isEmpty()) {
-            bmp = BitmapFactory.decodeFile(TurmtechnikActivity.sdCardPath +
-                    "/Turmtechnik/Grafiken/" + timeButtonHintergrundGrafikName);
-        }
-        if (bmp != null) {
-            time_button_drawable = new BitmapDrawable(bmp);
-            buttons.elementAt(index).setBackgroundDrawable(time_button_drawable);
-            buttons.elementAt(index).setTextColor(Color.WHITE);
-        } else {
-            buttons.elementAt(index).setBackgroundColor(Color.parseColor("#999999")); // light_gray
-            buttons.elementAt(index).setTextColor(Color.BLACK);
-        }
-
         flayoutParams.leftMargin = x;
         flayoutParams.topMargin = y;
         flayoutParams.gravity = Gravity.TOP + Gravity.LEFT;
@@ -416,17 +357,6 @@ public class SetNebenuhrLayout {
             }
         }
         
-        // Fallback: Wenn keine Nebenuhren in DB, mindestens 4 Slots anzeigen (Seite nicht leer)
-        if (nebenUhrCount == 0) {
-            android.util.Log.w("SetNebenuhrLayout", "Keine Nebenuhr-Konfiguration gefunden, zeige Standard A/B/C/D");
-            uhrName[0] = "Nebenuhr A";
-            uhrName[1] = "Nebenuhr B";
-            uhrName[2] = "Nebenuhr C";
-            uhrName[3] = "Monduhr D";
-            for (int i = 0; i < 4; i++) flag_24[i] = false;
-            nebenUhrCount = 4;
-        }
-
         if (nebenUhrCount < 3) {
             android.util.Log.w("SetNebenuhrLayout", "Warnung: Nur " + nebenUhrCount + " Nebenuhren gefunden, erwartet mindestens 3");
         }
