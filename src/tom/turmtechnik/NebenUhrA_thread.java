@@ -194,16 +194,15 @@ public class NebenUhrA_thread extends Thread {
                 LogTurmtechnik2.appendNebenuhrRelaisLogWiederholung("A", relaisNumber, StaticVariable.uhrA_calendarZeit, StaticVariable.uhrA_angezeigteZeit, StaticVariable.uhrA_lastRelaisA);
                 lastAbortA = false;
             }
-            // Wert NACH dem Impuls vorab in DB speichern – bei Absturz NACH Impuls ist dann schon der neue Stand gesichert (Uhr läuft nicht vor).
-            // impulsAusstehend = true: bei Absturz VOR Impuls erkennt der Neustart den alten Stand (angezeigteZeit − 1).
-            int newIst = computeNextAngezeigteZeit_A();
-            if (newIst >= 0 && Serial_IoThread.getSerialIoStatus2()) {
+            // Vorab nur lastRelaisA + impulsAusstehend setzen, NICHT angezeigteZeit erhöhen.
+            // Sonst: Neustart nach Vorab-Save aber vor Send → DB hat schon neue Zeit, Uhr hat Impuls nie bekommen → Minute geht verloren.
+            // angezeigteZeit wird erst nach erfolgreichem Impuls gespeichert.
+            if (Serial_IoThread.getSerialIoStatus2()) {
                 try {
                     PlatinenDatabaseHelper dbHelper = PlatinenDatabaseHelper.getInstance(TurmtechnikActivity.turmtechnikContext);
                     PlatinenDatabaseHelper.NebenuhrConfig saveConfig = dbHelper.getNebenuhrByZeile(3);
                     if (saveConfig != null) {
-                        saveConfig.lastRelaisA = nextLastRelaisA;  // Vorab: Stand nach diesem Impuls (Relais noch nicht gewechselt!)
-                        saveConfig.angezeigteZeit = newIst;
+                        saveConfig.lastRelaisA = nextLastRelaisA;
                         saveConfig.impulsAusstehend = true;
                         dbHelper.saveNebenuhr(saveConfig);
                     }
@@ -307,7 +306,8 @@ public class NebenUhrA_thread extends Thread {
                         StaticVariable.uhrA_angezeigteZeit,
                         StaticVariable.uhrA_lastRelaisA);
             } else if (!Serial_IoThread.getSerialIoStatus2()) {
-                LogTurmtechnik2.appendNebenuhrRelaisLogKeineVerbindung("A");
+                int soll = Math.max(StaticVariable.uhrA_calendarZeit, getCurrentCalendarMinuten12());
+                LogTurmtechnik2.appendNebenuhrRelaisLogKeineVerbindung("A", StaticVariable.uhrA_angezeigteZeit, soll, StaticVariable.uhrA_lastRelaisA);
             }
             if (platineIndex >= 0 && platineIndex < StaticVariable.nebenuhrImpulsLaeuftPlatine.length) {
                 StaticVariable.nebenuhrImpulsLaeuftPlatine[platineIndex] = false;

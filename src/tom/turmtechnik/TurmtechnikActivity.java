@@ -12,6 +12,7 @@ import android.bluetooth.BluetoothAdapter;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.BroadcastReceiver;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
@@ -224,6 +225,8 @@ public class TurmtechnikActivity extends Activity {
     private static final int SCREENSAVER_ALARM_REQUEST_CODE = 9002;
     /** Intent-Extra: Bildschirmschoner als Overlay anzeigen (Activity bleibt im Vordergrund, App wird nicht beendet). */
     public static final String EXTRA_SHOW_SCREENSAVER_OVERLAY = "show_screensaver_overlay";
+    /** Broadcast-Action: Bewegungserkennung meldet „Schoner aus“ – Overlay ausblenden, kein Activity-Neustart. */
+    public static final String ACTION_DISMISS_SCREENSAVER = "tom.turmtechnik.DISMISS_SCREENSAVER";
     /** Extra für Intent: nach Passwort-Dialog aus anderer Activity – Wert "beenden", "15min" oder "delete_beenden". */
     public static final String EXTRA_EXIT_ACTION = "exit_after_password";
     /** Nach 1 Stunde Inaktivität: KEEP_SCREEN_ON entfernen, damit der Bildschirm nach System-Timeout ausgeht. */
@@ -251,6 +254,7 @@ public class TurmtechnikActivity extends Activity {
     private int screensaverPreviousNavigationBarColor = 0;
     private int screensaverPreviousStatusBarColor = 0;
     private boolean screensaverActionBarWasVisible = false;
+    private BroadcastReceiver dismissScreensaverReceiver = null;
 
     /** Blendet den Bildschirmschoner-Overlay aus (Tipp oder turmt://layout1 aus WebView). */
     private void dismissScreensaverOverlay() {
@@ -266,6 +270,36 @@ public class TurmtechnikActivity extends Activity {
             openWebUiInBrowser(this, "/app-seite1.html");
         }
     }
+
+    /** Registriert Broadcast „Schoner aus“ von Bewegungserkennung – dann nur Overlay ausblenden, kein Activity-Neustart. */
+    private void registerDismissScreensaverReceiver() {
+        unregisterDismissScreensaverReceiver();
+        dismissScreensaverReceiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                if (ACTION_DISMISS_SCREENSAVER.equals(intent != null ? intent.getAction() : null)) {
+                    dismissScreensaverOverlay();
+                    bringMainContentToFront();
+                }
+            }
+        };
+        IntentFilter filter = new IntentFilter(ACTION_DISMISS_SCREENSAVER);
+        if (Build.VERSION.SDK_INT >= 33) {
+            registerReceiver(dismissScreensaverReceiver, filter, Context.RECEIVER_NOT_EXPORTED);
+        } else {
+            registerReceiver(dismissScreensaverReceiver, filter);
+        }
+    }
+
+    private void unregisterDismissScreensaverReceiver() {
+        if (dismissScreensaverReceiver != null) {
+            try {
+                unregisterReceiver(dismissScreensaverReceiver);
+            } catch (Exception ignored) { }
+            dismissScreensaverReceiver = null;
+        }
+    }
+
 
     /** Startet oder stoppt den MotionDetectionService je nach anlage_bewegungserkennung_ein. Fragt bei Bedarf CAMERA-Berechtigung an. */
     private void startOrStopMotionDetectionService() {
@@ -1221,15 +1255,23 @@ public class TurmtechnikActivity extends Activity {
                             if (activityStartedForScreensaver) {
                                 return;
                             }
-                            PlatinenDatabaseHelper db = PlatinenDatabaseHelper.getInstance(TurmtechnikActivity.this);
-                            String wv = db != null ? db.getConfigValue(CONFIG_WEB_UI_VOLLBILD_TEST) : null;
-                            boolean webUiVollbildTest = wv == null || !"0".equals(wv.trim());
-                            // Web-UI anzeigen wenn gewünscht oder wenn Layout nicht gebaut wurde (damit nach Init immer etwas kommt)
-                            if (webUiVollbildTest || layoutCreated == null) {
-                                ensureWebServerStarted(TurmtechnikActivity.this);
-                                openWebUiInBrowser(TurmtechnikActivity.this, "/app-seite1.html");
-                            } else if (parentLayout != null) {
-                                parentLayout.addView(layoutCreated);
+                            // Nach Bewegung (woke_by_motion): nur natives Layout anzeigen, keine Web-UI (vermeidet schwarzen Bildschirm)
+                            boolean wokeByMotion = getIntent() != null && getIntent().getBooleanExtra("woke_by_motion", false);
+                            if (wokeByMotion) {
+                                if (layoutCreated != null && parentLayout != null) {
+                                    parentLayout.addView(layoutCreated);
+                                }
+                            } else {
+                                PlatinenDatabaseHelper db = PlatinenDatabaseHelper.getInstance(TurmtechnikActivity.this);
+                                String wv = db != null ? db.getConfigValue(CONFIG_WEB_UI_VOLLBILD_TEST) : null;
+                                boolean webUiVollbildTest = wv == null || !"0".equals(wv.trim());
+                                // Web-UI anzeigen wenn gewünscht oder wenn Layout nicht gebaut wurde (damit nach Init immer etwas kommt)
+                                if (webUiVollbildTest || layoutCreated == null) {
+                                    ensureWebServerStarted(TurmtechnikActivity.this);
+                                    openWebUiInBrowser(TurmtechnikActivity.this, "/app-seite1.html");
+                                } else if (parentLayout != null) {
+                                    parentLayout.addView(layoutCreated);
+                                }
                             }
                             handler = new Handler();
                             // Schwere Arbeit nach dem nächsten Frame ausführen, damit Layout 1 nicht einfriert (Skipped N frames)
@@ -2536,12 +2578,15 @@ public class TurmtechnikActivity extends Activity {
         Intent hb = new Intent(this, StartTurmtechnikService.class);
         hb.setAction(StartTurmtechnikService.ACTION_HEARTBEAT);
         startService(hb);
-        // Nur bei echtem Neustart (nach onCreate) loggen – nicht bei jedem „in den Vordergrund holen“ (15-Min-Alarm/Bildschirmschoner)
+        // Nur bei echtem Neustart (nach onCreate) loggen – nicht bei „Bewegung: Schoner aus / Layout 1“ (dann kein Neustart ins Log)
         if (activityJustCreated) {
             activityJustCreated = false;
-            new LogTurmtechnik2("onStart NEU GESTARTET!!!!", 0, 0, 0, 0);
-            try { LogTurmtechnik2.setDeviceIpForNebenuhrLog(getLocalIpAddress()); } catch (Exception e) { }
-            LogTurmtechnik2.appendNebenuhrRelaisLogNeustart();
+            boolean wokeByMotion = getIntent() != null && getIntent().getBooleanExtra("woke_by_motion", false);
+            if (!wokeByMotion) {
+                new LogTurmtechnik2("onStart NEU GESTARTET!!!!", 0, 0, 0, 0);
+                try { LogTurmtechnik2.setDeviceIpForNebenuhrLog(getLocalIpAddress()); } catch (Exception e) { }
+                LogTurmtechnik2.appendNebenuhrRelaisLogNeustart();
+            }
         }
         // hier Turmuhrzeiger neu laden
         // loadNebenuhr(); // im thread laeuft die Nebenuhr weiter!!! auch bei on Stop
@@ -2572,9 +2617,14 @@ public class TurmtechnikActivity extends Activity {
             android.view.WindowManager.LayoutParams lp = getWindow().getAttributes();
             lp.screenBrightness = 0.9f;
             getWindow().setAttributes(lp);
-            dismissScreensaverOverlay();
+            if (screensaverOverlay != null && screensaverOverlay.getVisibility() == View.VISIBLE) {
+                screensaverOverlay.setVisibility(View.GONE);
+                bringMainContentToFront();
+                resetScreensaverTimer();
+            }
         }
         startOrStopMotionDetectionService();
+        registerDismissScreensaverReceiver();
         //new LogTurmtechnik("onResume" , 0, 0, 0, 0) ;
         if (onCreateFlag == true) {
             onCreateFlag = false;
@@ -2598,7 +2648,12 @@ public class TurmtechnikActivity extends Activity {
             android.view.WindowManager.LayoutParams lp = getWindow().getAttributes();
             lp.screenBrightness = 0.9f;
             getWindow().setAttributes(lp);
-            dismissScreensaverOverlay();
+            // Nur Overlay ausblenden und Layout 1 zeigen – NICHT dismissScreensaverOverlay(), da das bei activityStartedForScreensaver die Web-UI (app-seite1) öffnet → schwarze Seite mit weißem Rand
+            if (screensaverOverlay != null && screensaverOverlay.getVisibility() == View.VISIBLE) {
+                screensaverOverlay.setVisibility(View.GONE);
+                bringMainContentToFront();
+                resetScreensaverTimer();
+            }
         }
         if (intent != null && intent.getBooleanExtra(EXTRA_SHOW_SCREENSAVER_OVERLAY, false)) {
             intent.removeExtra(EXTRA_SHOW_SCREENSAVER_OVERLAY);
@@ -2637,6 +2692,7 @@ public class TurmtechnikActivity extends Activity {
     protected void onPause() {
         super.onPause();
         isInForeground = false;
+        unregisterDismissScreensaverReceiver();
         screensaverHandler.removeCallbacks(startScreensaverRunnable);
         screensaverHandler.removeCallbacks(screenOffRunnable);
         // Alarm NICHT abbrechen: App muss im Hintergrund weiterlaufen (z. B. WebUiActivity sichtbar). Nach X Min feuert der Alarm und holt TurmtechnikActivity mit Schoner in den Vordergrund. Alarm wird nur in onDestroy abgebrochen.
@@ -7537,9 +7593,11 @@ public class TurmtechnikActivity extends Activity {
         if (file_ok) {
             PlatinenDatabaseHelper dbForLayout = PlatinenDatabaseHelper.getInstance(TurmtechnikActivity.this);
             // Neuinstallation: Config ist nicht gesetzt → neues Web-UI-Layout (Seite 1/2). Nur bei explizit "0" altes Android-Layout.
+            // Bei woke_by_motion (Bewegungserkennung) immer natives Layout bauen, damit kein schwarzer Bildschirm (Web-UI) erscheint.
+            boolean wokeByMotion = getIntent() != null && getIntent().getBooleanExtra("woke_by_motion", false);
             String webUiConfig = dbForLayout != null ? dbForLayout.getConfigValue(CONFIG_WEB_UI_VOLLBILD_TEST) : null;
             boolean webUiVollbildTest = webUiConfig == null || !"0".equals(webUiConfig.trim());
-            if (!webUiVollbildTest) {
+            if (!webUiVollbildTest || wokeByMotion) {
                 printInfo("\nlayout wir aufgebaut...");
                 layout = new Seite1Layout(beschriftungTastenFileString, getApplicationContext());
                 layout.setOnAnlageImportRequestedListener(new Runnable() {
@@ -7631,8 +7689,10 @@ public class TurmtechnikActivity extends Activity {
             if (serial_iothread == null || !serial_iothread.isAlive()) {
                 StaticVariable.serial_io_ThreadsRun = false;
                 loadPlatinenDemoModusFromDb();
-                // ipList/portList immer aus der Platinen-DB laden (nur Datenbank, kein System.xls)
                 loadPlatinenIpListFromDb();
+                int ipCount = (StaticVariable.ipList != null && StaticVariable.portList != null)
+                        ? Math.min(StaticVariable.ipList.size(), StaticVariable.portList.size()) : 0;
+                Log.w("Serial_IoThread", "Start Relais-Thread: bt_io_ok=" + StaticVariable.bt_io_ok + ", Platinen (IP/Port)=" + ipCount + ", DemoModus=" + StaticVariable.platinenDemoModus);
                 serial_iothread = new Serial_IoThread();
                 serial_iothread.start();
             }

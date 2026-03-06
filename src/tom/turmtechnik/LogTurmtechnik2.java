@@ -427,8 +427,16 @@ public class LogTurmtechnik2 {
      * Maximal alle 60 Sekunden pro Uhr, gleiche Datei: LogNebenuhrRelais-&lt;dd-MM-yy&gt;.txt
      */
     public static void appendNebenuhrRelaisLogKeineVerbindung(String uhrName) {
+        appendNebenuhrRelaisLogKeineVerbindung(uhrName, 0, 0, false);
+    }
+
+    /**
+     * Wie oben, zusätzlich wird eine Zeile im Standardformat mit „Impuls Fehler: Ja“ geschrieben (ist/soll/lastRelaisA für Log).
+     */
+    public static void appendNebenuhrRelaisLogKeineVerbindung(String uhrName, int ist, int soll, boolean lastRelaisA) {
         int idx = "A".equals(uhrName) ? 0 : "B".equals(uhrName) ? 1 : "C".equals(uhrName) ? 2 : "D".equals(uhrName) ? 3 : -1;
         if (idx < 0) return;
+        appendNebenuhrRelaisLogZeile(uhrName, ist, soll, lastRelaisA, true);
         long now = System.currentTimeMillis();
         if (now - lastKeineVerbindungLogMs[idx] < KEINE_VERBINDUNG_LOG_INTERVAL_MS) return;
         lastKeineVerbindungLogMs[idx] = now;

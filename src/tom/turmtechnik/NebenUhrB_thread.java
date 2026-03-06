@@ -188,14 +188,12 @@ public class NebenUhrB_thread extends Thread {
                 LogTurmtechnik2.appendNebenuhrRelaisLogWiederholung("B", relaisNumber, StaticVariable.uhrB_calendarZeit, StaticVariable.uhrB_angezeigteZeit, StaticVariable.uhrB_lastRelaisA);
                 lastAbortB = false;
             }
-            int newIstB = computeNextAngezeigteZeit_B();
-            if (newIstB >= 0 && Serial_IoThread.getSerialIoStatus2()) {
+            if (Serial_IoThread.getSerialIoStatus2()) {
                 try {
                     PlatinenDatabaseHelper dbHelper = PlatinenDatabaseHelper.getInstance(TurmtechnikActivity.turmtechnikContext);
                     PlatinenDatabaseHelper.NebenuhrConfig saveConfig = dbHelper.getNebenuhrByZeile(4);
                     if (saveConfig != null) {
                         saveConfig.lastRelaisA = nextLastRelaisA;
-                        saveConfig.angezeigteZeit = newIstB;
                         saveConfig.impulsAusstehend = true;
                         dbHelper.saveNebenuhr(saveConfig);
                     }
@@ -296,7 +294,8 @@ public class NebenUhrB_thread extends Thread {
                         StaticVariable.uhrB_angezeigteZeit,
                         StaticVariable.uhrB_lastRelaisA);
             } else if (!Serial_IoThread.getSerialIoStatus2()) {
-                LogTurmtechnik2.appendNebenuhrRelaisLogKeineVerbindung("B");
+                int soll = Math.max(StaticVariable.uhrB_calendarZeit, getCurrentCalendarMinuten12());
+                LogTurmtechnik2.appendNebenuhrRelaisLogKeineVerbindung("B", StaticVariable.uhrB_angezeigteZeit, soll, StaticVariable.uhrB_lastRelaisA);
             }
             if (platineIndex >= 0 && platineIndex < StaticVariable.nebenuhrImpulsLaeuftPlatine.length) {
                 StaticVariable.nebenuhrImpulsLaeuftPlatine[platineIndex] = false;

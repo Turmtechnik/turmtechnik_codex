@@ -169,8 +169,7 @@
 
         <service
             android:name=".StartTurmtechnikService"
-            android:exported="false"
-            android:process=":turmtechnik_service">
+            android:exported="false">
         </service>
         <!-- Ohne android:process – im Hauptprozess, damit CameraX Frames an den Analyzer liefert (in :motion kamen auf manchen Geräten keine Frames) -->
         <service

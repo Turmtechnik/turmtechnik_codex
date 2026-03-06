@@ -76,12 +76,18 @@ public class ExcelRead {
         if (numberOfSheets == 0) {
             android.util.Log.w("ExcelRead", "Workbook hat keine Sheets: " + filename);
             sheet = null;
-        } else if (sheet_number >= numberOfSheets) {
-            // Sheet existiert nicht - verwende Sheet 0 als Fallback
-            android.util.Log.w("ExcelRead", "Sheet " + sheet_number + " existiert nicht in " + filename + " (nur " + numberOfSheets + " Sheets vorhanden). Verwende Sheet 0.");
-            sheet = workbook.getSheet(0);
         } else {
-            sheet = workbook.getSheet(sheet_number);
+            try {
+                if (sheet_number >= numberOfSheets) {
+                    android.util.Log.w("ExcelRead", "Sheet " + sheet_number + " existiert nicht in " + filename + " (nur " + numberOfSheets + " Sheets vorhanden). Verwende Sheet 0.");
+                    sheet = workbook.getSheet(0);
+                } else {
+                    sheet = workbook.getSheet(sheet_number);
+                }
+            } catch (IndexOutOfBoundsException e) {
+                android.util.Log.w("ExcelRead", "Workbook/Sheet-Zugriff fehlgeschlagen (Index: " + sheet_number + ", Size: 0?): " + filename + " – " + e.getMessage());
+                sheet = null;
+            }
         }
 
         //Log.i("spalten" , "" + getCellSpalten());
@@ -100,7 +106,12 @@ public class ExcelRead {
 
     public Sheet getSheet0() {
         if (workbook == null || workbook.getNumberOfSheets() == 0) return null;
-        return workbook.getSheet(0);
+        try {
+            return workbook.getSheet(0);
+        } catch (IndexOutOfBoundsException e) {
+            android.util.Log.w("ExcelRead", "getSheet(0) fehlgeschlagen (Workbook evtl. ohne Sheets): " + e.getMessage());
+            return null;
+        }
     }
 
 
@@ -145,7 +156,12 @@ public class ExcelRead {
 
         // Nur Sheet öffnen, wenn das Workbook mindestens ein Sheet hat (sonst IndexOutOfBoundsException)
         if (workbook.getNumberOfSheets() > 0) {
-            sheet = workbook.getSheet(0);  //7.6.13 geaendert
+            try {
+                sheet = workbook.getSheet(0);  //7.6.13 geaendert
+            } catch (IndexOutOfBoundsException e) {
+                android.util.Log.w("ExcelRead", "getSheet(0) fehlgeschlagen in openXls_save: " + e.getMessage());
+                sheet = null;
+            }
         } else {
             sheet = null;
         }

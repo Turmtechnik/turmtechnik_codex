@@ -90,17 +90,15 @@ public class Serial_IoThread extends Thread {
         }
 
         if (StaticVariable.bt_io_ok) {
+            Log.i("Serial_IoThread", "Verbindung: Bluetooth-Modus");
             bt_serial_io = new BluetoothSerial_io();
             bt_serial_io.connect();
-            // Beim Start sofort „alle aus“ an die Hardware senden (verhindert Relais 16 vom vorherigen Zustand)
             sendAllRelais();
         } else {
-            // Beim Start der WLAN-Threads First-Connect-Flags zurücksetzen
             Carambola_IoThread.resetFirstConnectFlags();
-            // Nur ein Thread pro eindeutige IP:Port (mehrere Einträge mit gleicher IP = ein Gerät → verhindert „Keine Antwort“ durch konkurrierende Verbindungen)
-            // ipList/portList müssen gleiche Größe haben, sonst IndexOutOfBoundsException vermeiden
             int listSize = (StaticVariable.ipList != null && StaticVariable.portList != null)
                     ? Math.min(StaticVariable.ipList.size(), StaticVariable.portList.size()) : 0;
+            Log.i("Serial_IoThread", "Verbindung: WLAN-Modus, Platinen-Anzahl=" + listSize + (listSize == 0 ? " (keine IPs in DB?)" : ""));
             java.util.ArrayList<Integer> started = new java.util.ArrayList<>();
             int threadIdx = 0;
             for (int i = 0; i < listSize && threadIdx < carambolaThreads.length; i++) {
@@ -121,6 +119,10 @@ public class Serial_IoThread extends Thread {
                 carambolaThreads[threadIdx].start();
                 threadIdx++;
             }
+            if (threadIdx == 0 && listSize > 0)
+                Log.w("Serial_IoThread", "WLAN: Kein Thread gestartet (listSize=" + listSize + ")");
+            else if (threadIdx > 0)
+                Log.i("Serial_IoThread", "WLAN: " + threadIdx + " Carambola-Thread(s) gestartet");
         }
 
         if (StaticVariable.bt_io_ok) {
@@ -135,9 +137,12 @@ public class Serial_IoThread extends Thread {
             bt_serial_io.disconnect(); // neu 4.11.15
             bt_serial_io = null;
 
-        } // neu 8.7.15
-        // bei Carambola endet dieser Thread
-        // jede ip Adresse hat seinen eigenen thread
+        } else {
+            // WLAN/Carambola: Thread am Leben halten, damit nicht ständig neu gestartet wird (sonst initRelaisFlags() löscht ausstehende Impulse)
+            while (StaticVariable.serial_io_ThreadsRun) {
+                sleepTime(500);
+            }
+        }
     }
 
     //public void endSerialThread()

@@ -18,6 +18,7 @@ import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.Looper;
 import android.os.PowerManager;
+import android.os.SystemClock;
 import android.util.Log;
 import android.util.Size;
 
@@ -410,6 +411,9 @@ public class MotionDetectionService extends LifecycleService {
     }
 
     private void wakeScreenIfDebounce() {
+        if (TurmtechnikActivity.isInForeground) {
+            return; // Layoutseite schon offen und sichtbar – nichts tun (Overlay wird in onNewIntent/onResume beim nächsten Mal ausgeblendet)
+        }
         long now = System.currentTimeMillis();
         if (now - lastWakeMs < DEBOUNCE_MS) {
             Log.i(TAG, "Schaltung unterdrückt (Debounce) – nächste Schaltung erst nach " + (DEBOUNCE_MS / 1000) + " s");
@@ -419,6 +423,15 @@ public class MotionDetectionService extends LifecycleService {
         Log.i(TAG, "Schaltung: Bildschirm aufwecken / Activity in den Vordergrund");
         PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
         if (pm == null) return;
+        // Bildschirm explizit einschalten (z. B. nach Ein/Aus-Taste) – per Reflection, da wakeUp(long) erst in neueren SDK-Stubs
+        if (Build.VERSION.SDK_INT >= 21) {
+            try {
+                java.lang.reflect.Method wakeUp = pm.getClass().getMethod("wakeUp", long.class);
+                wakeUp.invoke(pm, SystemClock.uptimeMillis());
+            } catch (Exception e) {
+                if (e.getCause() != null) Log.w(TAG, "wakeUp: " + e.getCause().getMessage());
+            }
+        }
         PowerManager.WakeLock wl = pm.newWakeLock(
                 PowerManager.SCREEN_BRIGHT_WAKE_LOCK | PowerManager.ACQUIRE_CAUSES_WAKEUP,
                 "turmtechnik:motion");
@@ -427,13 +440,19 @@ public class MotionDetectionService extends LifecycleService {
         } catch (Exception e) {
             Log.w(TAG, "WakeLock: " + e.getMessage());
         }
-        Intent intent = new Intent(this, TurmtechnikActivity.class);
-        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_REORDER_TO_FRONT | Intent.FLAG_ACTIVITY_SINGLE_TOP);
-        intent.putExtra("woke_by_motion", true);
-        try {
-            startActivity(intent);
-        } catch (Exception e) {
-            Log.w(TAG, "Activity starten: " + e.getMessage());
+        // Activity nur starten/holen, wenn App nicht schon im Vordergrund – sonst würde bei jeder Bewegung erneut onResume/Initialisierung laufen
+        if (!TurmtechnikActivity.isInForeground) {
+            Intent intent = new Intent(this, TurmtechnikActivity.class);
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_REORDER_TO_FRONT | Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+            if (Build.VERSION.SDK_INT >= 27) {
+                intent.addFlags(0x00200000); // FLAG_ACTIVITY_TURN_SCREEN_ON (API 27), Wert für älteres compileSdk
+            }
+            intent.putExtra("woke_by_motion", true);
+            try {
+                startActivity(intent);
+            } catch (Exception e) {
+                Log.w(TAG, "Activity starten: " + e.getMessage());
+            }
         }
         if (wl.isHeld()) {
             try {
