@@ -1,0 +1,1163 @@
+18:14:02  Automatic Verbindung O.K.  Uhr A soll=374 Uhr A ist=373 Relais gesendet 00000001 00000000 00000000 00000000 Turmtechnik V30.2
+18:14:03  Automatic Verbindung O.K.  Uhr A soll=374 Uhr A ist=373 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+18:15:00  save Nebenuhr Verbindung O.K.  Uhr A soll=375 Uhr A ist=374 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+18:15:00  Automatic Verbindung O.K.  Uhr A soll=375 Uhr A ist=374 Relais gesendet 00000000 00000000 00000100 00000000 Turmtechnik V30.2
+18:15:00  Automatic Verbindung O.K.  Uhr A soll=375 Uhr A ist=374 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+18:15:01  Automatic Verbindung O.K.  Uhr A soll=375 Uhr A ist=374 Relais gesendet 00000010 00000000 00000000 00000000 Turmtechnik V30.2
+18:15:02  Automatic Verbindung O.K.  Uhr A soll=375 Uhr A ist=374 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+18:16:00  save Nebenuhr Verbindung O.K.  Uhr A soll=376 Uhr A ist=375 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+18:16:01  Automatic Verbindung O.K.  Uhr A soll=376 Uhr A ist=375 Relais gesendet 00000001 00000000 00000000 00000000 Turmtechnik V30.2
+18:16:02  Automatic Verbindung O.K.  Uhr A soll=376 Uhr A ist=375 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+18:17:00  save Nebenuhr Verbindung O.K.  Uhr A soll=377 Uhr A ist=376 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+18:17:01  Automatic Verbindung O.K.  Uhr A soll=377 Uhr A ist=376 Relais gesendet 00000010 00000000 00000000 00000000 Turmtechnik V30.2
+18:17:02  Automatic Verbindung O.K.  Uhr A soll=377 Uhr A ist=376 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+18:17:20  onStop Verbindung O.K.  Uhr A soll=377 Uhr A ist=377 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+18:17:34  onStart NEU GESTARTET!!!! Verbindung O.K.  Uhr A soll=377 Uhr A ist=380 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+18:18:00  save Nebenuhr Verbindung O.K.  Uhr A soll=378 Uhr A ist=380 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+18:19:00  save Nebenuhr Verbindung O.K.  Uhr A soll=379 Uhr A ist=380 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+18:20:00  save Nebenuhr Verbindung O.K.  Uhr A soll=380 Uhr A ist=380 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+18:21:00  save Nebenuhr Verbindung O.K.  Uhr A soll=381 Uhr A ist=380 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+18:21:01  Automatic Verbindung O.K.  Uhr A soll=381 Uhr A ist=380 Relais gesendet 00000010 00000000 00000000 00000000 Turmtechnik V30.2
+18:21:02  Automatic Verbindung O.K.  Uhr A soll=381 Uhr A ist=380 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+18:22:00  save Nebenuhr Verbindung O.K.  Uhr A soll=381 Uhr A ist=381 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+18:22:01  Automatic Verbindung O.K.  Uhr A soll=382 Uhr A ist=381 Relais gesendet 00000001 00000000 00000000 00000000 Turmtechnik V30.2
+18:22:02  Automatic Verbindung O.K.  Uhr A soll=382 Uhr A ist=381 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+18:23:00  save Nebenuhr Verbindung O.K.  Uhr A soll=383 Uhr A ist=382 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+18:23:01  Automatic Verbindung O.K.  Uhr A soll=383 Uhr A ist=382 Relais gesendet 00000010 00000000 00000000 00000000 Turmtechnik V30.2
+18:23:02  Automatic Verbindung O.K.  Uhr A soll=383 Uhr A ist=382 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+18:24:00  save Nebenuhr Verbindung O.K.  Uhr A soll=384 Uhr A ist=383 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+18:24:01  Automatic Verbindung O.K.  Uhr A soll=384 Uhr A ist=383 Relais gesendet 00000001 00000000 00000000 00000000 Turmtechnik V30.2
+18:24:02  Automatic Verbindung O.K.  Uhr A soll=384 Uhr A ist=383 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+18:25:00  save Nebenuhr Verbindung O.K.  Uhr A soll=385 Uhr A ist=384 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+18:25:01  Automatic Verbindung O.K.  Uhr A soll=385 Uhr A ist=384 Relais gesendet 00000010 00000000 00000000 00000000 Turmtechnik V30.2
+18:25:02  Automatic Verbindung O.K.  Uhr A soll=385 Uhr A ist=384 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+18:26:00  save Nebenuhr Verbindung O.K.  Uhr A soll=385 Uhr A ist=385 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+18:26:01  Automatic Verbindung O.K.  Uhr A soll=386 Uhr A ist=385 Relais gesendet 00000001 00000000 00000000 00000000 Turmtechnik V30.2
+18:26:02  Automatic Verbindung O.K.  Uhr A soll=386 Uhr A ist=385 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+18:27:00  save Nebenuhr Verbindung O.K.  Uhr A soll=387 Uhr A ist=386 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+18:27:01  Automatic Verbindung O.K.  Uhr A soll=387 Uhr A ist=386 Relais gesendet 00000010 00000000 00000000 00000000 Turmtechnik V30.2
+18:27:02  Automatic Verbindung O.K.  Uhr A soll=387 Uhr A ist=386 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+18:28:00  save Nebenuhr Verbindung O.K.  Uhr A soll=388 Uhr A ist=387 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+18:28:01  Automatic Verbindung O.K.  Uhr A soll=388 Uhr A ist=387 Relais gesendet 00000001 00000000 00000000 00000000 Turmtechnik V30.2
+18:28:02  Automatic Verbindung O.K.  Uhr A soll=388 Uhr A ist=387 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+18:29:00  save Nebenuhr Verbindung O.K.  Uhr A soll=389 Uhr A ist=388 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+18:29:01  Automatic Verbindung O.K.  Uhr A soll=389 Uhr A ist=388 Relais gesendet 00000010 00000000 00000000 00000000 Turmtechnik V30.2
+18:29:02  Automatic Verbindung O.K.  Uhr A soll=389 Uhr A ist=388 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+18:30:00  save Nebenuhr Verbindung O.K.  Uhr A soll=390 Uhr A ist=389 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+18:30:00  Automatic Verbindung O.K.  Uhr A soll=390 Uhr A ist=389 Relais gesendet 00000000 00000000 00000100 00000000 Turmtechnik V30.2
+18:30:00  Automatic Verbindung O.K.  Uhr A soll=390 Uhr A ist=389 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+18:30:01  Automatic Verbindung O.K.  Uhr A soll=390 Uhr A ist=389 Relais gesendet 00000001 00000000 00000000 00000000 Turmtechnik V30.2
+18:30:02  Automatic Verbindung O.K.  Uhr A soll=390 Uhr A ist=389 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+18:30:02  Automatic Verbindung O.K.  Uhr A soll=390 Uhr A ist=389 Relais gesendet 00000000 00000000 00000100 00000000 Turmtechnik V30.2
+18:30:02  Automatic Verbindung O.K.  Uhr A soll=390 Uhr A ist=389 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+18:31:00  save Nebenuhr Verbindung O.K.  Uhr A soll=391 Uhr A ist=390 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+18:31:01  Automatic Verbindung O.K.  Uhr A soll=391 Uhr A ist=390 Relais gesendet 00000010 00000000 00000000 00000000 Turmtechnik V30.2
+18:31:02  Automatic Verbindung O.K.  Uhr A soll=391 Uhr A ist=390 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+18:32:09  load Nebenuhr Verbindung ERROR  Uhr A soll=392 Uhr A ist=390 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+18:33:00  save Nebenuhr Verbindung O.K.  Uhr A soll=392 Uhr A ist=390 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+18:33:00  Automatic Verbindung O.K.  Uhr A soll=393 Uhr A ist=390 Relais gesendet 00000001 00000000 00000000 00000000 Turmtechnik V30.2
+18:33:01  Automatic Verbindung O.K.  Uhr A soll=393 Uhr A ist=390 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+18:33:02  Automatic Verbindung O.K.  Uhr A soll=393 Uhr A ist=391 Relais gesendet 00000010 00000000 00000000 00000000 Turmtechnik V30.2
+18:33:03  Automatic Verbindung O.K.  Uhr A soll=393 Uhr A ist=391 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+18:33:04  Automatic Verbindung O.K.  Uhr A soll=393 Uhr A ist=392 Relais gesendet 00000001 00000000 00000000 00000000 Turmtechnik V30.2
+18:33:05  Automatic Verbindung O.K.  Uhr A soll=393 Uhr A ist=392 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+18:34:00  save Nebenuhr Verbindung O.K.  Uhr A soll=394 Uhr A ist=393 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+18:34:01  Automatic Verbindung O.K.  Uhr A soll=394 Uhr A ist=393 Relais gesendet 00000010 00000000 00000000 00000000 Turmtechnik V30.2
+18:34:02  Automatic Verbindung O.K.  Uhr A soll=394 Uhr A ist=393 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+18:35:00  save Nebenuhr Verbindung O.K.  Uhr A soll=395 Uhr A ist=394 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+18:35:01  Automatic Verbindung O.K.  Uhr A soll=395 Uhr A ist=394 Relais gesendet 00000001 00000000 00000000 00000000 Turmtechnik V30.2
+18:35:02  Automatic Verbindung O.K.  Uhr A soll=395 Uhr A ist=394 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+18:36:00  save Nebenuhr Verbindung O.K.  Uhr A soll=396 Uhr A ist=395 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+18:36:01  Automatic Verbindung O.K.  Uhr A soll=396 Uhr A ist=395 Relais gesendet 00000010 00000000 00000000 00000000 Turmtechnik V30.2
+18:36:02  Automatic Verbindung O.K.  Uhr A soll=396 Uhr A ist=395 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+18:37:00  save Nebenuhr Verbindung O.K.  Uhr A soll=397 Uhr A ist=396 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+18:37:01  Automatic Verbindung O.K.  Uhr A soll=397 Uhr A ist=396 Relais gesendet 00000001 00000000 00000000 00000000 Turmtechnik V30.2
+18:37:02  Automatic Verbindung O.K.  Uhr A soll=397 Uhr A ist=396 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+18:38:00  save Nebenuhr Verbindung O.K.  Uhr A soll=398 Uhr A ist=397 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+18:38:01  Automatic Verbindung O.K.  Uhr A soll=398 Uhr A ist=397 Relais gesendet 00000010 00000000 00000000 00000000 Turmtechnik V30.2
+18:38:02  Automatic Verbindung O.K.  Uhr A soll=398 Uhr A ist=397 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+18:39:00  save Nebenuhr Verbindung O.K.  Uhr A soll=399 Uhr A ist=398 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+18:39:01  Automatic Verbindung O.K.  Uhr A soll=399 Uhr A ist=398 Relais gesendet 00000001 00000000 00000000 00000000 Turmtechnik V30.2
+18:39:02  Automatic Verbindung O.K.  Uhr A soll=399 Uhr A ist=398 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+18:40:00  save Nebenuhr Verbindung O.K.  Uhr A soll=400 Uhr A ist=399 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+18:40:01  Automatic Verbindung O.K.  Uhr A soll=400 Uhr A ist=399 Relais gesendet 00000010 00000000 00000000 00000000 Turmtechnik V30.2
+18:40:02  Automatic Verbindung O.K.  Uhr A soll=400 Uhr A ist=399 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+18:41:00  save Nebenuhr Verbindung O.K.  Uhr A soll=401 Uhr A ist=400 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+18:41:01  Automatic Verbindung O.K.  Uhr A soll=401 Uhr A ist=400 Relais gesendet 00000001 00000000 00000000 00000000 Turmtechnik V30.2
+18:41:02  Automatic Verbindung O.K.  Uhr A soll=401 Uhr A ist=400 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+18:42:00  save Nebenuhr Verbindung O.K.  Uhr A soll=402 Uhr A ist=401 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+18:42:01  Automatic Verbindung O.K.  Uhr A soll=402 Uhr A ist=401 Relais gesendet 00000010 00000000 00000000 00000000 Turmtechnik V30.2
+18:42:02  Automatic Verbindung O.K.  Uhr A soll=402 Uhr A ist=401 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+18:43:00  save Nebenuhr Verbindung O.K.  Uhr A soll=403 Uhr A ist=402 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+18:43:01  Automatic Verbindung O.K.  Uhr A soll=403 Uhr A ist=402 Relais gesendet 00000001 00000000 00000000 00000000 Turmtechnik V30.2
+18:43:02  Automatic Verbindung O.K.  Uhr A soll=403 Uhr A ist=402 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+18:44:00  save Nebenuhr Verbindung O.K.  Uhr A soll=403 Uhr A ist=403 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+18:44:01  Automatic Verbindung O.K.  Uhr A soll=404 Uhr A ist=403 Relais gesendet 00000010 00000000 00000000 00000000 Turmtechnik V30.2
+18:44:02  Automatic Verbindung O.K.  Uhr A soll=404 Uhr A ist=403 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+18:45:00  save Nebenuhr Verbindung O.K.  Uhr A soll=405 Uhr A ist=404 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+18:45:00  Automatic Verbindung O.K.  Uhr A soll=405 Uhr A ist=404 Relais gesendet 00000000 00000000 00000100 00000000 Turmtechnik V30.2
+18:45:00  Automatic Verbindung O.K.  Uhr A soll=405 Uhr A ist=404 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+18:45:01  Automatic Verbindung O.K.  Uhr A soll=405 Uhr A ist=404 Relais gesendet 00000001 00000000 00000000 00000000 Turmtechnik V30.2
+18:45:02  Automatic Verbindung O.K.  Uhr A soll=405 Uhr A ist=404 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+18:45:02  Automatic Verbindung O.K.  Uhr A soll=405 Uhr A ist=404 Relais gesendet 00000000 00000000 00000100 00000000 Turmtechnik V30.2
+18:45:02  Automatic Verbindung O.K.  Uhr A soll=405 Uhr A ist=404 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+18:45:04  Automatic Verbindung O.K.  Uhr A soll=405 Uhr A ist=405 Relais gesendet 00000000 00000000 00000100 00000000 Turmtechnik V30.2
+18:45:04  Automatic Verbindung O.K.  Uhr A soll=405 Uhr A ist=405 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+18:46:00  save Nebenuhr Verbindung O.K.  Uhr A soll=406 Uhr A ist=405 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+18:46:01  Automatic Verbindung O.K.  Uhr A soll=406 Uhr A ist=405 Relais gesendet 00000010 00000000 00000000 00000000 Turmtechnik V30.2
+18:46:02  Automatic Verbindung O.K.  Uhr A soll=406 Uhr A ist=405 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+18:47:00  save Nebenuhr Verbindung O.K.  Uhr A soll=407 Uhr A ist=406 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+18:47:01  Automatic Verbindung O.K.  Uhr A soll=407 Uhr A ist=406 Relais gesendet 00000001 00000000 00000000 00000000 Turmtechnik V30.2
+18:47:02  Automatic Verbindung O.K.  Uhr A soll=407 Uhr A ist=406 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+18:48:00  save Nebenuhr Verbindung O.K.  Uhr A soll=408 Uhr A ist=407 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+18:48:01  Automatic Verbindung O.K.  Uhr A soll=408 Uhr A ist=407 Relais gesendet 00000010 00000000 00000000 00000000 Turmtechnik V30.2
+18:48:02  Automatic Verbindung O.K.  Uhr A soll=408 Uhr A ist=407 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+18:49:00  save Nebenuhr Verbindung O.K.  Uhr A soll=409 Uhr A ist=408 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+18:49:01  Automatic Verbindung O.K.  Uhr A soll=409 Uhr A ist=408 Relais gesendet 00000001 00000000 00000000 00000000 Turmtechnik V30.2
+18:49:02  Automatic Verbindung O.K.  Uhr A soll=409 Uhr A ist=408 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+18:50:00  save Nebenuhr Verbindung O.K.  Uhr A soll=410 Uhr A ist=409 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+18:50:01  Automatic Verbindung O.K.  Uhr A soll=410 Uhr A ist=409 Relais gesendet 00000010 00000000 00000000 00000000 Turmtechnik V30.2
+18:50:02  Automatic Verbindung O.K.  Uhr A soll=410 Uhr A ist=409 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+18:51:00  save Nebenuhr Verbindung O.K.  Uhr A soll=411 Uhr A ist=410 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+18:51:01  Automatic Verbindung O.K.  Uhr A soll=411 Uhr A ist=410 Relais gesendet 00000001 00000000 00000000 00000000 Turmtechnik V30.2
+18:51:02  Automatic Verbindung O.K.  Uhr A soll=411 Uhr A ist=410 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+18:52:00  save Nebenuhr Verbindung O.K.  Uhr A soll=412 Uhr A ist=411 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+18:52:01  Automatic Verbindung O.K.  Uhr A soll=412 Uhr A ist=411 Relais gesendet 00000010 00000000 00000000 00000000 Turmtechnik V30.2
+18:52:02  Automatic Verbindung O.K.  Uhr A soll=412 Uhr A ist=411 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+18:53:00  save Nebenuhr Verbindung O.K.  Uhr A soll=413 Uhr A ist=412 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+18:53:01  Automatic Verbindung O.K.  Uhr A soll=413 Uhr A ist=412 Relais gesendet 00000001 00000000 00000000 00000000 Turmtechnik V30.2
+18:53:02  Automatic Verbindung O.K.  Uhr A soll=413 Uhr A ist=412 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+18:54:00  save Nebenuhr Verbindung O.K.  Uhr A soll=414 Uhr A ist=413 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+18:54:01  Automatic Verbindung O.K.  Uhr A soll=414 Uhr A ist=413 Relais gesendet 00000010 00000000 00000000 00000000 Turmtechnik V30.2
+18:54:02  Automatic Verbindung O.K.  Uhr A soll=414 Uhr A ist=413 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+18:55:00  save Nebenuhr Verbindung O.K.  Uhr A soll=415 Uhr A ist=414 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+18:55:01  Automatic Verbindung O.K.  Uhr A soll=415 Uhr A ist=414 Relais gesendet 00000001 00000000 00000000 00000000 Turmtechnik V30.2
+18:55:02  Automatic Verbindung O.K.  Uhr A soll=415 Uhr A ist=414 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+18:56:00  save Nebenuhr Verbindung O.K.  Uhr A soll=416 Uhr A ist=415 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+18:56:01  Automatic Verbindung O.K.  Uhr A soll=416 Uhr A ist=415 Relais gesendet 00000010 00000000 00000000 00000000 Turmtechnik V30.2
+18:56:02  Automatic Verbindung O.K.  Uhr A soll=416 Uhr A ist=415 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+18:57:00  save Nebenuhr Verbindung O.K.  Uhr A soll=417 Uhr A ist=416 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+18:57:01  Automatic Verbindung O.K.  Uhr A soll=417 Uhr A ist=416 Relais gesendet 00000001 00000000 00000000 00000000 Turmtechnik V30.2
+18:57:02  Automatic Verbindung O.K.  Uhr A soll=417 Uhr A ist=416 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+18:58:00  save Nebenuhr Verbindung O.K.  Uhr A soll=418 Uhr A ist=417 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+18:58:01  Automatic Verbindung O.K.  Uhr A soll=418 Uhr A ist=417 Relais gesendet 00000010 00000000 00000000 00000000 Turmtechnik V30.2
+18:58:02  Automatic Verbindung O.K.  Uhr A soll=418 Uhr A ist=417 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+18:59:00  save Nebenuhr Verbindung O.K.  Uhr A soll=419 Uhr A ist=418 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+18:59:01  Automatic Verbindung O.K.  Uhr A soll=419 Uhr A ist=418 Relais gesendet 00000001 00000000 00000000 00000000 Turmtechnik V30.2
+18:59:02  Automatic Verbindung O.K.  Uhr A soll=419 Uhr A ist=418 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+19:00:00  save Nebenuhr Verbindung O.K.  Uhr A soll=420 Uhr A ist=419 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+19:00:00  Automatic Verbindung O.K.  Uhr A soll=420 Uhr A ist=419 Relais gesendet 00000000 00000000 00000100 00000000 Turmtechnik V30.2
+19:00:00  Automatic Verbindung O.K.  Uhr A soll=420 Uhr A ist=419 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+19:00:01  Automatic Verbindung O.K.  Uhr A soll=420 Uhr A ist=419 Relais gesendet 00000010 00000000 00000000 00000000 Turmtechnik V30.2
+19:00:02  Automatic Verbindung O.K.  Uhr A soll=420 Uhr A ist=419 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+19:00:02  Automatic Verbindung O.K.  Uhr A soll=420 Uhr A ist=419 Relais gesendet 00000000 00000000 00000100 00000000 Turmtechnik V30.2
+19:00:02  Automatic Verbindung O.K.  Uhr A soll=420 Uhr A ist=419 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+19:00:04  Automatic Verbindung O.K.  Uhr A soll=420 Uhr A ist=420 Relais gesendet 00000000 00000000 00000100 00000000 Turmtechnik V30.2
+19:00:04  Automatic Verbindung O.K.  Uhr A soll=420 Uhr A ist=420 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+19:00:06  Automatic Verbindung O.K.  Uhr A soll=420 Uhr A ist=420 Relais gesendet 00000000 00000000 00000100 00000000 Turmtechnik V30.2
+19:00:06  Automatic Verbindung O.K.  Uhr A soll=420 Uhr A ist=420 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+19:00:08  Automatic Verbindung O.K.  Uhr A soll=420 Uhr A ist=420 Relais gesendet 00000000 01000000 00000000 00000000 Turmtechnik V30.2
+19:00:09  Automatic Verbindung O.K.  Uhr A soll=420 Uhr A ist=420 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+19:00:11  Automatic Verbindung O.K.  Uhr A soll=420 Uhr A ist=420 Relais gesendet 00000000 01000000 00000000 00000000 Turmtechnik V30.2
+19:00:11  Automatic Verbindung O.K.  Uhr A soll=420 Uhr A ist=420 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+19:00:13  Automatic Verbindung O.K.  Uhr A soll=420 Uhr A ist=420 Relais gesendet 00000000 01000000 00000000 00000000 Turmtechnik V30.2
+19:00:13  Automatic Verbindung O.K.  Uhr A soll=420 Uhr A ist=420 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+19:00:15  Automatic Verbindung O.K.  Uhr A soll=420 Uhr A ist=420 Relais gesendet 00000000 01000000 00000000 00000000 Turmtechnik V30.2
+19:00:15  Automatic Verbindung O.K.  Uhr A soll=420 Uhr A ist=420 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+19:00:17  Automatic Verbindung O.K.  Uhr A soll=420 Uhr A ist=420 Relais gesendet 00000000 01000000 00000000 00000000 Turmtechnik V30.2
+19:00:17  Automatic Verbindung O.K.  Uhr A soll=420 Uhr A ist=420 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+19:00:19  Automatic Verbindung O.K.  Uhr A soll=420 Uhr A ist=420 Relais gesendet 00000000 01000000 00000000 00000000 Turmtechnik V30.2
+19:00:19  Automatic Verbindung O.K.  Uhr A soll=420 Uhr A ist=420 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+19:00:21  Automatic Verbindung O.K.  Uhr A soll=420 Uhr A ist=420 Relais gesendet 00000000 01000000 00000000 00000000 Turmtechnik V30.2
+19:00:21  Automatic Verbindung O.K.  Uhr A soll=420 Uhr A ist=420 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+19:01:00  save Nebenuhr Verbindung O.K.  Uhr A soll=421 Uhr A ist=420 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+19:01:01  Automatic Verbindung O.K.  Uhr A soll=421 Uhr A ist=420 Relais gesendet 00000001 00000000 00000000 00000000 Turmtechnik V30.2
+19:01:02  Automatic Verbindung O.K.  Uhr A soll=421 Uhr A ist=420 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+19:02:00  save Nebenuhr Verbindung O.K.  Uhr A soll=422 Uhr A ist=421 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+19:02:01  Automatic Verbindung O.K.  Uhr A soll=422 Uhr A ist=421 Relais gesendet 00000010 00000000 00000000 00000000 Turmtechnik V30.2
+19:02:02  Automatic Verbindung O.K.  Uhr A soll=422 Uhr A ist=421 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+19:03:00  save Nebenuhr Verbindung O.K.  Uhr A soll=423 Uhr A ist=422 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+19:03:01  Automatic Verbindung O.K.  Uhr A soll=423 Uhr A ist=422 Relais gesendet 00000001 00000000 00000000 00000000 Turmtechnik V30.2
+19:03:02  Automatic Verbindung O.K.  Uhr A soll=423 Uhr A ist=422 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+19:04:00  save Nebenuhr Verbindung O.K.  Uhr A soll=424 Uhr A ist=423 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+19:04:01  Automatic Verbindung O.K.  Uhr A soll=424 Uhr A ist=423 Relais gesendet 00000010 00000000 00000000 00000000 Turmtechnik V30.2
+19:04:02  Automatic Verbindung O.K.  Uhr A soll=424 Uhr A ist=423 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+19:05:00  save Nebenuhr Verbindung O.K.  Uhr A soll=425 Uhr A ist=424 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+19:05:01  Automatic Verbindung O.K.  Uhr A soll=425 Uhr A ist=424 Relais gesendet 00000001 00000000 00000000 00000000 Turmtechnik V30.2
+19:05:02  Automatic Verbindung O.K.  Uhr A soll=425 Uhr A ist=424 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+19:06:00  save Nebenuhr Verbindung O.K.  Uhr A soll=426 Uhr A ist=425 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+19:06:01  Automatic Verbindung O.K.  Uhr A soll=426 Uhr A ist=425 Relais gesendet 00000010 00000000 00000000 00000000 Turmtechnik V30.2
+19:06:02  Automatic Verbindung O.K.  Uhr A soll=426 Uhr A ist=425 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+19:07:00  save Nebenuhr Verbindung O.K.  Uhr A soll=427 Uhr A ist=426 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+19:07:01  Automatic Verbindung O.K.  Uhr A soll=427 Uhr A ist=426 Relais gesendet 00000001 00000000 00000000 00000000 Turmtechnik V30.2
+19:07:02  Automatic Verbindung O.K.  Uhr A soll=427 Uhr A ist=426 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+19:08:00  save Nebenuhr Verbindung O.K.  Uhr A soll=428 Uhr A ist=427 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+19:08:01  Automatic Verbindung O.K.  Uhr A soll=428 Uhr A ist=427 Relais gesendet 00000010 00000000 00000000 00000000 Turmtechnik V30.2
+19:08:02  Automatic Verbindung O.K.  Uhr A soll=428 Uhr A ist=427 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+19:09:00  save Nebenuhr Verbindung O.K.  Uhr A soll=429 Uhr A ist=428 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+19:09:01  Automatic Verbindung O.K.  Uhr A soll=429 Uhr A ist=428 Relais gesendet 00000001 00000000 00000000 00000000 Turmtechnik V30.2
+19:09:02  Automatic Verbindung O.K.  Uhr A soll=429 Uhr A ist=428 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+19:10:00  save Nebenuhr Verbindung O.K.  Uhr A soll=430 Uhr A ist=429 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+19:10:01  Automatic Verbindung O.K.  Uhr A soll=430 Uhr A ist=429 Relais gesendet 00000010 00000000 00000000 00000000 Turmtechnik V30.2
+19:10:02  Automatic Verbindung O.K.  Uhr A soll=430 Uhr A ist=429 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+19:11:00  save Nebenuhr Verbindung O.K.  Uhr A soll=431 Uhr A ist=430 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+19:11:01  Automatic Verbindung O.K.  Uhr A soll=431 Uhr A ist=430 Relais gesendet 00000001 00000000 00000000 00000000 Turmtechnik V30.2
+19:11:02  Automatic Verbindung O.K.  Uhr A soll=431 Uhr A ist=430 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+19:12:00  save Nebenuhr Verbindung O.K.  Uhr A soll=432 Uhr A ist=431 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+19:12:01  Automatic Verbindung O.K.  Uhr A soll=432 Uhr A ist=431 Relais gesendet 00000010 00000000 00000000 00000000 Turmtechnik V30.2
+19:12:02  Automatic Verbindung O.K.  Uhr A soll=432 Uhr A ist=431 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+19:13:00  save Nebenuhr Verbindung O.K.  Uhr A soll=433 Uhr A ist=432 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+19:13:01  Automatic Verbindung O.K.  Uhr A soll=433 Uhr A ist=432 Relais gesendet 00000001 00000000 00000000 00000000 Turmtechnik V30.2
+19:13:02  Automatic Verbindung O.K.  Uhr A soll=433 Uhr A ist=432 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+19:14:00  save Nebenuhr Verbindung O.K.  Uhr A soll=434 Uhr A ist=433 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+19:14:01  Automatic Verbindung O.K.  Uhr A soll=434 Uhr A ist=433 Relais gesendet 00000010 00000000 00000000 00000000 Turmtechnik V30.2
+19:14:02  Automatic Verbindung O.K.  Uhr A soll=434 Uhr A ist=433 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+19:15:00  save Nebenuhr Verbindung O.K.  Uhr A soll=435 Uhr A ist=434 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+19:15:00  Automatic Verbindung O.K.  Uhr A soll=435 Uhr A ist=434 Relais gesendet 00000000 00000000 00000100 00000000 Turmtechnik V30.2
+19:15:00  Automatic Verbindung O.K.  Uhr A soll=435 Uhr A ist=434 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+19:15:01  Automatic Verbindung O.K.  Uhr A soll=435 Uhr A ist=434 Relais gesendet 00000001 00000000 00000000 00000000 Turmtechnik V30.2
+19:15:02  Automatic Verbindung O.K.  Uhr A soll=435 Uhr A ist=434 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+19:16:00  save Nebenuhr Verbindung O.K.  Uhr A soll=436 Uhr A ist=435 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+19:16:01  Automatic Verbindung O.K.  Uhr A soll=436 Uhr A ist=435 Relais gesendet 00000010 00000000 00000000 00000000 Turmtechnik V30.2
+19:16:02  Automatic Verbindung O.K.  Uhr A soll=436 Uhr A ist=435 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+19:17:00  save Nebenuhr Verbindung O.K.  Uhr A soll=436 Uhr A ist=436 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+19:17:01  Automatic Verbindung O.K.  Uhr A soll=437 Uhr A ist=436 Relais gesendet 00000001 00000000 00000000 00000000 Turmtechnik V30.2
+19:17:02  Automatic Verbindung O.K.  Uhr A soll=437 Uhr A ist=436 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+19:18:00  save Nebenuhr Verbindung O.K.  Uhr A soll=438 Uhr A ist=437 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+19:18:01  Automatic Verbindung O.K.  Uhr A soll=438 Uhr A ist=437 Relais gesendet 00000010 00000000 00000000 00000000 Turmtechnik V30.2
+19:18:02  Automatic Verbindung O.K.  Uhr A soll=438 Uhr A ist=437 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+19:19:00  save Nebenuhr Verbindung O.K.  Uhr A soll=439 Uhr A ist=438 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+19:19:01  Automatic Verbindung O.K.  Uhr A soll=439 Uhr A ist=438 Relais gesendet 00000001 00000000 00000000 00000000 Turmtechnik V30.2
+19:19:02  Automatic Verbindung O.K.  Uhr A soll=439 Uhr A ist=438 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+19:20:00  save Nebenuhr Verbindung O.K.  Uhr A soll=440 Uhr A ist=439 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+19:20:01  Automatic Verbindung O.K.  Uhr A soll=440 Uhr A ist=439 Relais gesendet 00000010 00000000 00000000 00000000 Turmtechnik V30.2
+19:20:02  Automatic Verbindung O.K.  Uhr A soll=440 Uhr A ist=439 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+19:21:00  save Nebenuhr Verbindung O.K.  Uhr A soll=441 Uhr A ist=440 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+19:21:01  Automatic Verbindung O.K.  Uhr A soll=441 Uhr A ist=440 Relais gesendet 00000001 00000000 00000000 00000000 Turmtechnik V30.2
+19:21:02  Automatic Verbindung O.K.  Uhr A soll=441 Uhr A ist=440 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+19:22:00  save Nebenuhr Verbindung O.K.  Uhr A soll=442 Uhr A ist=441 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+19:22:01  Automatic Verbindung O.K.  Uhr A soll=442 Uhr A ist=441 Relais gesendet 00000010 00000000 00000000 00000000 Turmtechnik V30.2
+19:22:02  Automatic Verbindung O.K.  Uhr A soll=442 Uhr A ist=441 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+19:23:00  save Nebenuhr Verbindung O.K.  Uhr A soll=443 Uhr A ist=442 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+19:23:01  Automatic Verbindung O.K.  Uhr A soll=443 Uhr A ist=442 Relais gesendet 00000001 00000000 00000000 00000000 Turmtechnik V30.2
+19:23:02  Automatic Verbindung O.K.  Uhr A soll=443 Uhr A ist=442 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+19:24:00  save Nebenuhr Verbindung O.K.  Uhr A soll=444 Uhr A ist=443 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+19:24:01  Automatic Verbindung O.K.  Uhr A soll=444 Uhr A ist=443 Relais gesendet 00000010 00000000 00000000 00000000 Turmtechnik V30.2
+19:24:02  Automatic Verbindung O.K.  Uhr A soll=444 Uhr A ist=443 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+19:25:00  save Nebenuhr Verbindung O.K.  Uhr A soll=445 Uhr A ist=444 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+19:25:01  Automatic Verbindung O.K.  Uhr A soll=445 Uhr A ist=444 Relais gesendet 00000001 00000000 00000000 00000000 Turmtechnik V30.2
+19:25:02  Automatic Verbindung O.K.  Uhr A soll=445 Uhr A ist=444 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+19:26:00  save Nebenuhr Verbindung O.K.  Uhr A soll=446 Uhr A ist=445 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+19:26:01  Automatic Verbindung O.K.  Uhr A soll=446 Uhr A ist=445 Relais gesendet 00000010 00000000 00000000 00000000 Turmtechnik V30.2
+19:26:02  Automatic Verbindung O.K.  Uhr A soll=446 Uhr A ist=445 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+19:27:00  save Nebenuhr Verbindung O.K.  Uhr A soll=447 Uhr A ist=446 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+19:27:01  Automatic Verbindung O.K.  Uhr A soll=447 Uhr A ist=446 Relais gesendet 00000001 00000000 00000000 00000000 Turmtechnik V30.2
+19:27:02  Automatic Verbindung O.K.  Uhr A soll=447 Uhr A ist=446 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+19:28:00  save Nebenuhr Verbindung O.K.  Uhr A soll=448 Uhr A ist=447 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+19:28:01  Automatic Verbindung O.K.  Uhr A soll=448 Uhr A ist=447 Relais gesendet 00000010 00000000 00000000 00000000 Turmtechnik V30.2
+19:28:02  Automatic Verbindung O.K.  Uhr A soll=448 Uhr A ist=447 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+19:29:00  save Nebenuhr Verbindung O.K.  Uhr A soll=449 Uhr A ist=448 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+19:29:01  Automatic Verbindung O.K.  Uhr A soll=449 Uhr A ist=448 Relais gesendet 00000001 00000000 00000000 00000000 Turmtechnik V30.2
+19:29:02  Automatic Verbindung O.K.  Uhr A soll=449 Uhr A ist=448 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+19:30:00  save Nebenuhr Verbindung O.K.  Uhr A soll=450 Uhr A ist=449 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+19:30:00  Automatic Verbindung O.K.  Uhr A soll=450 Uhr A ist=449 Relais gesendet 00000000 00000000 00000100 00000000 Turmtechnik V30.2
+19:30:00  Automatic Verbindung O.K.  Uhr A soll=450 Uhr A ist=449 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+19:30:01  Automatic Verbindung O.K.  Uhr A soll=450 Uhr A ist=449 Relais gesendet 00000010 00000000 00000000 00000000 Turmtechnik V30.2
+19:30:02  Automatic Verbindung O.K.  Uhr A soll=450 Uhr A ist=449 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+19:30:02  Automatic Verbindung O.K.  Uhr A soll=450 Uhr A ist=449 Relais gesendet 00000000 00000000 00000100 00000000 Turmtechnik V30.2
+19:30:02  Automatic Verbindung O.K.  Uhr A soll=450 Uhr A ist=449 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+19:31:00  save Nebenuhr Verbindung O.K.  Uhr A soll=451 Uhr A ist=450 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+19:31:01  Automatic Verbindung O.K.  Uhr A soll=451 Uhr A ist=450 Relais gesendet 00000001 00000000 00000000 00000000 Turmtechnik V30.2
+19:31:02  Automatic Verbindung O.K.  Uhr A soll=451 Uhr A ist=450 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+19:32:00  save Nebenuhr Verbindung O.K.  Uhr A soll=452 Uhr A ist=451 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+19:32:01  Automatic Verbindung O.K.  Uhr A soll=452 Uhr A ist=451 Relais gesendet 00000010 00000000 00000000 00000000 Turmtechnik V30.2
+19:32:02  Automatic Verbindung O.K.  Uhr A soll=452 Uhr A ist=451 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+19:33:00  save Nebenuhr Verbindung O.K.  Uhr A soll=453 Uhr A ist=452 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+19:33:01  Automatic Verbindung O.K.  Uhr A soll=453 Uhr A ist=452 Relais gesendet 00000001 00000000 00000000 00000000 Turmtechnik V30.2
+19:33:02  Automatic Verbindung O.K.  Uhr A soll=453 Uhr A ist=452 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+19:34:00  save Nebenuhr Verbindung O.K.  Uhr A soll=454 Uhr A ist=453 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+19:34:01  Automatic Verbindung O.K.  Uhr A soll=454 Uhr A ist=453 Relais gesendet 00000010 00000000 00000000 00000000 Turmtechnik V30.2
+19:34:02  Automatic Verbindung O.K.  Uhr A soll=454 Uhr A ist=453 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+19:35:00  save Nebenuhr Verbindung O.K.  Uhr A soll=455 Uhr A ist=454 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+19:35:01  Automatic Verbindung O.K.  Uhr A soll=455 Uhr A ist=454 Relais gesendet 00000001 00000000 00000000 00000000 Turmtechnik V30.2
+19:35:02  Automatic Verbindung O.K.  Uhr A soll=455 Uhr A ist=454 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+19:36:00  save Nebenuhr Verbindung O.K.  Uhr A soll=456 Uhr A ist=455 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+19:36:01  Automatic Verbindung O.K.  Uhr A soll=456 Uhr A ist=455 Relais gesendet 00000010 00000000 00000000 00000000 Turmtechnik V30.2
+19:36:02  Automatic Verbindung O.K.  Uhr A soll=456 Uhr A ist=455 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+19:37:00  save Nebenuhr Verbindung O.K.  Uhr A soll=457 Uhr A ist=456 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+19:37:01  Automatic Verbindung O.K.  Uhr A soll=457 Uhr A ist=456 Relais gesendet 00000001 00000000 00000000 00000000 Turmtechnik V30.2
+19:37:02  Automatic Verbindung O.K.  Uhr A soll=457 Uhr A ist=456 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+19:38:00  save Nebenuhr Verbindung O.K.  Uhr A soll=458 Uhr A ist=457 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+19:38:01  Automatic Verbindung O.K.  Uhr A soll=458 Uhr A ist=457 Relais gesendet 00000010 00000000 00000000 00000000 Turmtechnik V30.2
+19:38:02  Automatic Verbindung O.K.  Uhr A soll=458 Uhr A ist=457 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+19:39:00  save Nebenuhr Verbindung O.K.  Uhr A soll=459 Uhr A ist=458 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+19:39:01  Automatic Verbindung O.K.  Uhr A soll=459 Uhr A ist=458 Relais gesendet 00000001 00000000 00000000 00000000 Turmtechnik V30.2
+19:39:02  Automatic Verbindung O.K.  Uhr A soll=459 Uhr A ist=458 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+19:40:00  save Nebenuhr Verbindung O.K.  Uhr A soll=460 Uhr A ist=459 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+19:40:01  Automatic Verbindung O.K.  Uhr A soll=460 Uhr A ist=459 Relais gesendet 00000010 00000000 00000000 00000000 Turmtechnik V30.2
+19:40:02  Automatic Verbindung O.K.  Uhr A soll=460 Uhr A ist=459 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+19:41:00  save Nebenuhr Verbindung O.K.  Uhr A soll=461 Uhr A ist=460 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+19:41:01  Automatic Verbindung O.K.  Uhr A soll=461 Uhr A ist=460 Relais gesendet 00000001 00000000 00000000 00000000 Turmtechnik V30.2
+19:41:02  Automatic Verbindung O.K.  Uhr A soll=461 Uhr A ist=460 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+19:42:00  save Nebenuhr Verbindung O.K.  Uhr A soll=462 Uhr A ist=461 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+19:42:01  Automatic Verbindung O.K.  Uhr A soll=462 Uhr A ist=461 Relais gesendet 00000010 00000000 00000000 00000000 Turmtechnik V30.2
+19:42:02  Automatic Verbindung O.K.  Uhr A soll=462 Uhr A ist=461 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+19:43:00  save Nebenuhr Verbindung O.K.  Uhr A soll=463 Uhr A ist=462 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+19:43:01  Automatic Verbindung O.K.  Uhr A soll=463 Uhr A ist=462 Relais gesendet 00000001 00000000 00000000 00000000 Turmtechnik V30.2
+19:43:02  Automatic Verbindung O.K.  Uhr A soll=463 Uhr A ist=462 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+19:44:00  save Nebenuhr Verbindung O.K.  Uhr A soll=464 Uhr A ist=463 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+19:44:01  Automatic Verbindung O.K.  Uhr A soll=464 Uhr A ist=463 Relais gesendet 00000010 00000000 00000000 00000000 Turmtechnik V30.2
+19:44:02  Automatic Verbindung O.K.  Uhr A soll=464 Uhr A ist=463 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+19:45:00  save Nebenuhr Verbindung O.K.  Uhr A soll=465 Uhr A ist=464 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+19:45:00  Automatic Verbindung O.K.  Uhr A soll=465 Uhr A ist=464 Relais gesendet 00000000 00000000 00000100 00000000 Turmtechnik V30.2
+19:45:00  Automatic Verbindung O.K.  Uhr A soll=465 Uhr A ist=464 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+19:45:01  Automatic Verbindung O.K.  Uhr A soll=465 Uhr A ist=464 Relais gesendet 00000001 00000000 00000000 00000000 Turmtechnik V30.2
+19:45:02  Automatic Verbindung O.K.  Uhr A soll=465 Uhr A ist=464 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+19:45:02  Automatic Verbindung O.K.  Uhr A soll=465 Uhr A ist=464 Relais gesendet 00000000 00000000 00000100 00000000 Turmtechnik V30.2
+19:45:02  Automatic Verbindung O.K.  Uhr A soll=465 Uhr A ist=464 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+19:45:04  Automatic Verbindung O.K.  Uhr A soll=465 Uhr A ist=465 Relais gesendet 00000000 00000000 00000100 00000000 Turmtechnik V30.2
+19:45:04  Automatic Verbindung O.K.  Uhr A soll=465 Uhr A ist=465 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+19:46:00  save Nebenuhr Verbindung O.K.  Uhr A soll=466 Uhr A ist=465 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+19:46:01  Automatic Verbindung O.K.  Uhr A soll=466 Uhr A ist=465 Relais gesendet 00000010 00000000 00000000 00000000 Turmtechnik V30.2
+19:46:02  Automatic Verbindung O.K.  Uhr A soll=466 Uhr A ist=465 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+19:47:00  save Nebenuhr Verbindung O.K.  Uhr A soll=467 Uhr A ist=466 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+19:47:01  Automatic Verbindung O.K.  Uhr A soll=467 Uhr A ist=466 Relais gesendet 00000001 00000000 00000000 00000000 Turmtechnik V30.2
+19:47:02  Automatic Verbindung O.K.  Uhr A soll=467 Uhr A ist=466 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+19:48:00  save Nebenuhr Verbindung O.K.  Uhr A soll=468 Uhr A ist=467 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+19:48:01  Automatic Verbindung O.K.  Uhr A soll=468 Uhr A ist=467 Relais gesendet 00000010 00000000 00000000 00000000 Turmtechnik V30.2
+19:48:02  Automatic Verbindung O.K.  Uhr A soll=468 Uhr A ist=467 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+19:49:00  save Nebenuhr Verbindung O.K.  Uhr A soll=469 Uhr A ist=468 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+19:49:01  Automatic Verbindung O.K.  Uhr A soll=469 Uhr A ist=468 Relais gesendet 00000001 00000000 00000000 00000000 Turmtechnik V30.2
+19:49:02  Automatic Verbindung O.K.  Uhr A soll=469 Uhr A ist=468 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+19:50:00  save Nebenuhr Verbindung O.K.  Uhr A soll=470 Uhr A ist=469 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+19:50:01  Automatic Verbindung O.K.  Uhr A soll=470 Uhr A ist=469 Relais gesendet 00000010 00000000 00000000 00000000 Turmtechnik V30.2
+19:50:02  Automatic Verbindung O.K.  Uhr A soll=470 Uhr A ist=469 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+19:51:00  save Nebenuhr Verbindung O.K.  Uhr A soll=471 Uhr A ist=470 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+19:51:01  Automatic Verbindung O.K.  Uhr A soll=471 Uhr A ist=470 Relais gesendet 00000001 00000000 00000000 00000000 Turmtechnik V30.2
+19:51:02  Automatic Verbindung O.K.  Uhr A soll=471 Uhr A ist=470 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+19:52:00  save Nebenuhr Verbindung O.K.  Uhr A soll=472 Uhr A ist=471 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+19:52:01  Automatic Verbindung O.K.  Uhr A soll=472 Uhr A ist=471 Relais gesendet 00000010 00000000 00000000 00000000 Turmtechnik V30.2
+19:52:02  Automatic Verbindung O.K.  Uhr A soll=472 Uhr A ist=471 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+19:53:00  save Nebenuhr Verbindung O.K.  Uhr A soll=473 Uhr A ist=472 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+19:53:01  Automatic Verbindung O.K.  Uhr A soll=473 Uhr A ist=472 Relais gesendet 00000001 00000000 00000000 00000000 Turmtechnik V30.2
+19:53:02  Automatic Verbindung O.K.  Uhr A soll=473 Uhr A ist=472 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+19:54:00  save Nebenuhr Verbindung O.K.  Uhr A soll=474 Uhr A ist=473 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+19:54:01  Automatic Verbindung O.K.  Uhr A soll=474 Uhr A ist=473 Relais gesendet 00000010 00000000 00000000 00000000 Turmtechnik V30.2
+19:54:02  Automatic Verbindung O.K.  Uhr A soll=474 Uhr A ist=473 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+19:55:00  save Nebenuhr Verbindung O.K.  Uhr A soll=475 Uhr A ist=474 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+19:55:01  Automatic Verbindung O.K.  Uhr A soll=475 Uhr A ist=474 Relais gesendet 00000001 00000000 00000000 00000000 Turmtechnik V30.2
+19:55:02  Automatic Verbindung O.K.  Uhr A soll=475 Uhr A ist=474 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+19:56:00  save Nebenuhr Verbindung O.K.  Uhr A soll=476 Uhr A ist=475 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+19:56:01  Automatic Verbindung O.K.  Uhr A soll=476 Uhr A ist=475 Relais gesendet 00000010 00000000 00000000 00000000 Turmtechnik V30.2
+19:56:02  Automatic Verbindung O.K.  Uhr A soll=476 Uhr A ist=475 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+19:57:00  save Nebenuhr Verbindung O.K.  Uhr A soll=476 Uhr A ist=476 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+19:57:01  Automatic Verbindung O.K.  Uhr A soll=477 Uhr A ist=476 Relais gesendet 00000001 00000000 00000000 00000000 Turmtechnik V30.2
+19:57:02  Automatic Verbindung O.K.  Uhr A soll=477 Uhr A ist=476 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+19:58:00  save Nebenuhr Verbindung O.K.  Uhr A soll=478 Uhr A ist=477 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+19:58:01  Automatic Verbindung O.K.  Uhr A soll=478 Uhr A ist=477 Relais gesendet 00000010 00000000 00000000 00000000 Turmtechnik V30.2
+19:58:02  Automatic Verbindung O.K.  Uhr A soll=478 Uhr A ist=477 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+19:59:00  save Nebenuhr Verbindung O.K.  Uhr A soll=479 Uhr A ist=478 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+19:59:01  Automatic Verbindung O.K.  Uhr A soll=479 Uhr A ist=478 Relais gesendet 00000001 00000000 00000000 00000000 Turmtechnik V30.2
+19:59:02  Automatic Verbindung O.K.  Uhr A soll=479 Uhr A ist=478 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+20:00:00  save Nebenuhr Verbindung O.K.  Uhr A soll=480 Uhr A ist=479 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+20:00:00  Automatic Verbindung O.K.  Uhr A soll=480 Uhr A ist=479 Relais gesendet 00000000 00000000 00000100 00000000 Turmtechnik V30.2
+20:00:00  Automatic Verbindung O.K.  Uhr A soll=480 Uhr A ist=479 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+20:00:01  Automatic Verbindung O.K.  Uhr A soll=480 Uhr A ist=479 Relais gesendet 00000010 00000000 00000000 00000000 Turmtechnik V30.2
+20:00:02  Automatic Verbindung O.K.  Uhr A soll=480 Uhr A ist=479 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+20:00:02  Automatic Verbindung O.K.  Uhr A soll=480 Uhr A ist=479 Relais gesendet 00000000 00000000 00000100 00000000 Turmtechnik V30.2
+20:00:02  Automatic Verbindung O.K.  Uhr A soll=480 Uhr A ist=479 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+20:00:04  Automatic Verbindung O.K.  Uhr A soll=480 Uhr A ist=480 Relais gesendet 00000000 00000000 00000100 00000000 Turmtechnik V30.2
+20:00:04  Automatic Verbindung O.K.  Uhr A soll=480 Uhr A ist=480 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+20:00:06  Automatic Verbindung O.K.  Uhr A soll=480 Uhr A ist=480 Relais gesendet 00000000 00000000 00000100 00000000 Turmtechnik V30.2
+20:00:06  Automatic Verbindung O.K.  Uhr A soll=480 Uhr A ist=480 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+20:00:08  Automatic Verbindung O.K.  Uhr A soll=480 Uhr A ist=480 Relais gesendet 00000000 01000000 00000000 00000000 Turmtechnik V30.2
+20:00:09  Automatic Verbindung O.K.  Uhr A soll=480 Uhr A ist=480 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+20:00:11  Automatic Verbindung O.K.  Uhr A soll=480 Uhr A ist=480 Relais gesendet 00000000 01000000 00000000 00000000 Turmtechnik V30.2
+20:00:11  Automatic Verbindung O.K.  Uhr A soll=480 Uhr A ist=480 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+20:00:13  Automatic Verbindung O.K.  Uhr A soll=480 Uhr A ist=480 Relais gesendet 00000000 01000000 00000000 00000000 Turmtechnik V30.2
+20:00:13  Automatic Verbindung O.K.  Uhr A soll=480 Uhr A ist=480 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+20:00:15  Automatic Verbindung O.K.  Uhr A soll=480 Uhr A ist=480 Relais gesendet 00000000 01000000 00000000 00000000 Turmtechnik V30.2
+20:00:15  Automatic Verbindung O.K.  Uhr A soll=480 Uhr A ist=480 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+20:00:17  Automatic Verbindung O.K.  Uhr A soll=480 Uhr A ist=480 Relais gesendet 00000000 01000000 00000000 00000000 Turmtechnik V30.2
+20:00:17  Automatic Verbindung O.K.  Uhr A soll=480 Uhr A ist=480 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+20:00:19  Automatic Verbindung O.K.  Uhr A soll=480 Uhr A ist=480 Relais gesendet 00000000 01000000 00000000 00000000 Turmtechnik V30.2
+20:00:19  Automatic Verbindung O.K.  Uhr A soll=480 Uhr A ist=480 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+20:00:21  Automatic Verbindung O.K.  Uhr A soll=480 Uhr A ist=480 Relais gesendet 00000000 01000000 00000000 00000000 Turmtechnik V30.2
+20:00:22  Automatic Verbindung O.K.  Uhr A soll=480 Uhr A ist=480 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+20:00:23  Automatic Verbindung O.K.  Uhr A soll=480 Uhr A ist=480 Relais gesendet 00000000 01000000 00000000 00000000 Turmtechnik V30.2
+20:00:24  Automatic Verbindung O.K.  Uhr A soll=480 Uhr A ist=480 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+20:01:00  save Nebenuhr Verbindung O.K.  Uhr A soll=481 Uhr A ist=480 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+20:01:01  Automatic Verbindung O.K.  Uhr A soll=481 Uhr A ist=480 Relais gesendet 00000001 00000000 00000000 00000000 Turmtechnik V30.2
+20:01:02  Automatic Verbindung O.K.  Uhr A soll=481 Uhr A ist=480 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+20:02:00  save Nebenuhr Verbindung O.K.  Uhr A soll=482 Uhr A ist=481 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+20:02:01  Automatic Verbindung O.K.  Uhr A soll=482 Uhr A ist=481 Relais gesendet 00000010 00000000 00000000 00000000 Turmtechnik V30.2
+20:02:02  Automatic Verbindung O.K.  Uhr A soll=482 Uhr A ist=481 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+20:03:00  save Nebenuhr Verbindung O.K.  Uhr A soll=483 Uhr A ist=482 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+20:03:01  Automatic Verbindung O.K.  Uhr A soll=483 Uhr A ist=482 Relais gesendet 00000001 00000000 00000000 00000000 Turmtechnik V30.2
+20:03:02  Automatic Verbindung O.K.  Uhr A soll=483 Uhr A ist=482 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+20:04:00  save Nebenuhr Verbindung O.K.  Uhr A soll=484 Uhr A ist=483 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+20:04:01  Automatic Verbindung O.K.  Uhr A soll=484 Uhr A ist=483 Relais gesendet 00000010 00000000 00000000 00000000 Turmtechnik V30.2
+20:04:02  Automatic Verbindung O.K.  Uhr A soll=484 Uhr A ist=483 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+20:05:00  save Nebenuhr Verbindung O.K.  Uhr A soll=485 Uhr A ist=484 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+20:05:01  Automatic Verbindung O.K.  Uhr A soll=485 Uhr A ist=484 Relais gesendet 00000001 00000000 00000000 00000000 Turmtechnik V30.2
+20:05:02  Automatic Verbindung O.K.  Uhr A soll=485 Uhr A ist=484 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+20:06:00  save Nebenuhr Verbindung O.K.  Uhr A soll=486 Uhr A ist=485 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+20:06:01  Automatic Verbindung O.K.  Uhr A soll=486 Uhr A ist=485 Relais gesendet 00000010 00000000 00000000 00000000 Turmtechnik V30.2
+20:06:02  Automatic Verbindung O.K.  Uhr A soll=486 Uhr A ist=485 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+20:07:00  save Nebenuhr Verbindung O.K.  Uhr A soll=487 Uhr A ist=486 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+20:07:01  Automatic Verbindung O.K.  Uhr A soll=487 Uhr A ist=486 Relais gesendet 00000001 00000000 00000000 00000000 Turmtechnik V30.2
+20:07:02  Automatic Verbindung O.K.  Uhr A soll=487 Uhr A ist=486 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+20:08:00  save Nebenuhr Verbindung O.K.  Uhr A soll=488 Uhr A ist=487 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+20:08:01  Automatic Verbindung O.K.  Uhr A soll=488 Uhr A ist=487 Relais gesendet 00000010 00000000 00000000 00000000 Turmtechnik V30.2
+20:08:02  Automatic Verbindung O.K.  Uhr A soll=488 Uhr A ist=487 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+20:09:00  save Nebenuhr Verbindung O.K.  Uhr A soll=489 Uhr A ist=488 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+20:09:01  Automatic Verbindung O.K.  Uhr A soll=489 Uhr A ist=488 Relais gesendet 00000001 00000000 00000000 00000000 Turmtechnik V30.2
+20:09:02  Automatic Verbindung O.K.  Uhr A soll=489 Uhr A ist=488 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+20:10:00  save Nebenuhr Verbindung O.K.  Uhr A soll=490 Uhr A ist=489 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+20:10:01  Automatic Verbindung O.K.  Uhr A soll=490 Uhr A ist=489 Relais gesendet 00000010 00000000 00000000 00000000 Turmtechnik V30.2
+20:10:02  Automatic Verbindung O.K.  Uhr A soll=490 Uhr A ist=489 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+20:11:00  save Nebenuhr Verbindung O.K.  Uhr A soll=491 Uhr A ist=490 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+20:11:01  Automatic Verbindung O.K.  Uhr A soll=491 Uhr A ist=490 Relais gesendet 00000001 00000000 00000000 00000000 Turmtechnik V30.2
+20:11:02  Automatic Verbindung O.K.  Uhr A soll=491 Uhr A ist=490 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+20:12:00  save Nebenuhr Verbindung O.K.  Uhr A soll=492 Uhr A ist=491 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+20:12:01  Automatic Verbindung O.K.  Uhr A soll=492 Uhr A ist=491 Relais gesendet 00000010 00000000 00000000 00000000 Turmtechnik V30.2
+20:12:02  Automatic Verbindung O.K.  Uhr A soll=492 Uhr A ist=491 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+20:13:00  save Nebenuhr Verbindung O.K.  Uhr A soll=492 Uhr A ist=492 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+20:13:01  Automatic Verbindung O.K.  Uhr A soll=493 Uhr A ist=492 Relais gesendet 00000001 00000000 00000000 00000000 Turmtechnik V30.2
+20:13:02  Automatic Verbindung O.K.  Uhr A soll=493 Uhr A ist=492 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+20:14:00  save Nebenuhr Verbindung O.K.  Uhr A soll=494 Uhr A ist=493 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+20:14:01  Automatic Verbindung O.K.  Uhr A soll=494 Uhr A ist=493 Relais gesendet 00000010 00000000 00000000 00000000 Turmtechnik V30.2
+20:14:02  Automatic Verbindung O.K.  Uhr A soll=494 Uhr A ist=493 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+20:15:00  save Nebenuhr Verbindung O.K.  Uhr A soll=495 Uhr A ist=494 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+20:15:00  Automatic Verbindung O.K.  Uhr A soll=495 Uhr A ist=494 Relais gesendet 00000000 00000000 00000100 00000000 Turmtechnik V30.2
+20:15:00  Automatic Verbindung O.K.  Uhr A soll=495 Uhr A ist=494 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+20:15:01  Automatic Verbindung O.K.  Uhr A soll=495 Uhr A ist=494 Relais gesendet 00000001 00000000 00000000 00000000 Turmtechnik V30.2
+20:15:02  Automatic Verbindung O.K.  Uhr A soll=495 Uhr A ist=494 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+20:16:00  save Nebenuhr Verbindung O.K.  Uhr A soll=496 Uhr A ist=495 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+20:16:01  Automatic Verbindung O.K.  Uhr A soll=496 Uhr A ist=495 Relais gesendet 00000010 00000000 00000000 00000000 Turmtechnik V30.2
+20:16:02  Automatic Verbindung O.K.  Uhr A soll=496 Uhr A ist=495 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+20:17:00  save Nebenuhr Verbindung O.K.  Uhr A soll=497 Uhr A ist=496 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+20:17:01  Automatic Verbindung O.K.  Uhr A soll=497 Uhr A ist=496 Relais gesendet 00000001 00000000 00000000 00000000 Turmtechnik V30.2
+20:17:02  Automatic Verbindung O.K.  Uhr A soll=497 Uhr A ist=496 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+20:18:00  save Nebenuhr Verbindung O.K.  Uhr A soll=498 Uhr A ist=497 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+20:18:01  Automatic Verbindung O.K.  Uhr A soll=498 Uhr A ist=497 Relais gesendet 00000010 00000000 00000000 00000000 Turmtechnik V30.2
+20:18:02  Automatic Verbindung O.K.  Uhr A soll=498 Uhr A ist=497 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+20:19:00  save Nebenuhr Verbindung O.K.  Uhr A soll=499 Uhr A ist=498 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+20:19:01  Automatic Verbindung O.K.  Uhr A soll=499 Uhr A ist=498 Relais gesendet 00000001 00000000 00000000 00000000 Turmtechnik V30.2
+20:19:02  Automatic Verbindung O.K.  Uhr A soll=499 Uhr A ist=498 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+20:20:00  save Nebenuhr Verbindung O.K.  Uhr A soll=500 Uhr A ist=499 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+20:20:01  Automatic Verbindung O.K.  Uhr A soll=500 Uhr A ist=499 Relais gesendet 00000010 00000000 00000000 00000000 Turmtechnik V30.2
+20:20:02  Automatic Verbindung O.K.  Uhr A soll=500 Uhr A ist=499 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+20:21:00  save Nebenuhr Verbindung O.K.  Uhr A soll=501 Uhr A ist=500 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+20:21:01  Automatic Verbindung O.K.  Uhr A soll=501 Uhr A ist=500 Relais gesendet 00000001 00000000 00000000 00000000 Turmtechnik V30.2
+20:21:02  Automatic Verbindung O.K.  Uhr A soll=501 Uhr A ist=500 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+20:22:00  save Nebenuhr Verbindung O.K.  Uhr A soll=502 Uhr A ist=501 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+20:22:01  Automatic Verbindung O.K.  Uhr A soll=502 Uhr A ist=501 Relais gesendet 00000010 00000000 00000000 00000000 Turmtechnik V30.2
+20:22:02  Automatic Verbindung O.K.  Uhr A soll=502 Uhr A ist=501 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+20:23:00  save Nebenuhr Verbindung O.K.  Uhr A soll=503 Uhr A ist=502 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+20:23:01  Automatic Verbindung O.K.  Uhr A soll=503 Uhr A ist=502 Relais gesendet 00000001 00000000 00000000 00000000 Turmtechnik V30.2
+20:23:02  Automatic Verbindung O.K.  Uhr A soll=503 Uhr A ist=502 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+20:24:00  save Nebenuhr Verbindung O.K.  Uhr A soll=504 Uhr A ist=503 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+20:24:01  Automatic Verbindung O.K.  Uhr A soll=504 Uhr A ist=503 Relais gesendet 00000010 00000000 00000000 00000000 Turmtechnik V30.2
+20:24:02  Automatic Verbindung O.K.  Uhr A soll=504 Uhr A ist=503 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+20:25:00  save Nebenuhr Verbindung O.K.  Uhr A soll=505 Uhr A ist=504 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+20:25:01  Automatic Verbindung O.K.  Uhr A soll=505 Uhr A ist=504 Relais gesendet 00000001 00000000 00000000 00000000 Turmtechnik V30.2
+20:25:02  Automatic Verbindung O.K.  Uhr A soll=505 Uhr A ist=504 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+20:26:00  save Nebenuhr Verbindung O.K.  Uhr A soll=506 Uhr A ist=505 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+20:26:01  Automatic Verbindung O.K.  Uhr A soll=506 Uhr A ist=505 Relais gesendet 00000010 00000000 00000000 00000000 Turmtechnik V30.2
+20:26:02  Automatic Verbindung O.K.  Uhr A soll=506 Uhr A ist=505 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+20:27:00  save Nebenuhr Verbindung O.K.  Uhr A soll=507 Uhr A ist=506 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+20:27:01  Automatic Verbindung O.K.  Uhr A soll=507 Uhr A ist=506 Relais gesendet 00000001 00000000 00000000 00000000 Turmtechnik V30.2
+20:27:02  Automatic Verbindung O.K.  Uhr A soll=507 Uhr A ist=506 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+20:28:00  save Nebenuhr Verbindung O.K.  Uhr A soll=508 Uhr A ist=507 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+20:28:01  Automatic Verbindung O.K.  Uhr A soll=508 Uhr A ist=507 Relais gesendet 00000010 00000000 00000000 00000000 Turmtechnik V30.2
+20:28:02  Automatic Verbindung O.K.  Uhr A soll=508 Uhr A ist=507 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+20:29:00  save Nebenuhr Verbindung O.K.  Uhr A soll=509 Uhr A ist=508 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+20:29:01  Automatic Verbindung O.K.  Uhr A soll=509 Uhr A ist=508 Relais gesendet 00000001 00000000 00000000 00000000 Turmtechnik V30.2
+20:29:02  Automatic Verbindung O.K.  Uhr A soll=509 Uhr A ist=508 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+20:30:00  save Nebenuhr Verbindung O.K.  Uhr A soll=510 Uhr A ist=509 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+20:30:00  Automatic Verbindung O.K.  Uhr A soll=510 Uhr A ist=509 Relais gesendet 00000000 00000000 00000100 00000000 Turmtechnik V30.2
+20:30:00  Automatic Verbindung O.K.  Uhr A soll=510 Uhr A ist=509 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+20:30:01  Automatic Verbindung O.K.  Uhr A soll=510 Uhr A ist=509 Relais gesendet 00000010 00000000 00000000 00000000 Turmtechnik V30.2
+20:30:02  Automatic Verbindung O.K.  Uhr A soll=510 Uhr A ist=509 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+20:30:02  Automatic Verbindung O.K.  Uhr A soll=510 Uhr A ist=509 Relais gesendet 00000000 00000000 00000100 00000000 Turmtechnik V30.2
+20:30:02  Automatic Verbindung O.K.  Uhr A soll=510 Uhr A ist=509 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+20:31:00  save Nebenuhr Verbindung O.K.  Uhr A soll=511 Uhr A ist=510 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+20:31:01  Automatic Verbindung O.K.  Uhr A soll=511 Uhr A ist=510 Relais gesendet 00000001 00000000 00000000 00000000 Turmtechnik V30.2
+20:31:02  Automatic Verbindung O.K.  Uhr A soll=511 Uhr A ist=510 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+20:32:00  save Nebenuhr Verbindung O.K.  Uhr A soll=512 Uhr A ist=511 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+20:32:01  Automatic Verbindung O.K.  Uhr A soll=512 Uhr A ist=511 Relais gesendet 00000010 00000000 00000000 00000000 Turmtechnik V30.2
+20:32:02  Automatic Verbindung O.K.  Uhr A soll=512 Uhr A ist=511 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+20:33:00  save Nebenuhr Verbindung O.K.  Uhr A soll=513 Uhr A ist=512 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+20:33:01  Automatic Verbindung O.K.  Uhr A soll=513 Uhr A ist=512 Relais gesendet 00000001 00000000 00000000 00000000 Turmtechnik V30.2
+20:33:02  Automatic Verbindung O.K.  Uhr A soll=513 Uhr A ist=512 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+20:34:00  save Nebenuhr Verbindung O.K.  Uhr A soll=514 Uhr A ist=513 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+20:34:01  Automatic Verbindung O.K.  Uhr A soll=514 Uhr A ist=513 Relais gesendet 00000010 00000000 00000000 00000000 Turmtechnik V30.2
+20:34:02  Automatic Verbindung O.K.  Uhr A soll=514 Uhr A ist=513 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+20:35:00  save Nebenuhr Verbindung O.K.  Uhr A soll=515 Uhr A ist=514 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+20:35:01  Automatic Verbindung O.K.  Uhr A soll=515 Uhr A ist=514 Relais gesendet 00000001 00000000 00000000 00000000 Turmtechnik V30.2
+20:35:02  Automatic Verbindung O.K.  Uhr A soll=515 Uhr A ist=514 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+20:36:00  save Nebenuhr Verbindung O.K.  Uhr A soll=516 Uhr A ist=515 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+20:36:01  Automatic Verbindung O.K.  Uhr A soll=516 Uhr A ist=515 Relais gesendet 00000010 00000000 00000000 00000000 Turmtechnik V30.2
+20:36:02  Automatic Verbindung O.K.  Uhr A soll=516 Uhr A ist=515 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+20:37:00  save Nebenuhr Verbindung O.K.  Uhr A soll=517 Uhr A ist=516 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+20:37:01  Automatic Verbindung O.K.  Uhr A soll=517 Uhr A ist=516 Relais gesendet 00000001 00000000 00000000 00000000 Turmtechnik V30.2
+20:37:02  Automatic Verbindung O.K.  Uhr A soll=517 Uhr A ist=516 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+20:38:00  save Nebenuhr Verbindung O.K.  Uhr A soll=518 Uhr A ist=517 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+20:38:01  Automatic Verbindung O.K.  Uhr A soll=518 Uhr A ist=517 Relais gesendet 00000010 00000000 00000000 00000000 Turmtechnik V30.2
+20:38:02  Automatic Verbindung O.K.  Uhr A soll=518 Uhr A ist=517 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+20:39:00  save Nebenuhr Verbindung O.K.  Uhr A soll=519 Uhr A ist=518 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+20:39:01  Automatic Verbindung O.K.  Uhr A soll=519 Uhr A ist=518 Relais gesendet 00000001 00000000 00000000 00000000 Turmtechnik V30.2
+20:39:02  Automatic Verbindung O.K.  Uhr A soll=519 Uhr A ist=518 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+20:40:00  save Nebenuhr Verbindung O.K.  Uhr A soll=520 Uhr A ist=519 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+20:40:01  Automatic Verbindung O.K.  Uhr A soll=520 Uhr A ist=519 Relais gesendet 00000010 00000000 00000000 00000000 Turmtechnik V30.2
+20:40:02  Automatic Verbindung O.K.  Uhr A soll=520 Uhr A ist=519 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+20:41:00  save Nebenuhr Verbindung O.K.  Uhr A soll=521 Uhr A ist=520 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+20:41:01  Automatic Verbindung O.K.  Uhr A soll=521 Uhr A ist=520 Relais gesendet 00000001 00000000 00000000 00000000 Turmtechnik V30.2
+20:41:02  Automatic Verbindung O.K.  Uhr A soll=521 Uhr A ist=520 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+20:42:00  save Nebenuhr Verbindung O.K.  Uhr A soll=522 Uhr A ist=521 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+20:42:01  Automatic Verbindung O.K.  Uhr A soll=522 Uhr A ist=521 Relais gesendet 00000010 00000000 00000000 00000000 Turmtechnik V30.2
+20:42:02  Automatic Verbindung O.K.  Uhr A soll=522 Uhr A ist=521 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+20:43:00  save Nebenuhr Verbindung O.K.  Uhr A soll=523 Uhr A ist=522 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+20:43:01  Automatic Verbindung O.K.  Uhr A soll=523 Uhr A ist=522 Relais gesendet 00000001 00000000 00000000 00000000 Turmtechnik V30.2
+20:43:02  Automatic Verbindung O.K.  Uhr A soll=523 Uhr A ist=522 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+20:44:00  save Nebenuhr Verbindung O.K.  Uhr A soll=524 Uhr A ist=523 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+20:44:01  Automatic Verbindung O.K.  Uhr A soll=524 Uhr A ist=523 Relais gesendet 00000010 00000000 00000000 00000000 Turmtechnik V30.2
+20:44:02  Automatic Verbindung O.K.  Uhr A soll=524 Uhr A ist=523 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+20:45:00  save Nebenuhr Verbindung O.K.  Uhr A soll=525 Uhr A ist=524 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+20:45:00  Automatic Verbindung O.K.  Uhr A soll=525 Uhr A ist=524 Relais gesendet 00000000 00000000 00000100 00000000 Turmtechnik V30.2
+20:45:00  Automatic Verbindung O.K.  Uhr A soll=525 Uhr A ist=524 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+20:45:01  Automatic Verbindung O.K.  Uhr A soll=525 Uhr A ist=524 Relais gesendet 00000001 00000000 00000000 00000000 Turmtechnik V30.2
+20:45:02  Automatic Verbindung O.K.  Uhr A soll=525 Uhr A ist=524 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+20:45:02  Automatic Verbindung O.K.  Uhr A soll=525 Uhr A ist=524 Relais gesendet 00000000 00000000 00000100 00000000 Turmtechnik V30.2
+20:45:02  Automatic Verbindung O.K.  Uhr A soll=525 Uhr A ist=524 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+20:45:04  Automatic Verbindung O.K.  Uhr A soll=525 Uhr A ist=525 Relais gesendet 00000000 00000000 00000100 00000000 Turmtechnik V30.2
+20:45:04  Automatic Verbindung O.K.  Uhr A soll=525 Uhr A ist=525 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+20:46:00  save Nebenuhr Verbindung O.K.  Uhr A soll=526 Uhr A ist=525 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+20:46:01  Automatic Verbindung O.K.  Uhr A soll=526 Uhr A ist=525 Relais gesendet 00000010 00000000 00000000 00000000 Turmtechnik V30.2
+20:46:02  Automatic Verbindung O.K.  Uhr A soll=526 Uhr A ist=525 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+20:47:00  save Nebenuhr Verbindung O.K.  Uhr A soll=527 Uhr A ist=526 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+20:47:01  Automatic Verbindung O.K.  Uhr A soll=527 Uhr A ist=526 Relais gesendet 00000001 00000000 00000000 00000000 Turmtechnik V30.2
+20:47:02  Automatic Verbindung O.K.  Uhr A soll=527 Uhr A ist=526 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+20:48:00  save Nebenuhr Verbindung O.K.  Uhr A soll=528 Uhr A ist=527 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+20:48:01  Automatic Verbindung O.K.  Uhr A soll=528 Uhr A ist=527 Relais gesendet 00000010 00000000 00000000 00000000 Turmtechnik V30.2
+20:48:02  Automatic Verbindung O.K.  Uhr A soll=528 Uhr A ist=527 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+20:49:00  save Nebenuhr Verbindung O.K.  Uhr A soll=529 Uhr A ist=528 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+20:49:01  Automatic Verbindung O.K.  Uhr A soll=529 Uhr A ist=528 Relais gesendet 00000001 00000000 00000000 00000000 Turmtechnik V30.2
+20:49:02  Automatic Verbindung O.K.  Uhr A soll=529 Uhr A ist=528 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+20:50:00  save Nebenuhr Verbindung O.K.  Uhr A soll=530 Uhr A ist=529 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+20:50:01  Automatic Verbindung O.K.  Uhr A soll=530 Uhr A ist=529 Relais gesendet 00000010 00000000 00000000 00000000 Turmtechnik V30.2
+20:50:02  Automatic Verbindung O.K.  Uhr A soll=530 Uhr A ist=529 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+20:51:00  save Nebenuhr Verbindung O.K.  Uhr A soll=531 Uhr A ist=530 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+20:51:01  Automatic Verbindung O.K.  Uhr A soll=531 Uhr A ist=530 Relais gesendet 00000001 00000000 00000000 00000000 Turmtechnik V30.2
+20:51:02  Automatic Verbindung O.K.  Uhr A soll=531 Uhr A ist=530 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+20:52:00  save Nebenuhr Verbindung O.K.  Uhr A soll=532 Uhr A ist=531 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+20:52:01  Automatic Verbindung O.K.  Uhr A soll=532 Uhr A ist=531 Relais gesendet 00000010 00000000 00000000 00000000 Turmtechnik V30.2
+20:52:02  Automatic Verbindung O.K.  Uhr A soll=532 Uhr A ist=531 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+20:53:00  save Nebenuhr Verbindung O.K.  Uhr A soll=533 Uhr A ist=532 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+20:53:01  Automatic Verbindung O.K.  Uhr A soll=533 Uhr A ist=532 Relais gesendet 00000001 00000000 00000000 00000000 Turmtechnik V30.2
+20:53:02  Automatic Verbindung O.K.  Uhr A soll=533 Uhr A ist=532 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+20:54:00  save Nebenuhr Verbindung O.K.  Uhr A soll=533 Uhr A ist=533 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+20:54:01  Automatic Verbindung O.K.  Uhr A soll=534 Uhr A ist=533 Relais gesendet 00000010 00000000 00000000 00000000 Turmtechnik V30.2
+20:54:02  Automatic Verbindung O.K.  Uhr A soll=534 Uhr A ist=533 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+20:55:00  save Nebenuhr Verbindung O.K.  Uhr A soll=535 Uhr A ist=534 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+20:55:01  Automatic Verbindung O.K.  Uhr A soll=535 Uhr A ist=534 Relais gesendet 00000001 00000000 00000000 00000000 Turmtechnik V30.2
+20:55:02  Automatic Verbindung O.K.  Uhr A soll=535 Uhr A ist=534 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+20:56:00  save Nebenuhr Verbindung O.K.  Uhr A soll=536 Uhr A ist=535 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+20:56:01  Automatic Verbindung O.K.  Uhr A soll=536 Uhr A ist=535 Relais gesendet 00000010 00000000 00000000 00000000 Turmtechnik V30.2
+20:56:02  Automatic Verbindung O.K.  Uhr A soll=536 Uhr A ist=535 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+20:57:00  save Nebenuhr Verbindung O.K.  Uhr A soll=537 Uhr A ist=536 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+20:57:01  Automatic Verbindung O.K.  Uhr A soll=537 Uhr A ist=536 Relais gesendet 00000001 00000000 00000000 00000000 Turmtechnik V30.2
+20:57:02  Automatic Verbindung O.K.  Uhr A soll=537 Uhr A ist=536 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+20:58:00  save Nebenuhr Verbindung O.K.  Uhr A soll=538 Uhr A ist=537 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+20:58:01  Automatic Verbindung O.K.  Uhr A soll=538 Uhr A ist=537 Relais gesendet 00000010 00000000 00000000 00000000 Turmtechnik V30.2
+20:58:02  Automatic Verbindung O.K.  Uhr A soll=538 Uhr A ist=537 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+20:59:00  save Nebenuhr Verbindung O.K.  Uhr A soll=539 Uhr A ist=538 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+20:59:01  Automatic Verbindung O.K.  Uhr A soll=539 Uhr A ist=538 Relais gesendet 00000001 00000000 00000000 00000000 Turmtechnik V30.2
+20:59:02  Automatic Verbindung O.K.  Uhr A soll=539 Uhr A ist=538 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+21:00:00  save Nebenuhr Verbindung O.K.  Uhr A soll=540 Uhr A ist=539 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+21:00:00  Automatic Verbindung O.K.  Uhr A soll=540 Uhr A ist=539 Relais gesendet 00000000 00000000 00000100 00000000 Turmtechnik V30.2
+21:00:00  Automatic Verbindung O.K.  Uhr A soll=540 Uhr A ist=539 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+21:00:01  Automatic Verbindung O.K.  Uhr A soll=540 Uhr A ist=539 Relais gesendet 00000010 00000000 00000000 00000000 Turmtechnik V30.2
+21:00:02  Automatic Verbindung O.K.  Uhr A soll=540 Uhr A ist=539 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+21:00:02  Automatic Verbindung O.K.  Uhr A soll=540 Uhr A ist=539 Relais gesendet 00000000 00000000 00000100 00000000 Turmtechnik V30.2
+21:00:02  Automatic Verbindung O.K.  Uhr A soll=540 Uhr A ist=539 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+21:00:04  Automatic Verbindung O.K.  Uhr A soll=540 Uhr A ist=540 Relais gesendet 00000000 00000000 00000100 00000000 Turmtechnik V30.2
+21:00:04  Automatic Verbindung O.K.  Uhr A soll=540 Uhr A ist=540 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+21:00:06  Automatic Verbindung O.K.  Uhr A soll=540 Uhr A ist=540 Relais gesendet 00000000 00000000 00000100 00000000 Turmtechnik V30.2
+21:00:06  Automatic Verbindung O.K.  Uhr A soll=540 Uhr A ist=540 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+21:00:08  Automatic Verbindung O.K.  Uhr A soll=540 Uhr A ist=540 Relais gesendet 00000000 01000000 00000000 00000000 Turmtechnik V30.2
+21:00:09  Automatic Verbindung O.K.  Uhr A soll=540 Uhr A ist=540 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+21:00:11  Automatic Verbindung O.K.  Uhr A soll=540 Uhr A ist=540 Relais gesendet 00000000 01000000 00000000 00000000 Turmtechnik V30.2
+21:00:11  Automatic Verbindung O.K.  Uhr A soll=540 Uhr A ist=540 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+21:00:13  Automatic Verbindung O.K.  Uhr A soll=540 Uhr A ist=540 Relais gesendet 00000000 01000000 00000000 00000000 Turmtechnik V30.2
+21:00:13  Automatic Verbindung O.K.  Uhr A soll=540 Uhr A ist=540 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+21:00:15  Automatic Verbindung O.K.  Uhr A soll=540 Uhr A ist=540 Relais gesendet 00000000 01000000 00000000 00000000 Turmtechnik V30.2
+21:00:15  Automatic Verbindung O.K.  Uhr A soll=540 Uhr A ist=540 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+21:00:17  Automatic Verbindung O.K.  Uhr A soll=540 Uhr A ist=540 Relais gesendet 00000000 01000000 00000000 00000000 Turmtechnik V30.2
+21:00:17  Automatic Verbindung O.K.  Uhr A soll=540 Uhr A ist=540 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+21:00:19  Automatic Verbindung O.K.  Uhr A soll=540 Uhr A ist=540 Relais gesendet 00000000 01000000 00000000 00000000 Turmtechnik V30.2
+21:00:19  Automatic Verbindung O.K.  Uhr A soll=540 Uhr A ist=540 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+21:00:21  Automatic Verbindung O.K.  Uhr A soll=540 Uhr A ist=540 Relais gesendet 00000000 01000000 00000000 00000000 Turmtechnik V30.2
+21:00:22  Automatic Verbindung O.K.  Uhr A soll=540 Uhr A ist=540 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+21:00:23  Automatic Verbindung O.K.  Uhr A soll=540 Uhr A ist=540 Relais gesendet 00000000 01000000 00000000 00000000 Turmtechnik V30.2
+21:00:24  Automatic Verbindung O.K.  Uhr A soll=540 Uhr A ist=540 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+21:00:25  Automatic Verbindung O.K.  Uhr A soll=540 Uhr A ist=540 Relais gesendet 00000000 01000000 00000000 00000000 Turmtechnik V30.2
+21:00:26  Automatic Verbindung O.K.  Uhr A soll=540 Uhr A ist=540 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+21:01:00  save Nebenuhr Verbindung O.K.  Uhr A soll=541 Uhr A ist=540 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+21:01:01  Automatic Verbindung O.K.  Uhr A soll=541 Uhr A ist=540 Relais gesendet 00000001 00000000 00000000 00000000 Turmtechnik V30.2
+21:01:02  Automatic Verbindung O.K.  Uhr A soll=541 Uhr A ist=540 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+21:02:00  save Nebenuhr Verbindung O.K.  Uhr A soll=542 Uhr A ist=541 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+21:02:01  Automatic Verbindung O.K.  Uhr A soll=542 Uhr A ist=541 Relais gesendet 00000010 00000000 00000000 00000000 Turmtechnik V30.2
+21:02:02  Automatic Verbindung O.K.  Uhr A soll=542 Uhr A ist=541 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+21:03:00  save Nebenuhr Verbindung O.K.  Uhr A soll=543 Uhr A ist=542 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+21:03:01  Automatic Verbindung O.K.  Uhr A soll=543 Uhr A ist=542 Relais gesendet 00000001 00000000 00000000 00000000 Turmtechnik V30.2
+21:03:02  Automatic Verbindung O.K.  Uhr A soll=543 Uhr A ist=542 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+21:04:00  save Nebenuhr Verbindung O.K.  Uhr A soll=544 Uhr A ist=543 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+21:04:01  Automatic Verbindung O.K.  Uhr A soll=544 Uhr A ist=543 Relais gesendet 00000010 00000000 00000000 00000000 Turmtechnik V30.2
+21:04:02  Automatic Verbindung O.K.  Uhr A soll=544 Uhr A ist=543 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+21:05:00  save Nebenuhr Verbindung O.K.  Uhr A soll=545 Uhr A ist=544 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+21:05:01  Automatic Verbindung O.K.  Uhr A soll=545 Uhr A ist=544 Relais gesendet 00000001 00000000 00000000 00000000 Turmtechnik V30.2
+21:05:02  Automatic Verbindung O.K.  Uhr A soll=545 Uhr A ist=544 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+21:06:00  save Nebenuhr Verbindung O.K.  Uhr A soll=546 Uhr A ist=545 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+21:06:01  Automatic Verbindung O.K.  Uhr A soll=546 Uhr A ist=545 Relais gesendet 00000010 00000000 00000000 00000000 Turmtechnik V30.2
+21:06:02  Automatic Verbindung O.K.  Uhr A soll=546 Uhr A ist=545 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+21:07:00  save Nebenuhr Verbindung O.K.  Uhr A soll=547 Uhr A ist=546 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+21:07:01  Automatic Verbindung O.K.  Uhr A soll=547 Uhr A ist=546 Relais gesendet 00000001 00000000 00000000 00000000 Turmtechnik V30.2
+21:07:02  Automatic Verbindung O.K.  Uhr A soll=547 Uhr A ist=546 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+21:08:00  save Nebenuhr Verbindung O.K.  Uhr A soll=548 Uhr A ist=547 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+21:08:01  Automatic Verbindung O.K.  Uhr A soll=548 Uhr A ist=547 Relais gesendet 00000010 00000000 00000000 00000000 Turmtechnik V30.2
+21:08:02  Automatic Verbindung O.K.  Uhr A soll=548 Uhr A ist=547 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+21:09:00  save Nebenuhr Verbindung O.K.  Uhr A soll=549 Uhr A ist=548 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+21:09:01  Automatic Verbindung O.K.  Uhr A soll=549 Uhr A ist=548 Relais gesendet 00000001 00000000 00000000 00000000 Turmtechnik V30.2
+21:09:02  Automatic Verbindung O.K.  Uhr A soll=549 Uhr A ist=548 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+21:10:00  save Nebenuhr Verbindung O.K.  Uhr A soll=550 Uhr A ist=549 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+21:10:01  Automatic Verbindung O.K.  Uhr A soll=550 Uhr A ist=549 Relais gesendet 00000010 00000000 00000000 00000000 Turmtechnik V30.2
+21:10:02  Automatic Verbindung O.K.  Uhr A soll=550 Uhr A ist=549 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+21:11:00  save Nebenuhr Verbindung O.K.  Uhr A soll=551 Uhr A ist=550 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+21:11:01  Automatic Verbindung O.K.  Uhr A soll=551 Uhr A ist=550 Relais gesendet 00000001 00000000 00000000 00000000 Turmtechnik V30.2
+21:11:02  Automatic Verbindung O.K.  Uhr A soll=551 Uhr A ist=550 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+21:12:00  save Nebenuhr Verbindung O.K.  Uhr A soll=552 Uhr A ist=551 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+21:12:01  Automatic Verbindung O.K.  Uhr A soll=552 Uhr A ist=551 Relais gesendet 00000010 00000000 00000000 00000000 Turmtechnik V30.2
+21:12:02  Automatic Verbindung O.K.  Uhr A soll=552 Uhr A ist=551 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+21:13:00  save Nebenuhr Verbindung O.K.  Uhr A soll=553 Uhr A ist=552 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+21:13:01  Automatic Verbindung O.K.  Uhr A soll=553 Uhr A ist=552 Relais gesendet 00000001 00000000 00000000 00000000 Turmtechnik V30.2
+21:13:02  Automatic Verbindung O.K.  Uhr A soll=553 Uhr A ist=552 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+21:14:00  save Nebenuhr Verbindung O.K.  Uhr A soll=554 Uhr A ist=553 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+21:14:01  Automatic Verbindung O.K.  Uhr A soll=554 Uhr A ist=553 Relais gesendet 00000010 00000000 00000000 00000000 Turmtechnik V30.2
+21:14:02  Automatic Verbindung O.K.  Uhr A soll=554 Uhr A ist=553 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+21:15:00  save Nebenuhr Verbindung O.K.  Uhr A soll=555 Uhr A ist=554 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+21:15:01  Automatic Verbindung O.K.  Uhr A soll=555 Uhr A ist=554 Relais gesendet 00000001 00000000 00000000 00000000 Turmtechnik V30.2
+21:15:02  Automatic Verbindung O.K.  Uhr A soll=555 Uhr A ist=554 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+21:16:00  save Nebenuhr Verbindung O.K.  Uhr A soll=556 Uhr A ist=555 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+21:16:01  Automatic Verbindung O.K.  Uhr A soll=556 Uhr A ist=555 Relais gesendet 00000010 00000000 00000000 00000000 Turmtechnik V30.2
+21:16:02  Automatic Verbindung O.K.  Uhr A soll=556 Uhr A ist=555 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+21:17:00  save Nebenuhr Verbindung O.K.  Uhr A soll=557 Uhr A ist=556 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+21:17:01  Automatic Verbindung O.K.  Uhr A soll=557 Uhr A ist=556 Relais gesendet 00000001 00000000 00000000 00000000 Turmtechnik V30.2
+21:17:02  Automatic Verbindung O.K.  Uhr A soll=557 Uhr A ist=556 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+21:18:00  save Nebenuhr Verbindung O.K.  Uhr A soll=558 Uhr A ist=557 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+21:18:01  Automatic Verbindung O.K.  Uhr A soll=558 Uhr A ist=557 Relais gesendet 00000010 00000000 00000000 00000000 Turmtechnik V30.2
+21:18:02  Automatic Verbindung O.K.  Uhr A soll=558 Uhr A ist=557 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+21:19:00  save Nebenuhr Verbindung O.K.  Uhr A soll=559 Uhr A ist=558 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+21:19:01  Automatic Verbindung O.K.  Uhr A soll=559 Uhr A ist=558 Relais gesendet 00000001 00000000 00000000 00000000 Turmtechnik V30.2
+21:19:02  Automatic Verbindung O.K.  Uhr A soll=559 Uhr A ist=558 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+21:20:00  save Nebenuhr Verbindung O.K.  Uhr A soll=560 Uhr A ist=559 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+21:20:01  Automatic Verbindung O.K.  Uhr A soll=560 Uhr A ist=559 Relais gesendet 00000010 00000000 00000000 00000000 Turmtechnik V30.2
+21:20:02  Automatic Verbindung O.K.  Uhr A soll=560 Uhr A ist=559 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+21:21:00  save Nebenuhr Verbindung O.K.  Uhr A soll=561 Uhr A ist=560 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+21:21:01  Automatic Verbindung O.K.  Uhr A soll=561 Uhr A ist=560 Relais gesendet 00000001 00000000 00000000 00000000 Turmtechnik V30.2
+21:21:02  Automatic Verbindung O.K.  Uhr A soll=561 Uhr A ist=560 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+21:22:00  save Nebenuhr Verbindung O.K.  Uhr A soll=562 Uhr A ist=561 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+21:22:01  Automatic Verbindung O.K.  Uhr A soll=562 Uhr A ist=561 Relais gesendet 00000010 00000000 00000000 00000000 Turmtechnik V30.2
+21:22:02  Automatic Verbindung O.K.  Uhr A soll=562 Uhr A ist=561 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+21:23:00  save Nebenuhr Verbindung O.K.  Uhr A soll=563 Uhr A ist=562 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+21:23:01  Automatic Verbindung O.K.  Uhr A soll=563 Uhr A ist=562 Relais gesendet 00000001 00000000 00000000 00000000 Turmtechnik V30.2
+21:23:02  Automatic Verbindung O.K.  Uhr A soll=563 Uhr A ist=562 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+21:24:00  save Nebenuhr Verbindung O.K.  Uhr A soll=564 Uhr A ist=563 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+21:24:01  Automatic Verbindung O.K.  Uhr A soll=564 Uhr A ist=563 Relais gesendet 00000010 00000000 00000000 00000000 Turmtechnik V30.2
+21:24:02  Automatic Verbindung O.K.  Uhr A soll=564 Uhr A ist=563 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+21:25:00  save Nebenuhr Verbindung O.K.  Uhr A soll=565 Uhr A ist=564 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+21:25:01  Automatic Verbindung O.K.  Uhr A soll=565 Uhr A ist=564 Relais gesendet 00000001 00000000 00000000 00000000 Turmtechnik V30.2
+21:25:02  Automatic Verbindung O.K.  Uhr A soll=565 Uhr A ist=564 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+21:26:00  save Nebenuhr Verbindung O.K.  Uhr A soll=566 Uhr A ist=565 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+21:26:01  Automatic Verbindung O.K.  Uhr A soll=566 Uhr A ist=565 Relais gesendet 00000010 00000000 00000000 00000000 Turmtechnik V30.2
+21:26:02  Automatic Verbindung O.K.  Uhr A soll=566 Uhr A ist=565 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+21:27:00  save Nebenuhr Verbindung O.K.  Uhr A soll=566 Uhr A ist=566 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+21:27:01  Automatic Verbindung O.K.  Uhr A soll=567 Uhr A ist=566 Relais gesendet 00000001 00000000 00000000 00000000 Turmtechnik V30.2
+21:27:02  Automatic Verbindung O.K.  Uhr A soll=567 Uhr A ist=566 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+21:27:05  Automatic Verbindung O.K.  Uhr A soll=567 Uhr A ist=567 Relais gesendet 00000000 00000000 00100000 00000000 Turmtechnik V30.2
+21:27:35  Automatic Verbindung O.K.  Uhr A soll=567 Uhr A ist=567 Relais gesendet 00000100 00000000 00100000 00000000 Turmtechnik V30.2
+21:27:45  Automatic Verbindung O.K.  Uhr A soll=567 Uhr A ist=567 Relais gesendet 00001100 00000000 00100000 00000000 Turmtechnik V30.2
+21:27:50  Automatic Verbindung O.K.  Uhr A soll=567 Uhr A ist=567 Relais gesendet 00011100 00000000 00100000 00000000 Turmtechnik V30.2
+21:28:00  save Nebenuhr Verbindung O.K.  Uhr A soll=568 Uhr A ist=567 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+21:28:00  Automatic Verbindung O.K.  Uhr A soll=568 Uhr A ist=567 Relais gesendet 10011100 00000000 00110000 00000000 Turmtechnik V30.2
+21:28:01  Automatic Verbindung O.K.  Uhr A soll=568 Uhr A ist=567 Relais gesendet 10011110 00000000 00110000 00000000 Turmtechnik V30.2
+21:28:02  Automatic Verbindung O.K.  Uhr A soll=568 Uhr A ist=567 Relais gesendet 10011100 00000000 00110000 00000000 Turmtechnik V30.2
+21:28:05  Automatic Verbindung O.K.  Uhr A soll=568 Uhr A ist=568 Relais gesendet 10011100 00000001 00110000 00000000 Turmtechnik V30.2
+21:28:10  Automatic Verbindung O.K.  Uhr A soll=568 Uhr A ist=568 Relais gesendet 10011100 00000011 00110000 00000000 Turmtechnik V30.2
+21:28:15  Automatic Verbindung O.K.  Uhr A soll=568 Uhr A ist=568 Relais gesendet 10011100 00000111 00110000 00000000 Turmtechnik V30.2
+21:28:20  Automatic Verbindung O.K.  Uhr A soll=568 Uhr A ist=568 Relais gesendet 10111100 00000111 00110000 00000000 Turmtechnik V30.2
+21:28:20  Automatic Verbindung O.K.  Uhr A soll=568 Uhr A ist=568 Relais gesendet 10111100 00001111 00110000 00000000 Turmtechnik V30.2
+21:28:25  Automatic Verbindung O.K.  Uhr A soll=568 Uhr A ist=568 Relais gesendet 11111100 00001111 00110000 00000000 Turmtechnik V30.2
+21:28:25  Automatic Verbindung O.K.  Uhr A soll=568 Uhr A ist=568 Relais gesendet 11111100 00011111 00110000 00000000 Turmtechnik V30.2
+21:28:30  Automatic Verbindung O.K.  Uhr A soll=568 Uhr A ist=568 Relais gesendet 11111100 00111111 00110000 00000000 Turmtechnik V30.2
+21:28:41  Automatic Verbindung O.K.  Uhr A soll=568 Uhr A ist=568 Relais gesendet 10111100 00011111 00110000 00000000 Turmtechnik V30.2
+21:28:46  Automatic Verbindung O.K.  Uhr A soll=568 Uhr A ist=568 Relais gesendet 10011100 00001111 00110000 00000000 Turmtechnik V30.2
+21:28:51  Automatic Verbindung O.K.  Uhr A soll=568 Uhr A ist=568 Relais gesendet 10001100 00000111 00110000 00000000 Turmtechnik V30.2
+21:28:56  Automatic Verbindung O.K.  Uhr A soll=568 Uhr A ist=568 Relais gesendet 10000100 00000011 00110000 00000000 Turmtechnik V30.2
+21:29:00  save Nebenuhr Verbindung O.K.  Uhr A soll=569 Uhr A ist=568 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+21:29:01  Automatic Verbindung O.K.  Uhr A soll=569 Uhr A ist=568 Relais gesendet 10000101 00000011 00110000 00000000 Turmtechnik V30.2
+21:29:01  Automatic Verbindung O.K.  Uhr A soll=569 Uhr A ist=568 Relais gesendet 10000001 00000001 00110000 00000000 Turmtechnik V30.2
+21:29:02  Automatic Verbindung O.K.  Uhr A soll=569 Uhr A ist=568 Relais gesendet 10000000 00000001 00110000 00000000 Turmtechnik V30.2
+21:29:06  Automatic Verbindung O.K.  Uhr A soll=569 Uhr A ist=569 Relais gesendet 10000000 00000000 00010000 00000000 Turmtechnik V30.2
+21:29:11  Automatic Verbindung O.K.  Uhr A soll=569 Uhr A ist=569 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+21:30:00  save Nebenuhr Verbindung O.K.  Uhr A soll=569 Uhr A ist=569 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+21:30:01  Automatic Verbindung O.K.  Uhr A soll=570 Uhr A ist=569 Relais gesendet 00000010 00000000 00000000 00000000 Turmtechnik V30.2
+21:30:02  Automatic Verbindung O.K.  Uhr A soll=570 Uhr A ist=569 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+21:31:00  save Nebenuhr Verbindung O.K.  Uhr A soll=571 Uhr A ist=570 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+21:31:01  Automatic Verbindung O.K.  Uhr A soll=571 Uhr A ist=570 Relais gesendet 00000001 00000000 00000000 00000000 Turmtechnik V30.2
+21:31:02  Automatic Verbindung O.K.  Uhr A soll=571 Uhr A ist=570 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+21:32:00  save Nebenuhr Verbindung O.K.  Uhr A soll=572 Uhr A ist=571 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+21:32:01  Automatic Verbindung O.K.  Uhr A soll=572 Uhr A ist=571 Relais gesendet 00000010 00000000 00000000 00000000 Turmtechnik V30.2
+21:32:02  Automatic Verbindung O.K.  Uhr A soll=572 Uhr A ist=571 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+21:33:00  save Nebenuhr Verbindung O.K.  Uhr A soll=573 Uhr A ist=572 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+21:33:01  Automatic Verbindung O.K.  Uhr A soll=573 Uhr A ist=572 Relais gesendet 00000001 00000000 00000000 00000000 Turmtechnik V30.2
+21:33:02  Automatic Verbindung O.K.  Uhr A soll=573 Uhr A ist=572 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+21:34:00  save Nebenuhr Verbindung O.K.  Uhr A soll=574 Uhr A ist=573 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+21:34:01  Automatic Verbindung O.K.  Uhr A soll=574 Uhr A ist=573 Relais gesendet 00000010 00000000 00000000 00000000 Turmtechnik V30.2
+21:34:02  Automatic Verbindung O.K.  Uhr A soll=574 Uhr A ist=573 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+21:35:00  save Nebenuhr Verbindung O.K.  Uhr A soll=575 Uhr A ist=574 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+21:35:01  Automatic Verbindung O.K.  Uhr A soll=575 Uhr A ist=574 Relais gesendet 00000001 00000000 00000000 00000000 Turmtechnik V30.2
+21:35:02  Automatic Verbindung O.K.  Uhr A soll=575 Uhr A ist=574 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+21:36:00  save Nebenuhr Verbindung O.K.  Uhr A soll=576 Uhr A ist=575 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+21:36:01  Automatic Verbindung O.K.  Uhr A soll=576 Uhr A ist=575 Relais gesendet 00000010 00000000 00000000 00000000 Turmtechnik V30.2
+21:36:02  Automatic Verbindung O.K.  Uhr A soll=576 Uhr A ist=575 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+21:37:00  save Nebenuhr Verbindung O.K.  Uhr A soll=577 Uhr A ist=576 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+21:37:01  Automatic Verbindung O.K.  Uhr A soll=577 Uhr A ist=576 Relais gesendet 00000001 00000000 00000000 00000000 Turmtechnik V30.2
+21:37:02  Automatic Verbindung O.K.  Uhr A soll=577 Uhr A ist=576 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+21:38:00  save Nebenuhr Verbindung O.K.  Uhr A soll=578 Uhr A ist=577 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+21:38:01  Automatic Verbindung O.K.  Uhr A soll=578 Uhr A ist=577 Relais gesendet 00000010 00000000 00000000 00000000 Turmtechnik V30.2
+21:38:02  Automatic Verbindung O.K.  Uhr A soll=578 Uhr A ist=577 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+21:39:00  save Nebenuhr Verbindung O.K.  Uhr A soll=579 Uhr A ist=578 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+21:39:01  Automatic Verbindung O.K.  Uhr A soll=579 Uhr A ist=578 Relais gesendet 00000001 00000000 00000000 00000000 Turmtechnik V30.2
+21:39:02  Automatic Verbindung O.K.  Uhr A soll=579 Uhr A ist=578 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+21:40:00  save Nebenuhr Verbindung O.K.  Uhr A soll=580 Uhr A ist=579 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+21:40:01  Automatic Verbindung O.K.  Uhr A soll=580 Uhr A ist=579 Relais gesendet 00000010 00000000 00000000 00000000 Turmtechnik V30.2
+21:40:02  Automatic Verbindung O.K.  Uhr A soll=580 Uhr A ist=579 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+21:41:00  save Nebenuhr Verbindung O.K.  Uhr A soll=581 Uhr A ist=580 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+21:41:01  Automatic Verbindung O.K.  Uhr A soll=581 Uhr A ist=580 Relais gesendet 00000001 00000000 00000000 00000000 Turmtechnik V30.2
+21:41:02  Automatic Verbindung O.K.  Uhr A soll=581 Uhr A ist=580 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+21:42:00  save Nebenuhr Verbindung O.K.  Uhr A soll=582 Uhr A ist=581 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+21:42:01  Automatic Verbindung O.K.  Uhr A soll=582 Uhr A ist=581 Relais gesendet 00000010 00000000 00000000 00000000 Turmtechnik V30.2
+21:42:02  Automatic Verbindung O.K.  Uhr A soll=582 Uhr A ist=581 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+21:43:00  save Nebenuhr Verbindung O.K.  Uhr A soll=583 Uhr A ist=582 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+21:43:01  Automatic Verbindung O.K.  Uhr A soll=583 Uhr A ist=582 Relais gesendet 00000001 00000000 00000000 00000000 Turmtechnik V30.2
+21:43:02  Automatic Verbindung O.K.  Uhr A soll=583 Uhr A ist=582 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+21:44:00  save Nebenuhr Verbindung O.K.  Uhr A soll=584 Uhr A ist=583 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+21:44:01  Automatic Verbindung O.K.  Uhr A soll=584 Uhr A ist=583 Relais gesendet 00000010 00000000 00000000 00000000 Turmtechnik V30.2
+21:44:02  Automatic Verbindung O.K.  Uhr A soll=584 Uhr A ist=583 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+21:45:00  save Nebenuhr Verbindung O.K.  Uhr A soll=585 Uhr A ist=584 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+21:45:01  Automatic Verbindung O.K.  Uhr A soll=585 Uhr A ist=584 Relais gesendet 00000001 00000000 00000000 00000000 Turmtechnik V30.2
+21:45:02  Automatic Verbindung O.K.  Uhr A soll=585 Uhr A ist=584 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+21:46:00  save Nebenuhr Verbindung O.K.  Uhr A soll=586 Uhr A ist=585 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+21:46:01  Automatic Verbindung O.K.  Uhr A soll=586 Uhr A ist=585 Relais gesendet 00000010 00000000 00000000 00000000 Turmtechnik V30.2
+21:46:02  Automatic Verbindung O.K.  Uhr A soll=586 Uhr A ist=585 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+21:47:00  save Nebenuhr Verbindung O.K.  Uhr A soll=587 Uhr A ist=586 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+21:47:01  Automatic Verbindung O.K.  Uhr A soll=587 Uhr A ist=586 Relais gesendet 00000001 00000000 00000000 00000000 Turmtechnik V30.2
+21:47:02  Automatic Verbindung O.K.  Uhr A soll=587 Uhr A ist=586 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+21:48:00  save Nebenuhr Verbindung O.K.  Uhr A soll=588 Uhr A ist=587 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+21:48:01  Automatic Verbindung O.K.  Uhr A soll=588 Uhr A ist=587 Relais gesendet 00000010 00000000 00000000 00000000 Turmtechnik V30.2
+21:48:02  Automatic Verbindung O.K.  Uhr A soll=588 Uhr A ist=587 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+21:49:00  save Nebenuhr Verbindung O.K.  Uhr A soll=589 Uhr A ist=588 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+21:49:01  Automatic Verbindung O.K.  Uhr A soll=589 Uhr A ist=588 Relais gesendet 00000001 00000000 00000000 00000000 Turmtechnik V30.2
+21:49:02  Automatic Verbindung O.K.  Uhr A soll=589 Uhr A ist=588 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+21:50:00  save Nebenuhr Verbindung O.K.  Uhr A soll=590 Uhr A ist=589 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+21:50:01  Automatic Verbindung O.K.  Uhr A soll=590 Uhr A ist=589 Relais gesendet 00000010 00000000 00000000 00000000 Turmtechnik V30.2
+21:50:02  Automatic Verbindung O.K.  Uhr A soll=590 Uhr A ist=589 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+21:51:00  save Nebenuhr Verbindung O.K.  Uhr A soll=591 Uhr A ist=590 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+21:51:01  Automatic Verbindung O.K.  Uhr A soll=591 Uhr A ist=590 Relais gesendet 00000001 00000000 00000000 00000000 Turmtechnik V30.2
+21:51:02  Automatic Verbindung O.K.  Uhr A soll=591 Uhr A ist=590 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+21:52:00  save Nebenuhr Verbindung O.K.  Uhr A soll=592 Uhr A ist=591 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+21:52:01  Automatic Verbindung O.K.  Uhr A soll=592 Uhr A ist=591 Relais gesendet 00000010 00000000 00000000 00000000 Turmtechnik V30.2
+21:52:02  Automatic Verbindung O.K.  Uhr A soll=592 Uhr A ist=591 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+21:53:00  save Nebenuhr Verbindung O.K.  Uhr A soll=593 Uhr A ist=592 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+21:53:01  Automatic Verbindung O.K.  Uhr A soll=593 Uhr A ist=592 Relais gesendet 00000001 00000000 00000000 00000000 Turmtechnik V30.2
+21:53:02  Automatic Verbindung O.K.  Uhr A soll=593 Uhr A ist=592 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+21:54:00  save Nebenuhr Verbindung O.K.  Uhr A soll=594 Uhr A ist=593 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+21:54:01  Automatic Verbindung O.K.  Uhr A soll=594 Uhr A ist=593 Relais gesendet 00000010 00000000 00000000 00000000 Turmtechnik V30.2
+21:54:02  Automatic Verbindung O.K.  Uhr A soll=594 Uhr A ist=593 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+21:55:00  save Nebenuhr Verbindung O.K.  Uhr A soll=595 Uhr A ist=594 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+21:55:01  Automatic Verbindung O.K.  Uhr A soll=595 Uhr A ist=594 Relais gesendet 00000001 00000000 00000000 00000000 Turmtechnik V30.2
+21:55:02  Automatic Verbindung O.K.  Uhr A soll=595 Uhr A ist=594 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+21:56:00  save Nebenuhr Verbindung O.K.  Uhr A soll=596 Uhr A ist=595 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+21:56:01  Automatic Verbindung O.K.  Uhr A soll=596 Uhr A ist=595 Relais gesendet 00000010 00000000 00000000 00000000 Turmtechnik V30.2
+21:56:02  Automatic Verbindung O.K.  Uhr A soll=596 Uhr A ist=595 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+21:57:00  save Nebenuhr Verbindung O.K.  Uhr A soll=597 Uhr A ist=596 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+21:57:01  Automatic Verbindung O.K.  Uhr A soll=597 Uhr A ist=596 Relais gesendet 00000001 00000000 00000000 00000000 Turmtechnik V30.2
+21:57:02  Automatic Verbindung O.K.  Uhr A soll=597 Uhr A ist=596 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+21:58:00  save Nebenuhr Verbindung O.K.  Uhr A soll=598 Uhr A ist=597 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+21:58:01  Automatic Verbindung O.K.  Uhr A soll=598 Uhr A ist=597 Relais gesendet 00000010 00000000 00000000 00000000 Turmtechnik V30.2
+21:58:02  Automatic Verbindung O.K.  Uhr A soll=598 Uhr A ist=597 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+21:59:00  save Nebenuhr Verbindung O.K.  Uhr A soll=599 Uhr A ist=598 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+21:59:01  Automatic Verbindung O.K.  Uhr A soll=599 Uhr A ist=598 Relais gesendet 00000001 00000000 00000000 00000000 Turmtechnik V30.2
+21:59:02  Automatic Verbindung O.K.  Uhr A soll=599 Uhr A ist=598 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+22:00:00  save Nebenuhr Verbindung O.K.  Uhr A soll=600 Uhr A ist=599 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+22:00:01  Automatic Verbindung O.K.  Uhr A soll=600 Uhr A ist=599 Relais gesendet 00000010 00000000 00000000 00000000 Turmtechnik V30.2
+22:00:02  Automatic Verbindung O.K.  Uhr A soll=600 Uhr A ist=599 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+22:01:00  save Nebenuhr Verbindung O.K.  Uhr A soll=601 Uhr A ist=600 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+22:01:01  Automatic Verbindung O.K.  Uhr A soll=601 Uhr A ist=600 Relais gesendet 00000001 00000000 00000000 00000000 Turmtechnik V30.2
+22:01:02  Automatic Verbindung O.K.  Uhr A soll=601 Uhr A ist=600 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+22:02:00  save Nebenuhr Verbindung O.K.  Uhr A soll=602 Uhr A ist=601 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+22:02:01  Automatic Verbindung O.K.  Uhr A soll=602 Uhr A ist=601 Relais gesendet 00000010 00000000 00000000 00000000 Turmtechnik V30.2
+22:02:02  Automatic Verbindung O.K.  Uhr A soll=602 Uhr A ist=601 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+22:03:00  save Nebenuhr Verbindung O.K.  Uhr A soll=603 Uhr A ist=602 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+22:03:01  Automatic Verbindung O.K.  Uhr A soll=603 Uhr A ist=602 Relais gesendet 00000001 00000000 00000000 00000000 Turmtechnik V30.2
+22:03:02  Automatic Verbindung O.K.  Uhr A soll=603 Uhr A ist=602 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+22:04:00  save Nebenuhr Verbindung O.K.  Uhr A soll=604 Uhr A ist=603 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+22:04:01  Automatic Verbindung O.K.  Uhr A soll=604 Uhr A ist=603 Relais gesendet 00000010 00000000 00000000 00000000 Turmtechnik V30.2
+22:04:02  Automatic Verbindung O.K.  Uhr A soll=604 Uhr A ist=603 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+22:05:00  save Nebenuhr Verbindung O.K.  Uhr A soll=605 Uhr A ist=604 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+22:05:01  Automatic Verbindung O.K.  Uhr A soll=605 Uhr A ist=604 Relais gesendet 00000001 00000000 00000000 00000000 Turmtechnik V30.2
+22:05:02  Automatic Verbindung O.K.  Uhr A soll=605 Uhr A ist=604 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+22:06:00  save Nebenuhr Verbindung O.K.  Uhr A soll=606 Uhr A ist=605 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+22:06:01  Automatic Verbindung O.K.  Uhr A soll=606 Uhr A ist=605 Relais gesendet 00000010 00000000 00000000 00000000 Turmtechnik V30.2
+22:06:02  Automatic Verbindung O.K.  Uhr A soll=606 Uhr A ist=605 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+22:07:00  save Nebenuhr Verbindung O.K.  Uhr A soll=607 Uhr A ist=606 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+22:07:01  Automatic Verbindung O.K.  Uhr A soll=607 Uhr A ist=606 Relais gesendet 00000001 00000000 00000000 00000000 Turmtechnik V30.2
+22:07:02  Automatic Verbindung O.K.  Uhr A soll=607 Uhr A ist=606 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+22:08:00  save Nebenuhr Verbindung O.K.  Uhr A soll=608 Uhr A ist=607 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+22:08:01  Automatic Verbindung O.K.  Uhr A soll=608 Uhr A ist=607 Relais gesendet 00000010 00000000 00000000 00000000 Turmtechnik V30.2
+22:08:02  Automatic Verbindung O.K.  Uhr A soll=608 Uhr A ist=607 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+22:09:00  save Nebenuhr Verbindung O.K.  Uhr A soll=609 Uhr A ist=608 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+22:09:01  Automatic Verbindung O.K.  Uhr A soll=609 Uhr A ist=608 Relais gesendet 00000001 00000000 00000000 00000000 Turmtechnik V30.2
+22:09:02  Automatic Verbindung O.K.  Uhr A soll=609 Uhr A ist=608 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+22:10:00  save Nebenuhr Verbindung O.K.  Uhr A soll=610 Uhr A ist=609 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+22:10:01  Automatic Verbindung O.K.  Uhr A soll=610 Uhr A ist=609 Relais gesendet 00000010 00000000 00000000 00000000 Turmtechnik V30.2
+22:10:02  Automatic Verbindung O.K.  Uhr A soll=610 Uhr A ist=609 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+22:11:00  save Nebenuhr Verbindung O.K.  Uhr A soll=611 Uhr A ist=610 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+22:11:01  Automatic Verbindung O.K.  Uhr A soll=611 Uhr A ist=610 Relais gesendet 00000001 00000000 00000000 00000000 Turmtechnik V30.2
+22:11:02  Automatic Verbindung O.K.  Uhr A soll=611 Uhr A ist=610 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+22:12:00  save Nebenuhr Verbindung O.K.  Uhr A soll=612 Uhr A ist=611 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+22:12:01  Automatic Verbindung O.K.  Uhr A soll=612 Uhr A ist=611 Relais gesendet 00000010 00000000 00000000 00000000 Turmtechnik V30.2
+22:12:02  Automatic Verbindung O.K.  Uhr A soll=612 Uhr A ist=611 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+22:13:00  save Nebenuhr Verbindung O.K.  Uhr A soll=613 Uhr A ist=612 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+22:13:01  Automatic Verbindung O.K.  Uhr A soll=613 Uhr A ist=612 Relais gesendet 00000001 00000000 00000000 00000000 Turmtechnik V30.2
+22:13:02  Automatic Verbindung O.K.  Uhr A soll=613 Uhr A ist=612 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+22:14:00  save Nebenuhr Verbindung O.K.  Uhr A soll=614 Uhr A ist=613 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+22:14:01  Automatic Verbindung O.K.  Uhr A soll=614 Uhr A ist=613 Relais gesendet 00000010 00000000 00000000 00000000 Turmtechnik V30.2
+22:14:02  Automatic Verbindung O.K.  Uhr A soll=614 Uhr A ist=613 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+22:15:00  save Nebenuhr Verbindung O.K.  Uhr A soll=615 Uhr A ist=614 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+22:15:01  Automatic Verbindung O.K.  Uhr A soll=615 Uhr A ist=614 Relais gesendet 00000001 00000000 00000000 00000000 Turmtechnik V30.2
+22:15:02  Automatic Verbindung O.K.  Uhr A soll=615 Uhr A ist=614 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+22:16:00  save Nebenuhr Verbindung O.K.  Uhr A soll=616 Uhr A ist=615 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+22:16:01  Automatic Verbindung O.K.  Uhr A soll=616 Uhr A ist=615 Relais gesendet 00000010 00000000 00000000 00000000 Turmtechnik V30.2
+22:16:02  Automatic Verbindung O.K.  Uhr A soll=616 Uhr A ist=615 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+22:17:00  save Nebenuhr Verbindung O.K.  Uhr A soll=617 Uhr A ist=616 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+22:17:01  Automatic Verbindung O.K.  Uhr A soll=617 Uhr A ist=616 Relais gesendet 00000001 00000000 00000000 00000000 Turmtechnik V30.2
+22:17:02  Automatic Verbindung O.K.  Uhr A soll=617 Uhr A ist=616 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+22:18:00  save Nebenuhr Verbindung O.K.  Uhr A soll=618 Uhr A ist=617 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+22:18:01  Automatic Verbindung O.K.  Uhr A soll=618 Uhr A ist=617 Relais gesendet 00000010 00000000 00000000 00000000 Turmtechnik V30.2
+22:18:02  Automatic Verbindung O.K.  Uhr A soll=618 Uhr A ist=617 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+22:19:00  save Nebenuhr Verbindung O.K.  Uhr A soll=619 Uhr A ist=618 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+22:19:01  Automatic Verbindung O.K.  Uhr A soll=619 Uhr A ist=618 Relais gesendet 00000001 00000000 00000000 00000000 Turmtechnik V30.2
+22:19:02  Automatic Verbindung O.K.  Uhr A soll=619 Uhr A ist=618 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+22:20:00  save Nebenuhr Verbindung O.K.  Uhr A soll=620 Uhr A ist=619 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+22:20:01  Automatic Verbindung O.K.  Uhr A soll=620 Uhr A ist=619 Relais gesendet 00000010 00000000 00000000 00000000 Turmtechnik V30.2
+22:20:02  Automatic Verbindung O.K.  Uhr A soll=620 Uhr A ist=619 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+22:21:00  save Nebenuhr Verbindung O.K.  Uhr A soll=621 Uhr A ist=620 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+22:21:01  Automatic Verbindung O.K.  Uhr A soll=621 Uhr A ist=620 Relais gesendet 00000001 00000000 00000000 00000000 Turmtechnik V30.2
+22:21:02  Automatic Verbindung O.K.  Uhr A soll=621 Uhr A ist=620 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+22:22:00  save Nebenuhr Verbindung O.K.  Uhr A soll=622 Uhr A ist=621 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+22:22:01  Automatic Verbindung O.K.  Uhr A soll=622 Uhr A ist=621 Relais gesendet 00000010 00000000 00000000 00000000 Turmtechnik V30.2
+22:22:02  Automatic Verbindung O.K.  Uhr A soll=622 Uhr A ist=621 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+22:23:00  save Nebenuhr Verbindung O.K.  Uhr A soll=623 Uhr A ist=622 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+22:23:01  Automatic Verbindung O.K.  Uhr A soll=623 Uhr A ist=622 Relais gesendet 00000001 00000000 00000000 00000000 Turmtechnik V30.2
+22:23:02  Automatic Verbindung O.K.  Uhr A soll=623 Uhr A ist=622 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+22:24:00  save Nebenuhr Verbindung O.K.  Uhr A soll=624 Uhr A ist=623 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+22:24:01  Automatic Verbindung O.K.  Uhr A soll=624 Uhr A ist=623 Relais gesendet 00000010 00000000 00000000 00000000 Turmtechnik V30.2
+22:24:02  Automatic Verbindung O.K.  Uhr A soll=624 Uhr A ist=623 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+22:25:00  save Nebenuhr Verbindung O.K.  Uhr A soll=625 Uhr A ist=624 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+22:25:01  Automatic Verbindung O.K.  Uhr A soll=625 Uhr A ist=624 Relais gesendet 00000001 00000000 00000000 00000000 Turmtechnik V30.2
+22:25:02  Automatic Verbindung O.K.  Uhr A soll=625 Uhr A ist=624 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+22:26:00  save Nebenuhr Verbindung O.K.  Uhr A soll=626 Uhr A ist=625 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+22:26:01  Automatic Verbindung O.K.  Uhr A soll=626 Uhr A ist=625 Relais gesendet 00000010 00000000 00000000 00000000 Turmtechnik V30.2
+22:26:02  Automatic Verbindung O.K.  Uhr A soll=626 Uhr A ist=625 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+22:27:00  save Nebenuhr Verbindung O.K.  Uhr A soll=627 Uhr A ist=626 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+22:27:01  Automatic Verbindung O.K.  Uhr A soll=627 Uhr A ist=626 Relais gesendet 00000001 00000000 00000000 00000000 Turmtechnik V30.2
+22:27:02  Automatic Verbindung O.K.  Uhr A soll=627 Uhr A ist=626 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+22:28:00  save Nebenuhr Verbindung O.K.  Uhr A soll=628 Uhr A ist=627 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+22:28:01  Automatic Verbindung O.K.  Uhr A soll=628 Uhr A ist=627 Relais gesendet 00000010 00000000 00000000 00000000 Turmtechnik V30.2
+22:28:02  Automatic Verbindung O.K.  Uhr A soll=628 Uhr A ist=627 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+22:29:00  save Nebenuhr Verbindung O.K.  Uhr A soll=629 Uhr A ist=628 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+22:29:01  Automatic Verbindung O.K.  Uhr A soll=629 Uhr A ist=628 Relais gesendet 00000001 00000000 00000000 00000000 Turmtechnik V30.2
+22:29:02  Automatic Verbindung O.K.  Uhr A soll=629 Uhr A ist=628 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+22:30:00  save Nebenuhr Verbindung O.K.  Uhr A soll=630 Uhr A ist=629 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+22:30:01  Automatic Verbindung O.K.  Uhr A soll=630 Uhr A ist=629 Relais gesendet 00000010 00000000 00000000 00000000 Turmtechnik V30.2
+22:30:02  Automatic Verbindung O.K.  Uhr A soll=630 Uhr A ist=629 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+22:31:00  save Nebenuhr Verbindung O.K.  Uhr A soll=631 Uhr A ist=630 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+22:31:01  Automatic Verbindung O.K.  Uhr A soll=631 Uhr A ist=630 Relais gesendet 00000001 00000000 00000000 00000000 Turmtechnik V30.2
+22:31:02  Automatic Verbindung O.K.  Uhr A soll=631 Uhr A ist=630 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+22:32:00  save Nebenuhr Verbindung O.K.  Uhr A soll=632 Uhr A ist=631 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+22:32:01  Automatic Verbindung O.K.  Uhr A soll=632 Uhr A ist=631 Relais gesendet 00000010 00000000 00000000 00000000 Turmtechnik V30.2
+22:32:02  Automatic Verbindung O.K.  Uhr A soll=632 Uhr A ist=631 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+22:33:00  save Nebenuhr Verbindung O.K.  Uhr A soll=633 Uhr A ist=632 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+22:33:01  Automatic Verbindung O.K.  Uhr A soll=633 Uhr A ist=632 Relais gesendet 00000001 00000000 00000000 00000000 Turmtechnik V30.2
+22:33:02  Automatic Verbindung O.K.  Uhr A soll=633 Uhr A ist=632 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+22:34:00  save Nebenuhr Verbindung O.K.  Uhr A soll=634 Uhr A ist=633 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+22:34:01  Automatic Verbindung O.K.  Uhr A soll=634 Uhr A ist=633 Relais gesendet 00000010 00000000 00000000 00000000 Turmtechnik V30.2
+22:34:02  Automatic Verbindung O.K.  Uhr A soll=634 Uhr A ist=633 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+22:35:00  save Nebenuhr Verbindung O.K.  Uhr A soll=635 Uhr A ist=634 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+22:35:01  Automatic Verbindung O.K.  Uhr A soll=635 Uhr A ist=634 Relais gesendet 00000001 00000000 00000000 00000000 Turmtechnik V30.2
+22:35:02  Automatic Verbindung O.K.  Uhr A soll=635 Uhr A ist=634 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+22:36:00  save Nebenuhr Verbindung O.K.  Uhr A soll=636 Uhr A ist=635 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+22:36:01  Automatic Verbindung O.K.  Uhr A soll=636 Uhr A ist=635 Relais gesendet 00000010 00000000 00000000 00000000 Turmtechnik V30.2
+22:36:02  Automatic Verbindung O.K.  Uhr A soll=636 Uhr A ist=635 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+22:37:00  save Nebenuhr Verbindung O.K.  Uhr A soll=637 Uhr A ist=636 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+22:37:01  Automatic Verbindung O.K.  Uhr A soll=637 Uhr A ist=636 Relais gesendet 00000001 00000000 00000000 00000000 Turmtechnik V30.2
+22:37:02  Automatic Verbindung O.K.  Uhr A soll=637 Uhr A ist=636 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+22:38:00  save Nebenuhr Verbindung O.K.  Uhr A soll=638 Uhr A ist=637 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+22:38:01  Automatic Verbindung O.K.  Uhr A soll=638 Uhr A ist=637 Relais gesendet 00000010 00000000 00000000 00000000 Turmtechnik V30.2
+22:38:02  Automatic Verbindung O.K.  Uhr A soll=638 Uhr A ist=637 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+22:39:00  save Nebenuhr Verbindung O.K.  Uhr A soll=639 Uhr A ist=638 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+22:39:01  Automatic Verbindung O.K.  Uhr A soll=639 Uhr A ist=638 Relais gesendet 00000001 00000000 00000000 00000000 Turmtechnik V30.2
+22:39:02  Automatic Verbindung O.K.  Uhr A soll=639 Uhr A ist=638 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+22:40:00  save Nebenuhr Verbindung O.K.  Uhr A soll=640 Uhr A ist=639 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+22:40:01  Automatic Verbindung O.K.  Uhr A soll=640 Uhr A ist=639 Relais gesendet 00000010 00000000 00000000 00000000 Turmtechnik V30.2
+22:40:02  Automatic Verbindung O.K.  Uhr A soll=640 Uhr A ist=639 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+22:41:00  save Nebenuhr Verbindung O.K.  Uhr A soll=641 Uhr A ist=640 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+22:41:01  Automatic Verbindung O.K.  Uhr A soll=641 Uhr A ist=640 Relais gesendet 00000001 00000000 00000000 00000000 Turmtechnik V30.2
+22:41:02  Automatic Verbindung O.K.  Uhr A soll=641 Uhr A ist=640 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+22:42:00  save Nebenuhr Verbindung O.K.  Uhr A soll=642 Uhr A ist=641 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+22:42:01  Automatic Verbindung O.K.  Uhr A soll=642 Uhr A ist=641 Relais gesendet 00000010 00000000 00000000 00000000 Turmtechnik V30.2
+22:42:02  Automatic Verbindung O.K.  Uhr A soll=642 Uhr A ist=641 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+22:43:00  save Nebenuhr Verbindung O.K.  Uhr A soll=643 Uhr A ist=642 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+22:43:01  Automatic Verbindung O.K.  Uhr A soll=643 Uhr A ist=642 Relais gesendet 00000001 00000000 00000000 00000000 Turmtechnik V30.2
+22:43:02  Automatic Verbindung O.K.  Uhr A soll=643 Uhr A ist=642 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+22:44:00  save Nebenuhr Verbindung O.K.  Uhr A soll=644 Uhr A ist=643 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+22:44:01  Automatic Verbindung O.K.  Uhr A soll=644 Uhr A ist=643 Relais gesendet 00000010 00000000 00000000 00000000 Turmtechnik V30.2
+22:44:02  Automatic Verbindung O.K.  Uhr A soll=644 Uhr A ist=643 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+22:45:00  save Nebenuhr Verbindung O.K.  Uhr A soll=645 Uhr A ist=644 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+22:45:01  Automatic Verbindung O.K.  Uhr A soll=645 Uhr A ist=644 Relais gesendet 00000001 00000000 00000000 00000000 Turmtechnik V30.2
+22:45:02  Automatic Verbindung O.K.  Uhr A soll=645 Uhr A ist=644 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+22:46:00  save Nebenuhr Verbindung O.K.  Uhr A soll=646 Uhr A ist=645 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+22:46:01  Automatic Verbindung O.K.  Uhr A soll=646 Uhr A ist=645 Relais gesendet 00000010 00000000 00000000 00000000 Turmtechnik V30.2
+22:46:02  Automatic Verbindung O.K.  Uhr A soll=646 Uhr A ist=645 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+22:47:00  save Nebenuhr Verbindung O.K.  Uhr A soll=647 Uhr A ist=646 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+22:47:01  Automatic Verbindung O.K.  Uhr A soll=647 Uhr A ist=646 Relais gesendet 00000001 00000000 00000000 00000000 Turmtechnik V30.2
+22:47:02  Automatic Verbindung O.K.  Uhr A soll=647 Uhr A ist=646 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+22:48:00  save Nebenuhr Verbindung O.K.  Uhr A soll=648 Uhr A ist=647 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+22:48:01  Automatic Verbindung O.K.  Uhr A soll=648 Uhr A ist=647 Relais gesendet 00000010 00000000 00000000 00000000 Turmtechnik V30.2
+22:48:02  Automatic Verbindung O.K.  Uhr A soll=648 Uhr A ist=647 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+22:49:00  save Nebenuhr Verbindung O.K.  Uhr A soll=649 Uhr A ist=648 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+22:49:01  Automatic Verbindung O.K.  Uhr A soll=649 Uhr A ist=648 Relais gesendet 00000001 00000000 00000000 00000000 Turmtechnik V30.2
+22:49:02  Automatic Verbindung O.K.  Uhr A soll=649 Uhr A ist=648 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+22:50:00  save Nebenuhr Verbindung O.K.  Uhr A soll=650 Uhr A ist=649 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+22:50:01  Automatic Verbindung O.K.  Uhr A soll=650 Uhr A ist=649 Relais gesendet 00000010 00000000 00000000 00000000 Turmtechnik V30.2
+22:50:02  Automatic Verbindung O.K.  Uhr A soll=650 Uhr A ist=649 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+22:51:00  save Nebenuhr Verbindung O.K.  Uhr A soll=650 Uhr A ist=650 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+22:51:01  Automatic Verbindung O.K.  Uhr A soll=651 Uhr A ist=650 Relais gesendet 00000001 00000000 00000000 00000000 Turmtechnik V30.2
+22:51:02  Automatic Verbindung O.K.  Uhr A soll=651 Uhr A ist=650 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+22:52:00  save Nebenuhr Verbindung O.K.  Uhr A soll=652 Uhr A ist=651 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+22:52:01  Automatic Verbindung O.K.  Uhr A soll=652 Uhr A ist=651 Relais gesendet 00000010 00000000 00000000 00000000 Turmtechnik V30.2
+22:52:02  Automatic Verbindung O.K.  Uhr A soll=652 Uhr A ist=651 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+22:53:00  save Nebenuhr Verbindung O.K.  Uhr A soll=653 Uhr A ist=652 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+22:53:01  Automatic Verbindung O.K.  Uhr A soll=653 Uhr A ist=652 Relais gesendet 00000001 00000000 00000000 00000000 Turmtechnik V30.2
+22:53:02  Automatic Verbindung O.K.  Uhr A soll=653 Uhr A ist=652 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+22:54:00  save Nebenuhr Verbindung O.K.  Uhr A soll=654 Uhr A ist=653 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+22:54:01  Automatic Verbindung O.K.  Uhr A soll=654 Uhr A ist=653 Relais gesendet 00000010 00000000 00000000 00000000 Turmtechnik V30.2
+22:54:02  Automatic Verbindung O.K.  Uhr A soll=654 Uhr A ist=653 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+22:55:00  save Nebenuhr Verbindung O.K.  Uhr A soll=655 Uhr A ist=654 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+22:55:01  Automatic Verbindung O.K.  Uhr A soll=655 Uhr A ist=654 Relais gesendet 00000001 00000000 00000000 00000000 Turmtechnik V30.2
+22:55:02  Automatic Verbindung O.K.  Uhr A soll=655 Uhr A ist=654 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+22:56:00  save Nebenuhr Verbindung O.K.  Uhr A soll=656 Uhr A ist=655 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+22:56:01  Automatic Verbindung O.K.  Uhr A soll=656 Uhr A ist=655 Relais gesendet 00000010 00000000 00000000 00000000 Turmtechnik V30.2
+22:56:02  Automatic Verbindung O.K.  Uhr A soll=656 Uhr A ist=655 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+22:57:00  save Nebenuhr Verbindung O.K.  Uhr A soll=657 Uhr A ist=656 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+22:57:01  Automatic Verbindung O.K.  Uhr A soll=657 Uhr A ist=656 Relais gesendet 00000001 00000000 00000000 00000000 Turmtechnik V30.2
+22:57:02  Automatic Verbindung O.K.  Uhr A soll=657 Uhr A ist=656 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+22:58:00  save Nebenuhr Verbindung O.K.  Uhr A soll=658 Uhr A ist=657 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+22:58:01  Automatic Verbindung O.K.  Uhr A soll=658 Uhr A ist=657 Relais gesendet 00000010 00000000 00000000 00000000 Turmtechnik V30.2
+22:58:02  Automatic Verbindung O.K.  Uhr A soll=658 Uhr A ist=657 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+22:59:00  save Nebenuhr Verbindung O.K.  Uhr A soll=659 Uhr A ist=658 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+22:59:01  Automatic Verbindung O.K.  Uhr A soll=659 Uhr A ist=658 Relais gesendet 00000001 00000000 00000000 00000000 Turmtechnik V30.2
+22:59:02  Automatic Verbindung O.K.  Uhr A soll=659 Uhr A ist=658 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+23:00:00  save Nebenuhr Verbindung O.K.  Uhr A soll=660 Uhr A ist=659 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+23:00:01  Automatic Verbindung O.K.  Uhr A soll=660 Uhr A ist=659 Relais gesendet 00000010 00000000 00000000 00000000 Turmtechnik V30.2
+23:00:02  Automatic Verbindung O.K.  Uhr A soll=660 Uhr A ist=659 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+23:01:00  save Nebenuhr Verbindung O.K.  Uhr A soll=661 Uhr A ist=660 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+23:01:01  Automatic Verbindung O.K.  Uhr A soll=661 Uhr A ist=660 Relais gesendet 00000001 00000000 00000000 00000000 Turmtechnik V30.2
+23:01:02  Automatic Verbindung O.K.  Uhr A soll=661 Uhr A ist=660 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+23:02:00  save Nebenuhr Verbindung O.K.  Uhr A soll=662 Uhr A ist=661 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+23:02:01  Automatic Verbindung O.K.  Uhr A soll=662 Uhr A ist=661 Relais gesendet 00000010 00000000 00000000 00000000 Turmtechnik V30.2
+23:02:02  Automatic Verbindung O.K.  Uhr A soll=662 Uhr A ist=661 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+23:03:00  save Nebenuhr Verbindung O.K.  Uhr A soll=663 Uhr A ist=662 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+23:03:01  Automatic Verbindung O.K.  Uhr A soll=663 Uhr A ist=662 Relais gesendet 00000001 00000000 00000000 00000000 Turmtechnik V30.2
+23:03:02  Automatic Verbindung O.K.  Uhr A soll=663 Uhr A ist=662 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+23:04:00  save Nebenuhr Verbindung O.K.  Uhr A soll=664 Uhr A ist=663 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+23:04:01  Automatic Verbindung O.K.  Uhr A soll=664 Uhr A ist=663 Relais gesendet 00000010 00000000 00000000 00000000 Turmtechnik V30.2
+23:04:02  Automatic Verbindung O.K.  Uhr A soll=664 Uhr A ist=663 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+23:05:00  save Nebenuhr Verbindung O.K.  Uhr A soll=665 Uhr A ist=664 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+23:05:01  Automatic Verbindung O.K.  Uhr A soll=665 Uhr A ist=664 Relais gesendet 00000001 00000000 00000000 00000000 Turmtechnik V30.2
+23:05:02  Automatic Verbindung O.K.  Uhr A soll=665 Uhr A ist=664 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+23:06:00  save Nebenuhr Verbindung O.K.  Uhr A soll=666 Uhr A ist=665 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+23:06:01  Automatic Verbindung O.K.  Uhr A soll=666 Uhr A ist=665 Relais gesendet 00000010 00000000 00000000 00000000 Turmtechnik V30.2
+23:06:02  Automatic Verbindung O.K.  Uhr A soll=666 Uhr A ist=665 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+23:07:00  save Nebenuhr Verbindung O.K.  Uhr A soll=667 Uhr A ist=666 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+23:07:01  Automatic Verbindung O.K.  Uhr A soll=667 Uhr A ist=666 Relais gesendet 00000001 00000000 00000000 00000000 Turmtechnik V30.2
+23:07:02  Automatic Verbindung O.K.  Uhr A soll=667 Uhr A ist=666 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+23:08:00  save Nebenuhr Verbindung O.K.  Uhr A soll=668 Uhr A ist=667 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+23:08:01  Automatic Verbindung O.K.  Uhr A soll=668 Uhr A ist=667 Relais gesendet 00000010 00000000 00000000 00000000 Turmtechnik V30.2
+23:08:02  Automatic Verbindung O.K.  Uhr A soll=668 Uhr A ist=667 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+23:09:00  save Nebenuhr Verbindung O.K.  Uhr A soll=669 Uhr A ist=668 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+23:09:01  Automatic Verbindung O.K.  Uhr A soll=669 Uhr A ist=668 Relais gesendet 00000001 00000000 00000000 00000000 Turmtechnik V30.2
+23:09:02  Automatic Verbindung O.K.  Uhr A soll=669 Uhr A ist=668 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+23:10:00  save Nebenuhr Verbindung O.K.  Uhr A soll=670 Uhr A ist=669 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+23:10:01  Automatic Verbindung O.K.  Uhr A soll=670 Uhr A ist=669 Relais gesendet 00000010 00000000 00000000 00000000 Turmtechnik V30.2
+23:10:02  Automatic Verbindung O.K.  Uhr A soll=670 Uhr A ist=669 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+23:11:00  save Nebenuhr Verbindung O.K.  Uhr A soll=670 Uhr A ist=670 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+23:11:01  Automatic Verbindung O.K.  Uhr A soll=671 Uhr A ist=670 Relais gesendet 00000001 00000000 00000000 00000000 Turmtechnik V30.2
+23:11:02  Automatic Verbindung O.K.  Uhr A soll=671 Uhr A ist=670 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+23:12:00  save Nebenuhr Verbindung O.K.  Uhr A soll=672 Uhr A ist=671 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+23:12:01  Automatic Verbindung O.K.  Uhr A soll=672 Uhr A ist=671 Relais gesendet 00000010 00000000 00000000 00000000 Turmtechnik V30.2
+23:12:02  Automatic Verbindung O.K.  Uhr A soll=672 Uhr A ist=671 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+23:13:00  save Nebenuhr Verbindung O.K.  Uhr A soll=673 Uhr A ist=672 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+23:13:01  Automatic Verbindung O.K.  Uhr A soll=673 Uhr A ist=672 Relais gesendet 00000001 00000000 00000000 00000000 Turmtechnik V30.2
+23:13:02  Automatic Verbindung O.K.  Uhr A soll=673 Uhr A ist=672 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+23:14:00  save Nebenuhr Verbindung O.K.  Uhr A soll=674 Uhr A ist=673 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+23:14:01  Automatic Verbindung O.K.  Uhr A soll=674 Uhr A ist=673 Relais gesendet 00000010 00000000 00000000 00000000 Turmtechnik V30.2
+23:14:02  Automatic Verbindung O.K.  Uhr A soll=674 Uhr A ist=673 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+23:15:00  save Nebenuhr Verbindung O.K.  Uhr A soll=675 Uhr A ist=674 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+23:15:01  Automatic Verbindung O.K.  Uhr A soll=675 Uhr A ist=674 Relais gesendet 00000001 00000000 00000000 00000000 Turmtechnik V30.2
+23:15:02  Automatic Verbindung O.K.  Uhr A soll=675 Uhr A ist=674 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+23:16:00  save Nebenuhr Verbindung O.K.  Uhr A soll=676 Uhr A ist=675 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+23:16:01  Automatic Verbindung O.K.  Uhr A soll=676 Uhr A ist=675 Relais gesendet 00000010 00000000 00000000 00000000 Turmtechnik V30.2
+23:16:02  Automatic Verbindung O.K.  Uhr A soll=676 Uhr A ist=675 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+23:17:00  save Nebenuhr Verbindung O.K.  Uhr A soll=677 Uhr A ist=676 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+23:17:01  Automatic Verbindung O.K.  Uhr A soll=677 Uhr A ist=676 Relais gesendet 00000001 00000000 00000000 00000000 Turmtechnik V30.2
+23:17:02  Automatic Verbindung O.K.  Uhr A soll=677 Uhr A ist=676 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+23:18:00  save Nebenuhr Verbindung O.K.  Uhr A soll=678 Uhr A ist=677 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+23:18:01  Automatic Verbindung O.K.  Uhr A soll=678 Uhr A ist=677 Relais gesendet 00000010 00000000 00000000 00000000 Turmtechnik V30.2
+23:18:02  Automatic Verbindung O.K.  Uhr A soll=678 Uhr A ist=677 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+23:19:00  save Nebenuhr Verbindung O.K.  Uhr A soll=679 Uhr A ist=678 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+23:19:01  Automatic Verbindung O.K.  Uhr A soll=679 Uhr A ist=678 Relais gesendet 00000001 00000000 00000000 00000000 Turmtechnik V30.2
+23:19:02  Automatic Verbindung O.K.  Uhr A soll=679 Uhr A ist=678 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+23:20:00  save Nebenuhr Verbindung O.K.  Uhr A soll=680 Uhr A ist=679 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+23:20:01  Automatic Verbindung O.K.  Uhr A soll=680 Uhr A ist=679 Relais gesendet 00000010 00000000 00000000 00000000 Turmtechnik V30.2
+23:20:02  Automatic Verbindung O.K.  Uhr A soll=680 Uhr A ist=679 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+23:21:00  save Nebenuhr Verbindung O.K.  Uhr A soll=681 Uhr A ist=680 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+23:21:01  Automatic Verbindung O.K.  Uhr A soll=681 Uhr A ist=680 Relais gesendet 00000001 00000000 00000000 00000000 Turmtechnik V30.2
+23:21:02  Automatic Verbindung O.K.  Uhr A soll=681 Uhr A ist=680 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+23:22:00  save Nebenuhr Verbindung O.K.  Uhr A soll=682 Uhr A ist=681 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+23:22:01  Automatic Verbindung O.K.  Uhr A soll=682 Uhr A ist=681 Relais gesendet 00000010 00000000 00000000 00000000 Turmtechnik V30.2
+23:22:02  Automatic Verbindung O.K.  Uhr A soll=682 Uhr A ist=681 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+23:23:00  save Nebenuhr Verbindung O.K.  Uhr A soll=683 Uhr A ist=682 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+23:23:01  Automatic Verbindung O.K.  Uhr A soll=683 Uhr A ist=682 Relais gesendet 00000001 00000000 00000000 00000000 Turmtechnik V30.2
+23:23:02  Automatic Verbindung O.K.  Uhr A soll=683 Uhr A ist=682 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+23:24:00  save Nebenuhr Verbindung O.K.  Uhr A soll=684 Uhr A ist=683 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+23:24:01  Automatic Verbindung O.K.  Uhr A soll=684 Uhr A ist=683 Relais gesendet 00000010 00000000 00000000 00000000 Turmtechnik V30.2
+23:24:02  Automatic Verbindung O.K.  Uhr A soll=684 Uhr A ist=683 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+23:25:00  save Nebenuhr Verbindung O.K.  Uhr A soll=685 Uhr A ist=684 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+23:25:01  Automatic Verbindung O.K.  Uhr A soll=685 Uhr A ist=684 Relais gesendet 00000001 00000000 00000000 00000000 Turmtechnik V30.2
+23:25:02  Automatic Verbindung O.K.  Uhr A soll=685 Uhr A ist=684 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+23:26:00  save Nebenuhr Verbindung O.K.  Uhr A soll=686 Uhr A ist=685 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+23:26:01  Automatic Verbindung O.K.  Uhr A soll=686 Uhr A ist=685 Relais gesendet 00000010 00000000 00000000 00000000 Turmtechnik V30.2
+23:26:02  Automatic Verbindung O.K.  Uhr A soll=686 Uhr A ist=685 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+23:27:00  save Nebenuhr Verbindung O.K.  Uhr A soll=687 Uhr A ist=686 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+23:27:01  Automatic Verbindung O.K.  Uhr A soll=687 Uhr A ist=686 Relais gesendet 00000001 00000000 00000000 00000000 Turmtechnik V30.2
+23:27:02  Automatic Verbindung O.K.  Uhr A soll=687 Uhr A ist=686 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+23:28:00  save Nebenuhr Verbindung O.K.  Uhr A soll=688 Uhr A ist=687 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+23:28:01  Automatic Verbindung O.K.  Uhr A soll=688 Uhr A ist=687 Relais gesendet 00000010 00000000 00000000 00000000 Turmtechnik V30.2
+23:28:02  Automatic Verbindung O.K.  Uhr A soll=688 Uhr A ist=687 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+23:29:00  save Nebenuhr Verbindung O.K.  Uhr A soll=689 Uhr A ist=688 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+23:29:01  Automatic Verbindung O.K.  Uhr A soll=689 Uhr A ist=688 Relais gesendet 00000001 00000000 00000000 00000000 Turmtechnik V30.2
+23:29:02  Automatic Verbindung O.K.  Uhr A soll=689 Uhr A ist=688 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+23:30:00  save Nebenuhr Verbindung O.K.  Uhr A soll=690 Uhr A ist=689 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+23:30:01  Automatic Verbindung O.K.  Uhr A soll=690 Uhr A ist=689 Relais gesendet 00000010 00000000 00000000 00000000 Turmtechnik V30.2
+23:30:02  Automatic Verbindung O.K.  Uhr A soll=690 Uhr A ist=689 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+23:31:00  save Nebenuhr Verbindung O.K.  Uhr A soll=691 Uhr A ist=690 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+23:31:01  Automatic Verbindung O.K.  Uhr A soll=691 Uhr A ist=690 Relais gesendet 00000001 00000000 00000000 00000000 Turmtechnik V30.2
+23:31:02  Automatic Verbindung O.K.  Uhr A soll=691 Uhr A ist=690 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+23:32:00  save Nebenuhr Verbindung O.K.  Uhr A soll=692 Uhr A ist=691 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+23:32:01  Automatic Verbindung O.K.  Uhr A soll=692 Uhr A ist=691 Relais gesendet 00000010 00000000 00000000 00000000 Turmtechnik V30.2
+23:32:02  Automatic Verbindung O.K.  Uhr A soll=692 Uhr A ist=691 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+23:33:00  save Nebenuhr Verbindung O.K.  Uhr A soll=693 Uhr A ist=692 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+23:33:01  Automatic Verbindung O.K.  Uhr A soll=693 Uhr A ist=692 Relais gesendet 00000001 00000000 00000000 00000000 Turmtechnik V30.2
+23:33:02  Automatic Verbindung O.K.  Uhr A soll=693 Uhr A ist=692 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+23:34:00  save Nebenuhr Verbindung O.K.  Uhr A soll=694 Uhr A ist=693 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+23:34:01  Automatic Verbindung O.K.  Uhr A soll=694 Uhr A ist=693 Relais gesendet 00000010 00000000 00000000 00000000 Turmtechnik V30.2
+23:34:02  Automatic Verbindung O.K.  Uhr A soll=694 Uhr A ist=693 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+23:35:00  save Nebenuhr Verbindung O.K.  Uhr A soll=695 Uhr A ist=694 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+23:35:01  Automatic Verbindung O.K.  Uhr A soll=695 Uhr A ist=694 Relais gesendet 00000001 00000000 00000000 00000000 Turmtechnik V30.2
+23:35:02  Automatic Verbindung O.K.  Uhr A soll=695 Uhr A ist=694 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+23:36:00  save Nebenuhr Verbindung O.K.  Uhr A soll=696 Uhr A ist=695 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+23:36:01  Automatic Verbindung O.K.  Uhr A soll=696 Uhr A ist=695 Relais gesendet 00000010 00000000 00000000 00000000 Turmtechnik V30.2
+23:36:02  Automatic Verbindung O.K.  Uhr A soll=696 Uhr A ist=695 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+23:37:00  save Nebenuhr Verbindung O.K.  Uhr A soll=697 Uhr A ist=696 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+23:37:01  Automatic Verbindung O.K.  Uhr A soll=697 Uhr A ist=696 Relais gesendet 00000001 00000000 00000000 00000000 Turmtechnik V30.2
+23:37:02  Automatic Verbindung O.K.  Uhr A soll=697 Uhr A ist=696 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+23:38:00  save Nebenuhr Verbindung O.K.  Uhr A soll=698 Uhr A ist=697 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+23:38:01  Automatic Verbindung O.K.  Uhr A soll=698 Uhr A ist=697 Relais gesendet 00000010 00000000 00000000 00000000 Turmtechnik V30.2
+23:38:02  Automatic Verbindung O.K.  Uhr A soll=698 Uhr A ist=697 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+23:39:00  save Nebenuhr Verbindung O.K.  Uhr A soll=699 Uhr A ist=698 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+23:39:01  Automatic Verbindung O.K.  Uhr A soll=699 Uhr A ist=698 Relais gesendet 00000001 00000000 00000000 00000000 Turmtechnik V30.2
+23:39:02  Automatic Verbindung O.K.  Uhr A soll=699 Uhr A ist=698 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+23:40:00  save Nebenuhr Verbindung O.K.  Uhr A soll=700 Uhr A ist=699 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+23:40:01  Automatic Verbindung O.K.  Uhr A soll=700 Uhr A ist=699 Relais gesendet 00000010 00000000 00000000 00000000 Turmtechnik V30.2
+23:40:02  Automatic Verbindung O.K.  Uhr A soll=700 Uhr A ist=699 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+23:41:00  save Nebenuhr Verbindung O.K.  Uhr A soll=701 Uhr A ist=700 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+23:41:01  Automatic Verbindung O.K.  Uhr A soll=701 Uhr A ist=700 Relais gesendet 00000001 00000000 00000000 00000000 Turmtechnik V30.2
+23:41:02  Automatic Verbindung O.K.  Uhr A soll=701 Uhr A ist=700 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+23:42:00  save Nebenuhr Verbindung O.K.  Uhr A soll=702 Uhr A ist=701 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+23:42:01  Automatic Verbindung O.K.  Uhr A soll=702 Uhr A ist=701 Relais gesendet 00000010 00000000 00000000 00000000 Turmtechnik V30.2
+23:42:02  Automatic Verbindung O.K.  Uhr A soll=702 Uhr A ist=701 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+23:43:00  save Nebenuhr Verbindung O.K.  Uhr A soll=703 Uhr A ist=702 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+23:43:01  Automatic Verbindung O.K.  Uhr A soll=703 Uhr A ist=702 Relais gesendet 00000001 00000000 00000000 00000000 Turmtechnik V30.2
+23:43:02  Automatic Verbindung O.K.  Uhr A soll=703 Uhr A ist=702 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+23:44:00  save Nebenuhr Verbindung O.K.  Uhr A soll=704 Uhr A ist=703 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+23:44:01  Automatic Verbindung O.K.  Uhr A soll=704 Uhr A ist=703 Relais gesendet 00000010 00000000 00000000 00000000 Turmtechnik V30.2
+23:44:02  Automatic Verbindung O.K.  Uhr A soll=704 Uhr A ist=703 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+23:45:00  save Nebenuhr Verbindung O.K.  Uhr A soll=704 Uhr A ist=704 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+23:45:01  Automatic Verbindung O.K.  Uhr A soll=705 Uhr A ist=704 Relais gesendet 00000001 00000000 00000000 00000000 Turmtechnik V30.2
+23:45:02  Automatic Verbindung O.K.  Uhr A soll=705 Uhr A ist=704 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+23:46:00  save Nebenuhr Verbindung O.K.  Uhr A soll=706 Uhr A ist=705 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+23:46:01  Automatic Verbindung O.K.  Uhr A soll=706 Uhr A ist=705 Relais gesendet 00000010 00000000 00000000 00000000 Turmtechnik V30.2
+23:46:02  Automatic Verbindung O.K.  Uhr A soll=706 Uhr A ist=705 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+23:47:00  save Nebenuhr Verbindung O.K.  Uhr A soll=707 Uhr A ist=706 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+23:47:01  Automatic Verbindung O.K.  Uhr A soll=707 Uhr A ist=706 Relais gesendet 00000001 00000000 00000000 00000000 Turmtechnik V30.2
+23:47:02  Automatic Verbindung O.K.  Uhr A soll=707 Uhr A ist=706 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+23:48:00  save Nebenuhr Verbindung O.K.  Uhr A soll=708 Uhr A ist=707 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+23:48:01  Automatic Verbindung O.K.  Uhr A soll=708 Uhr A ist=707 Relais gesendet 00000010 00000000 00000000 00000000 Turmtechnik V30.2
+23:48:02  Automatic Verbindung O.K.  Uhr A soll=708 Uhr A ist=707 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+23:49:00  save Nebenuhr Verbindung O.K.  Uhr A soll=709 Uhr A ist=708 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+23:49:01  Automatic Verbindung O.K.  Uhr A soll=709 Uhr A ist=708 Relais gesendet 00000001 00000000 00000000 00000000 Turmtechnik V30.2
+23:49:02  Automatic Verbindung O.K.  Uhr A soll=709 Uhr A ist=708 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+23:50:00  save Nebenuhr Verbindung O.K.  Uhr A soll=710 Uhr A ist=709 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+23:50:01  Automatic Verbindung O.K.  Uhr A soll=710 Uhr A ist=709 Relais gesendet 00000010 00000000 00000000 00000000 Turmtechnik V30.2
+23:50:02  Automatic Verbindung O.K.  Uhr A soll=710 Uhr A ist=709 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+23:51:00  save Nebenuhr Verbindung O.K.  Uhr A soll=711 Uhr A ist=710 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+23:51:01  Automatic Verbindung O.K.  Uhr A soll=711 Uhr A ist=710 Relais gesendet 00000001 00000000 00000000 00000000 Turmtechnik V30.2
+23:51:02  Automatic Verbindung O.K.  Uhr A soll=711 Uhr A ist=710 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+23:52:00  save Nebenuhr Verbindung O.K.  Uhr A soll=712 Uhr A ist=711 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+23:52:01  Automatic Verbindung O.K.  Uhr A soll=712 Uhr A ist=711 Relais gesendet 00000010 00000000 00000000 00000000 Turmtechnik V30.2
+23:52:02  Automatic Verbindung O.K.  Uhr A soll=712 Uhr A ist=711 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+23:53:00  save Nebenuhr Verbindung O.K.  Uhr A soll=713 Uhr A ist=712 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+23:53:01  Automatic Verbindung O.K.  Uhr A soll=713 Uhr A ist=712 Relais gesendet 00000001 00000000 00000000 00000000 Turmtechnik V30.2
+23:53:02  Automatic Verbindung O.K.  Uhr A soll=713 Uhr A ist=712 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+23:54:00  save Nebenuhr Verbindung O.K.  Uhr A soll=714 Uhr A ist=713 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+23:54:01  Automatic Verbindung O.K.  Uhr A soll=714 Uhr A ist=713 Relais gesendet 00000010 00000000 00000000 00000000 Turmtechnik V30.2
+23:54:02  Automatic Verbindung O.K.  Uhr A soll=714 Uhr A ist=713 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+23:55:00  save Nebenuhr Verbindung O.K.  Uhr A soll=715 Uhr A ist=714 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+23:55:01  Automatic Verbindung O.K.  Uhr A soll=715 Uhr A ist=714 Relais gesendet 00000001 00000000 00000000 00000000 Turmtechnik V30.2
+23:55:02  Automatic Verbindung O.K.  Uhr A soll=715 Uhr A ist=714 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+23:56:00  save Nebenuhr Verbindung O.K.  Uhr A soll=716 Uhr A ist=715 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+23:56:01  Automatic Verbindung O.K.  Uhr A soll=716 Uhr A ist=715 Relais gesendet 00000010 00000000 00000000 00000000 Turmtechnik V30.2
+23:56:02  Automatic Verbindung O.K.  Uhr A soll=716 Uhr A ist=715 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+23:57:00  save Nebenuhr Verbindung O.K.  Uhr A soll=717 Uhr A ist=716 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+23:57:01  Automatic Verbindung O.K.  Uhr A soll=717 Uhr A ist=716 Relais gesendet 00000001 00000000 00000000 00000000 Turmtechnik V30.2
+23:57:02  Automatic Verbindung O.K.  Uhr A soll=717 Uhr A ist=716 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+23:58:00  save Nebenuhr Verbindung O.K.  Uhr A soll=718 Uhr A ist=717 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+23:58:01  Automatic Verbindung O.K.  Uhr A soll=718 Uhr A ist=717 Relais gesendet 00000010 00000000 00000000 00000000 Turmtechnik V30.2
+23:58:02  Automatic Verbindung O.K.  Uhr A soll=718 Uhr A ist=717 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+23:59:00  save Nebenuhr Verbindung O.K.  Uhr A soll=719 Uhr A ist=718 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2
+23:59:01  Automatic Verbindung O.K.  Uhr A soll=719 Uhr A ist=718 Relais gesendet 00000001 00000000 00000000 00000000 Turmtechnik V30.2
+23:59:02  Automatic Verbindung O.K.  Uhr A soll=719 Uhr A ist=718 Relais gesendet 00000000 00000000 00000000 00000000 Turmtechnik V30.2

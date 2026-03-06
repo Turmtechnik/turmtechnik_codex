@@ -1,0 +1,226 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AbsoluteLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                android:id="@+id/manueler_start_layout"
+
+                android:layout_margin="0dp"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent">
+
+    <AbsoluteLayout
+
+        android:id="@+id/feldOben"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="0dp"
+        android:layout_marginTop="0dp"
+
+        android:layout_gravity="top|left"
+        >
+    </AbsoluteLayout>
+
+
+    <!--
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/imageButtonPfeilNachOben"
+        android:background="@drawable/balken_pfeil_nach_oben"
+        android:layout_margin="10dp"
+        android:layout_below="@+id/feldOben"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true" />
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/imageButtonPfeilNachUnten"
+        android:layout_margin="10dp"
+        android:background="@drawable/balken_pfeil_nach_unten"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true" />
+
+    <Button
+        android:layout_width="200dp"
+        android:layout_height="120dp"
+        android:text="Stop"
+        android:textColor="@color/white"
+        android:textSize="60sp"
+        android:layout_margin="10dp"
+
+        android:background="@color/red"
+        android:id="@+id/buttonStop"
+        android:layout_below="@+id/feldOben"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentEnd="true" />
+
+    <Button
+        android:layout_width="200dp"
+        android:layout_height="140dp"
+        android:text="EIN"
+        android:textColor="@color/black"
+        android:textSize="60sp"
+        android:background="@color/yellow"
+        android:id="@+id/buttonEinAus"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentEnd="true"
+        android:layout_alignTop="@+id/buttonTime"
+        android:layout_alignBottom="@+id/buttonTime" />
+
+
+    <Button
+        android:layout_width="200dp"
+        android:layout_height="120dp"
+        android:text="Zurück"
+        android:layout_margin="10dp"
+        android:textColor="@color/white"
+        android:textSize="60sp"
+        android:id="@+id/buttonBack"
+        android:background="@color/light_blue"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentEnd="true" />
+
+
+    <Button
+        android:layout_width="280dp"
+        android:layout_height="120dp"
+        android:text="-"
+        android:gravity="top|center"
+
+        android:layout_margin="10dp"
+        android:textColor="@color/black"
+        android:textSize="100sp"
+        android:textStyle="bold"
+        android:id="@+id/buttonMinus"
+        android:layout_below="@+id/feldOben"
+        android:layout_toLeftOf="@+id/buttonStop"
+        android:layout_toStartOf="@+id/buttonStop" />
+
+    <Button
+        android:layout_width="280dp"
+        android:layout_height="120dp"
+        android:text="+"
+        android:gravity="top|center"
+        android:textColor="@color/black"
+        android:textSize="100sp"
+        android:textStyle="bold"
+        android:id="@+id/buttonPlus"
+        android:layout_alignParentBottom="true"
+        android:layout_alignLeft="@+id/buttonTime"
+        android:layout_alignStart="@+id/buttonTime" />
+
+    <Button
+        android:layout_width="280sp"
+        android:layout_height="120dp"
+        android:text="Um 12:23"
+        android:textColor="@color/black"
+        android:textSize="40sp"
+        android:textStyle="bold"
+        android:id="@+id/buttonTime"
+        android:layout_above="@+id/buttonPlus"
+        android:layout_alignLeft="@+id/buttonMinus"
+        android:layout_alignStart="@+id/buttonMinus"
+        android:layout_below="@+id/buttonMinus" />
+
+    <TextView
+        android:layout_width="300dp"
+        android:layout_height="60dp"
+        android:background="@color/green"
+        android:text="Benutzerprogramm 1"
+        android:textColor="@color/black"
+        android:gravity="center"
+        android:id="@+id/textView1"
+        android:layout_alignTop="@+id/buttonMinus"
+        android:layout_toLeftOf="@+id/buttonMinus"
+        android:layout_toRightOf="@+id/imageButtonPfeilNachOben"
+        android:layout_toEndOf="@+id/imageButtonPfeilNachOben" />
+
+    <TextView
+        android:layout_width="300dp"
+        android:layout_height="60dp"
+        android:background="@color/green"
+        android:text="Benutzerprogramm 2"
+        android:textSize="20sp"
+        android:textColor="@color/black"
+        android:id="@+id/textView2"
+        android:gravity="center"
+        android:layout_below="@+id/textView1"
+        android:layout_toRightOf="@+id/imageButtonPfeilNachOben"
+        android:layout_alignRight="@+id/textView1"
+        android:layout_alignEnd="@+id/textView1" />
+
+    <TextView
+        android:layout_width="300sp"
+        android:layout_height="60dp"
+        android:text="Benutzerprogramm 3"
+        android:textColor="@color/black"
+        android:background="@color/green"
+        android:textSize="30sp"
+        android:gravity="center"
+        android:id="@+id/textView3"
+        android:layout_below="@+id/textView2"
+        android:layout_toRightOf="@+id/imageButtonPfeilNachOben"
+        android:layout_alignRight="@+id/textView2"
+        android:layout_alignEnd="@+id/textView2" />
+
+    <TextView
+        android:layout_width="300sp"
+        android:layout_height="60dp"
+        android:text="Benutzerprogramm 7"
+        android:textColor="@color/black"
+        android:id="@+id/textView7"
+        android:background="@color/green"
+        android:gravity="center"
+        android:layout_toRightOf="@+id/imageButtonPfeilNachUnten"
+        android:layout_toStartOf="@+id/buttonPlus"
+        android:layout_alignRight="@+id/textView6"
+        android:layout_alignEnd="@+id/textView6"
+        android:layout_alignBottom="@+id/buttonPlus" />
+
+    <TextView
+        android:layout_width="300dp"
+        android:layout_height="60dp"
+        android:text="Benutzerprogramm 6"
+        android:textColor="@color/black"
+        android:id="@+id/textView6"
+        android:background="@color/green"
+        android:textSize="20sp"
+        android:gravity="center"
+        android:layout_above="@+id/textView7"
+        android:layout_toRightOf="@+id/imageButtonPfeilNachUnten"
+        android:layout_alignRight="@+id/textView4"
+        android:layout_alignEnd="@+id/textView4" />
+
+    <TextView
+        android:layout_width="300dp"
+        android:layout_height="60dp"
+        android:text="Benutzerprogramm 5"
+        android:textColor="@color/black"
+        android:background="@color/green"
+        android:textSize="30sp"
+        android:gravity="center"
+        android:id="@+id/textView5"
+        android:layout_above="@+id/textView6"
+        android:layout_toRightOf="@+id/imageButtonPfeilNachUnten"
+        android:layout_alignRight="@+id/textView6"
+        android:layout_alignEnd="@+id/textView6" />
+
+    <TextView
+        android:layout_width="300dp"
+        android:layout_height="60dp"
+        android:text="Benutzerprogramm 4"
+        android:textColor="@color/red"
+        android:textSize="40sp"
+        android:background="@color/green"
+        android:gravity="center"
+        android:id="@+id/textView4"
+        android:layout_above="@+id/textView5"
+        android:layout_toRightOf="@+id/imageButtonPfeilNachOben"
+        android:layout_below="@+id/textView3"
+        android:layout_alignRight="@+id/textView3"
+        android:layout_alignEnd="@+id/textView3" />
+    -->
+
+</AbsoluteLayout>

@@ -1,0 +1,31 @@
+<resources>
+
+    <string name="app_name">Turmtechnik</string>
+    <string name="hello_world">Hello world!</string>
+    <string name="menu_settings">Settings</string>
+    <string name="title_activity_turmtechnik">Turmtechnik V40.0</string>
+    <string name="title_activity_editor">EditorActivity</string>
+    <!--  Version 11.2 war letzte Version in Eclipse jetzt auf Android Studio -->
+    <string name="anlage_import_passwort">turmtechnik</string>
+    <string name="anlage_import_dialog_titel">Anlage importieren</string>
+    <string name="anlage_import_passwort_hinweis">Passwort eingeben (Logo 5 Sek. gedrückt):</string>
+    <string name="anlage_import_datei_auswaehlen">Import-Datei im Turmtechnik-Ordner wählen:</string>
+    <string name="anlage_import_erfolg">Anlage importiert. App wird neu gestartet.</string>
+    <string name="anlage_import_fehler">Import fehlgeschlagen.</string>
+    <string name="anlage_import_keine_dateien">Keine .db-Dateien im Turmtechnik-Ordner gefunden.</string>
+    <string name="anlage_menue_titel">Admin-Menü</string>
+    <string name="anlage_menue_import">Anlage importieren</string>
+    <string name="anlage_menue_export">Anlage exportieren (Backup)</string>
+    <string name="anlage_menue_webui">Web-UI im Browser öffnen</string>
+    <string name="web_ui_zurueck">Zurück</string>
+    <string name="anlage_export_erfolg">Backup gespeichert im Turmtechnik-Ordner.</string>
+    <string name="anlage_export_fehler">Export fehlgeschlagen.</string>
+    <string name="anlage_menue_debloat">Debloat-Skript exportieren (ADB)</string>
+    <string name="debloat_titel">Samsung/Android Debloat (ADB)</string>
+    <string name="debloat_anleitung">Dieses Skript entfernt viele vorinstallierte Apps nur für den aktuellen Benutzer (pm uninstall --user 0).\n\nDie App kann die Befehle nicht selbst ausführen. So geht\'s:\n\n1. USB-Debugging auf dem Gerät aktivieren (Entwickleroptionen).\n2. Gerät per USB mit dem PC verbinden.\n3. Auf dem PC ADB installieren (Android SDK Platform-Tools).\n4. „Skript exportieren“ tippen – die .bat-Datei wird im Turmtechnik-Ordner gespeichert.\n5. Die Datei auf den PC kopieren und dort ausführen (Doppelklick bzw. in der Eingabeaufforderung).\n\nHinweis: Einige Pakete können auf Ihrem Gerät fehlen – das Skript ignoriert Fehler und fährt fort. Quelle: Heavy Debloat Script by invinciblevenom.</string>
+    <string name="debloat_export_bat">Skript exportieren (Windows .bat)</string>
+    <string name="debloat_zurueck">Zurück</string>
+    <string name="debloat_export_erfolg">Skript gespeichert: %s\nDatei auf PC kopieren und dort ausführen.</string>
+    <string name="debloat_export_fehler">Export fehlgeschlagen:</string>
+    <string name="debloat_export_fehler_ordner">Turmtechnik-Ordner konnte nicht erstellt werden.</string>
+</resources>

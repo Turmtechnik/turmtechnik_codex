@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="16dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/debloat_titel"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:paddingBottom="8dp" />
+
+        <TextView
+            android:id="@+id/debloat_anleitung"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/debloat_anleitung"
+            android:textSize="14sp"
+            android:paddingBottom="16dp" />
+
+        <Button
+            android:id="@+id/debloat_export_bat"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/debloat_export_bat"
+            android:padding="12dp"
+            android:layout_marginBottom="8dp" />
+
+        <Button
+            android:id="@+id/debloat_zurueck"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/debloat_zurueck"
+            android:padding="12dp" />
+    </LinearLayout>
+</ScrollView>

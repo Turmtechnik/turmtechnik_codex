@@ -1,0 +1,1885 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Turmtechnik Android App - Projekt-Dokumentation</title>
+    <style>
+        @media print {
+            @page {
+                size: A4;
+                margin: 2cm;
+            }
+            body {
+                font-size: 11pt;
+            }
+            h1 {
+                page-break-before: always;
+            }
+            h1:first-child {
+                page-break-before: auto;
+            }
+            h2, h3 {
+                page-break-after: avoid;
+            }
+        }
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #fff;
+        }
+        h1 {
+            color: #2c3e50;
+            border-bottom: 3px solid #3498db;
+            padding-bottom: 10px;
+            margin-top: 40px;
+            page-break-before: always;
+        }
+        h1:first-child {
+            page-break-before: auto;
+            margin-top: 0;
+        }
+        h2 {
+            color: #34495e;
+            border-bottom: 2px solid #95a5a6;
+            padding-bottom: 5px;
+            margin-top: 30px;
+            page-break-after: avoid;
+        }
+        h3 {
+            color: #555;
+            margin-top: 20px;
+            page-break-after: avoid;
+        }
+        h4 {
+            color: #666;
+            margin-top: 15px;
+        }
+        code {
+            background-color: #f4f4f4;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Consolas', 'Courier New', monospace;
+            font-size: 0.9em;
+        }
+        pre {
+            background-color: #f4f4f4;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+            border-left: 4px solid #3498db;
+        }
+        pre code {
+            background-color: transparent;
+            padding: 0;
+        }
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 20px 0;
+            font-size: 0.95em;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: left;
+        }
+        th {
+            background-color: #3498db;
+            color: white;
+            font-weight: bold;
+        }
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        a {
+            color: #3498db;
+            text-decoration: none;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+        ul, ol {
+            margin: 10px 0;
+            padding-left: 30px;
+        }
+        li {
+            margin: 5px 0;
+        }
+        blockquote {
+            border-left: 4px solid #3498db;
+            margin: 20px 0;
+            padding: 10px 20px;
+            background-color: #f9f9f9;
+            font-style: italic;
+        }
+        .toc {
+            background-color: #f4f4f4;
+            padding: 20px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        .toc ul {
+            list-style-type: none;
+            padding-left: 0;
+        }
+        .toc li {
+            margin: 5px 0;
+        }
+        .toc a {
+            color: #2c3e50;
+        }
+        @media print {
+            .no-print {
+                display: none;
+            }
+        }
+        .print-hint {
+            background-color: #fff3cd;
+            border: 1px solid #ffc107;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+            text-align: center;
+        }
+        .print-hint strong {
+            color: #856404;
+        }
+    </style>
+</head>
+<body>
+    <div class="print-hint no-print">
+        <strong>Hinweis:</strong> Drücken Sie <strong>Strg+P</strong> (oder <strong>Cmd+P</strong> auf Mac) um diese Seite als PDF zu speichern.
+    </div>
+    <h1 id="turmtechnik-android-app-vollstandige-projekt-dokumentation">Turmtechnik Android App - Vollständige Projekt-Dokumentation</h1>
+<h2 id="inhaltsverzeichnis">Inhaltsverzeichnis</h2>
+<h3 id="teil-i-einleitung-und-ubersicht">Teil I: Einleitung und Übersicht</h3>
+<ol>
+<li><a href="#1-projektbeschreibung">Projektbeschreibung</a></li>
+<li><a href="#2-zielgruppe">Zielgruppe</a></li>
+<li><a href="#3-systemanforderungen">Systemanforderungen</a></li>
+<li><a href="#4-übersicht-der-hauptfunktionen">Übersicht der Hauptfunktionen</a></li>
+</ol>
+<h3 id="teil-ii-installation-und-einrichtung-fur-installateure">Teil II: Installation und Einrichtung (für Installateure)</h3>
+<ol>
+<li><a href="#5-installation-der-android-app">Installation der Android-App</a></li>
+<li><a href="#6-erste-konfiguration">Erste Konfiguration</a></li>
+<li><a href="#7-datenbank-setup">Datenbank-Setup</a></li>
+<li><a href="#8-excel-dateien-import">Excel-Dateien Import</a></li>
+<li><a href="#9-web-ui-zugriff-einrichten">Web-UI Zugriff einrichten</a></li>
+<li><a href="#10-berechtigungen">Berechtigungen</a></li>
+<li><a href="#11-netzwerk-konfiguration">Netzwerk-Konfiguration</a></li>
+</ol>
+<h3 id="teil-iii-funktionen-und-konfiguration">Teil III: Funktionen und Konfiguration</h3>
+<ol>
+<li><a href="#12-programmsteuerung">Programmsteuerung</a></li>
+<li><a href="#13-feiertage-verwaltung">Feiertage-Verwaltung</a></li>
+<li><a href="#14-platinen-konfiguration">Platinen-Konfiguration</a></li>
+<li><a href="#15-nebenuhr-konfiguration">Nebenuhr-Konfiguration</a></li>
+<li><a href="#16-vorschwingen-konfiguration">Vorschwingen-Konfiguration</a></li>
+<li><a href="#17-relais-verwaltung">Relais-Verwaltung</a></li>
+<li><a href="#18-melodien-verwaltung">Melodien-Verwaltung</a></li>
+<li><a href="#19-zeitsynchronisation">Zeitsynchronisation</a></li>
+<li><a href="#20-schlagwerk">Schlagwerk</a></li>
+<li><a href="#21-heizung">Heizung</a></li>
+<li><a href="#22-web-ui-konfiguration">Web-UI Konfiguration</a></li>
+<li><a href="#23-datenbank-migration">Datenbank-Migration</a></li>
+<li><a href="#24-system-konfiguration">System-Konfiguration</a></li>
+</ol>
+<h3 id="teil-iv-benutzerhandbuch-fur-anwender">Teil IV: Benutzerhandbuch (für Anwender)</h3>
+<ol>
+<li><a href="#25-grundfunktionen">Grundfunktionen</a></li>
+<li><a href="#26-programm-abfrage">Programm-Abfrage</a></li>
+<li><a href="#27-manuelle-steuerung">Manuelle Steuerung</a></li>
+<li><a href="#28-konfiguration-über-web-ui">Konfiguration über Web-UI</a></li>
+</ol>
+<h3 id="teil-v-technische-details-fur-installateure">Teil V: Technische Details (für Installateure)</h3>
+<ol>
+<li><a href="#29-architektur">Architektur</a></li>
+<li><a href="#30-dateistruktur">Dateistruktur</a></li>
+<li><a href="#31-api-dokumentation">API-Dokumentation</a></li>
+</ol>
+<h3 id="teil-vi-anhange">Teil VI: Anhänge</h3>
+<ol>
+<li><a href="#32-anhang-a-excel-datei-format">Anhang A: Excel-Datei-Format</a></li>
+<li><a href="#33-anhang-b-datenbank-schema">Anhang B: Datenbank-Schema</a></li>
+<li><a href="#34-anhang-c-api-referenz">Anhang C: API-Referenz</a></li>
+<li><a href="#35-anhang-d-glossar">Anhang D: Glossar</a></li>
+<li><a href="#36-anhang-e-fehlerbehebung">Anhang E: Fehlerbehebung</a></li>
+</ol>
+<hr />
+<h2 id="1-projektbeschreibung">1. Projektbeschreibung</h2>
+<p>Die <strong>Turmtechnik Android App</strong> ist eine umfassende Steuerungssoftware für Kirchturmtechnik-Anlagen. Die App ermöglicht die vollautomatische Steuerung von Glocken, Schlagwerken, Nebenuhren, Heizungen und weiteren Komponenten einer Turmtechnik-Anlage.</p>
+<h3 id="hauptmerkmale">Hauptmerkmale:</h3>
+<ul>
+<li><strong>Automatische Programmsteuerung</strong> mit Zeitplanung, Wochentags-Filtern und Prioritäten</li>
+<li><strong>Feiertagsverwaltung</strong> mit Osterfeiertagen, fixen Feiertagen und Sonderfeiertagen</li>
+<li><strong>Platinen-Konfiguration</strong> für Bluetooth- und WiFi-Module (Carambola)</li>
+<li><strong>Nebenuhr-Steuerung</strong> für bis zu 4 Nebenuhren (A, B, C, D) inkl. Monduhr</li>
+<li><strong>Vorschwingen-Konfiguration</strong> für Glocken-Vorschwingen vor dem Läuten</li>
+<li><strong>Web-UI</strong> für Remote-Konfiguration über Browser</li>
+<li><strong>Datenbank-Integration</strong> mit SQLite für persistente Speicherung</li>
+<li><strong>Excel-Integration</strong> für Import/Export von Konfigurationsdaten</li>
+</ul>
+<h3 id="technologie-stack">Technologie-Stack:</h3>
+<ul>
+<li><strong>Plattform:</strong> Android (Java)</li>
+<li><strong>Datenbank:</strong> SQLite</li>
+<li><strong>Web-Server:</strong> Embedded HTTP Server (SimpleHttpServer)</li>
+<li><strong>Datenformat:</strong> Excel (.xls) für Import/Export, JSON für API</li>
+</ul>
+<hr />
+<h2 id="2-zielgruppe">2. Zielgruppe</h2>
+<h3 id="installateure">Installateure</h3>
+<p>Diese Dokumentation enthält technische Details für:<br />
+- System-Installateure<br />
+- Wartungspersonal<br />
+- Entwickler<br />
+- Systemadministratoren</p>
+<p><strong>Relevante Kapitel:</strong> Teil II (Installation), Teil V (Technische Details), Teil VI (Anhänge)</p>
+<h3 id="anwender">Anwender</h3>
+<p>Diese Dokumentation enthält Bedienungsanleitungen für:<br />
+- Endbenutzer<br />
+- Bediener der Anlage<br />
+- Personen, die Programme konfigurieren</p>
+<p><strong>Relevante Kapitel:</strong> Teil IV (Benutzerhandbuch), Teil III (Funktionen)</p>
+<hr />
+<h2 id="3-systemanforderungen">3. Systemanforderungen</h2>
+<h3 id="hardware-anforderungen">Hardware-Anforderungen:</h3>
+<ul>
+<li><strong>Android-Gerät:</strong> Tablet oder Smartphone</li>
+<li><strong>Android-Version:</strong> Mindestens Android 5.0 (API Level 21)</li>
+<li><strong>Speicherplatz:</strong> Mindestens 100 MB frei</li>
+<li><strong>RAM:</strong> Mindestens 512 MB empfohlen</li>
+<li><strong>Netzwerk:</strong> WiFi oder Mobilfunk für Web-UI Zugriff (optional)</li>
+</ul>
+<h3 id="software-anforderungen">Software-Anforderungen:</h3>
+<ul>
+<li><strong>Android Betriebssystem:</strong> 5.0 oder höher</li>
+<li><strong>Java Runtime:</strong> In Android integriert</li>
+<li><strong>Berechtigungen:</strong> </li>
+<li>Internet-Zugriff</li>
+<li>Bluetooth (optional)</li>
+<li>WRITE_SECURE_SETTINGS (für Zeitsynchronisation, über ADB)</li>
+</ul>
+<h3 id="zusatzliche-hardware-optional">Zusätzliche Hardware (optional):</h3>
+<ul>
+<li><strong>Carambola-Module:</strong> Für WiFi/Bluetooth-Kommunikation</li>
+<li><strong>GPS-Modul:</strong> Für Zeitsynchronisation</li>
+<li><strong>NMEA-GPS-Interface:</strong> Für präzise Zeitsynchronisation</li>
+</ul>
+<hr />
+<h2 id="4-ubersicht-der-hauptfunktionen">4. Übersicht der Hauptfunktionen</h2>
+<h3 id="41-programmsteuerung">4.1 Programmsteuerung</h3>
+<ul>
+<li>Automatische Ausführung von Programmen zu festgelegten Zeiten</li>
+<li>Unterstützung für Normalprogramm, Feiertagsprogramme und Benutzerprogramme</li>
+<li>Sonnenaufgang/Sonnenuntergang-Integration (SA/SU)</li>
+<li>Wochentags-Filterung</li>
+<li>Prioritäts-System (1-9)</li>
+<li>Verknüpfte Tasten</li>
+<li>Periodisch (Sommer/Winter)</li>
+</ul>
+<h3 id="42-feiertage-verwaltung">4.2 Feiertage-Verwaltung</h3>
+<ul>
+<li><strong>Osterfeiertage:</strong> Variable Feiertage, die sich nach dem Osterdatum richten</li>
+<li><strong>Fixe Feiertage:</strong> Feste Feiertage mit festem Datum (z.B. Weihnachten)</li>
+<li><strong>Sonderfeiertage:</strong> Verschobene Feiertage (auf Sonntag)</li>
+<li><strong>Vorfeiertag:</strong> Automatische Erstellung des Tages vor einem Feiertag</li>
+<li>Dynamische Berechnung von Sonderfeiertagen</li>
+</ul>
+<h3 id="43-platinen-konfiguration">4.3 Platinen-Konfiguration</h3>
+<ul>
+<li>Konfiguration von Carambola-Modulen</li>
+<li>Bluetooth- und WiFi-Modus</li>
+<li>IP-Adressen und Ports</li>
+<li>MAC-Adressen</li>
+<li>Relais-Anzahl pro Platine</li>
+<li>Online-Status-Anzeige</li>
+<li>Scan-Relais und Antwortzeit</li>
+</ul>
+<h3 id="44-nebenuhr-konfiguration">4.4 Nebenuhr-Konfiguration</h3>
+<ul>
+<li>4 Nebenuhren (A, B, C, D)</li>
+<li>Monduhr (D) mit Mondphasen-Anzeige</li>
+<li>Wechselschaltung (Relais A/B)</li>
+<li>Impuls-Längen und Pause-Zeiten (in Sekunden)</li>
+<li>12-Stunden-Modus</li>
+<li>Layout-Konfiguration</li>
+</ul>
+<h3 id="45-vorschwingen-konfiguration">4.5 Vorschwingen-Konfiguration</h3>
+<ul>
+<li>Vorschwingen-Relais und Läuten-Relais</li>
+<li>Vorschwingzeit in Sekunden</li>
+<li>Berechnete Relais-Nummern</li>
+<li>Dropdown-Auswahl für Schwingen/Melodie-Tasten</li>
+</ul>
+<h3 id="46-web-ui">4.6 Web-UI</h3>
+<ul>
+<li>Remote-Konfiguration über Browser</li>
+<li>REST API für alle Konfigurationsbereiche</li>
+<li>Responsive Design (Desktop, Tablet, Smartphone)</li>
+<li>Keine App-Updates für UI-Änderungen nötig</li>
+</ul>
+<h3 id="47-datenbank-integration">4.7 Datenbank-Integration</h3>
+<ul>
+<li>SQLite-Datenbank für persistente Speicherung</li>
+<li>Migration von Excel-Dateien zur Datenbank</li>
+<li>Backup und Wiederherstellung</li>
+<li>Vollständige CRUD-Operationen</li>
+</ul>
+<hr />
+<h2 id="5-installation-der-android-app">5. Installation der Android-App</h2>
+<h3 id="51-apk-installation">5.1 APK-Installation</h3>
+<ol>
+<li><strong>APK-Datei übertragen:</strong></li>
+<li>Übertragen Sie die <code>.apk</code> Datei auf das Android-Gerät</li>
+<li>
+<p>Per USB, E-Mail oder Cloud-Speicher</p>
+</li>
+<li>
+<p><strong>Installation starten:</strong></p>
+</li>
+<li>Öffnen Sie die APK-Datei auf dem Gerät</li>
+<li>Bestätigen Sie die Installation von "Unbekannten Quellen" (falls nötig)</li>
+<li>
+<p>Folgen Sie den Installationsanweisungen</p>
+</li>
+<li>
+<p><strong>App starten:</strong></p>
+</li>
+<li>Öffnen Sie die App "Turmtechnik" aus dem App-Menü</li>
+<li>Die App startet im Landscape-Modus (Querformat)</li>
+</ol>
+<h3 id="52-erste-schritte-nach-installation">5.2 Erste Schritte nach Installation</h3>
+<ol>
+<li><strong>Berechtigungen erteilen:</strong></li>
+<li>Die App fragt nach notwendigen Berechtigungen</li>
+<li>
+<p>Erteilen Sie alle angeforderten Berechtigungen</p>
+</li>
+<li>
+<p><strong>WRITE_SECURE_SETTINGS Permission:</strong></p>
+</li>
+<li>
+<p>Diese Permission muss über ADB vergeben werden (siehe Kapitel 10)</p>
+</li>
+<li>
+<p><strong>Excel-Dateien kopieren:</strong></p>
+</li>
+<li>Kopieren Sie alle Excel-Dateien in das Verzeichnis <code>/sdcard/Turmtechnik/</code></li>
+<li>
+<p>Erforderliche Dateien:</p>
+<ul>
+<li><code>System.xls</code></li>
+<li><code>Normalprogramm.xls</code></li>
+<li><code>Beschriftung-Tasten.xls</code></li>
+<li>Weitere Programm-Dateien (Feiertage, etc.)</li>
+</ul>
+</li>
+<li>
+<p><strong>Datenbank initialisieren:</strong></p>
+</li>
+<li>Die Datenbank wird beim ersten Start automatisch erstellt</li>
+<li>Verwenden Sie die Web-UI, um Daten aus Excel zu importieren</li>
+</ol>
+<hr />
+<h2 id="6-erste-konfiguration">6. Erste Konfiguration</h2>
+<h3 id="61-grundkonfiguration">6.1 Grundkonfiguration</h3>
+<p>Nach der Installation müssen folgende Schritte durchgeführt werden:</p>
+<ol>
+<li><strong>Platinen konfigurieren:</strong></li>
+<li>Öffnen Sie die Web-UI (siehe Kapitel 9)</li>
+<li>Navigieren Sie zu "Platinen-Konfiguration"</li>
+<li>
+<p>Fügen Sie alle Platinen hinzu (IP-Adressen, Ports, MAC-Adressen)</p>
+</li>
+<li>
+<p><strong>Programme importieren:</strong></p>
+</li>
+<li>Navigieren Sie zu "Programm-Editor" in der Web-UI</li>
+<li>Klicken Sie auf "Import Excel Programmtage"</li>
+<li>
+<p>Warten Sie, bis der Import abgeschlossen ist</p>
+</li>
+<li>
+<p><strong>Feiertage konfigurieren:</strong></p>
+</li>
+<li>Osterfeiertage: Werden automatisch erstellt, können aber angepasst werden</li>
+<li>Fixe Feiertage: Importieren Sie aus Excel oder fügen Sie manuell hinzu</li>
+<li>
+<p>Sonderfeiertage: Werden automatisch berechnet, wenn Verschiebung aktiviert ist</p>
+</li>
+<li>
+<p><strong>Nebenuhren konfigurieren:</strong></p>
+</li>
+<li>Navigieren Sie zu "Nebenuhr Config"</li>
+<li>Konfigurieren Sie Nebenuhr A, B, C und D (Monduhr)</li>
+<li>Setzen Sie Relais-Nummern, Impuls-Längen und Pause-Zeiten</li>
+</ol>
+<h3 id="62-system-einstellungen">6.2 System-Einstellungen</h3>
+<ol>
+<li><strong>Autostart aktivieren:</strong></li>
+<li>Die App startet automatisch beim Boot des Geräts</li>
+<li>
+<p>Kann in den System-Einstellungen deaktiviert werden</p>
+</li>
+<li>
+<p><strong>Zeitsynchronisation:</strong></p>
+</li>
+<li>Konfigurieren Sie Zeitserver oder GPS</li>
+<li>
+<p>Aktivieren Sie die automatische Zeitsynchronisation</p>
+</li>
+<li>
+<p><strong>Power off bei % Akku:</strong></p>
+</li>
+<li>Setzen Sie den Schwellwert für automatisches Abschalten</li>
+<li>Standard: 75%</li>
+</ol>
+<hr />
+<h2 id="7-datenbank-setup">7. Datenbank-Setup</h2>
+<h3 id="71-datenbank-erstellung">7.1 Datenbank-Erstellung</h3>
+<p>Die Datenbank wird automatisch beim ersten Start der App erstellt:</p>
+<ul>
+<li><strong>Datenbankname:</strong> <code>turmtechnik_config.db</code></li>
+<li><strong>Speicherort:</strong> <code>/data/data/tom.turmtechnik/databases/turmtechnik_config.db</code></li>
+<li><strong>Version:</strong> 12 (wird automatisch aktualisiert)</li>
+</ul>
+<h3 id="72-datenbank-tabellen">7.2 Datenbank-Tabellen</h3>
+<p>Die Datenbank enthält folgende Tabellen:</p>
+<ol>
+<li><strong>platinen_config</strong> - Platinen-Konfiguration</li>
+<li><strong>io_config</strong> - I/O-Konfiguration (Key-Value-Paare)</li>
+<li><strong>nebenuhr_config</strong> - Nebenuhr-Konfiguration (A, B, C, D)</li>
+<li><strong>tagtypen</strong> - Tagtypen (Normalprogramm, Feiertage, etc.)</li>
+<li><strong>programme</strong> - Programme für alle Tagtypen</li>
+<li><strong>osterfeiertage</strong> - Osterfeiertage (variable Feiertage)</li>
+<li><strong>feste_feiertage</strong> - Fixe Feiertage</li>
+<li><strong>sonderfeiertage</strong> - Sonderfeiertage (verschobene Feiertage)</li>
+<li><strong>vorschwingen_config</strong> - Vorschwingen-Konfiguration</li>
+</ol>
+<h3 id="73-datenbank-migration">7.3 Datenbank-Migration</h3>
+<p>Bei App-Updates wird die Datenbank automatisch migriert:</p>
+<ul>
+<li><strong>onUpgrade()</strong> Methode führt Migrationen durch</li>
+<li>Neue Spalten werden automatisch hinzugefügt</li>
+<li>Bestehende Daten bleiben erhalten</li>
+</ul>
+<h3 id="74-datenbank-backup">7.4 Datenbank-Backup</h3>
+<p><strong>Manuelles Backup:</strong></p>
+<pre class="codehilite"><code class="language-bash">adb pull /data/data/tom.turmtechnik/databases/turmtechnik_config.db backup.db
+</code></pre>
+
+<p><strong>Wiederherstellung:</strong></p>
+<pre class="codehilite"><code class="language-bash">adb push backup.db /data/data/tom.turmtechnik/databases/turmtechnik_config.db
+</code></pre>
+
+<hr />
+<h2 id="8-excel-dateien-import">8. Excel-Dateien Import</h2>
+<h3 id="81-erforderliche-excel-dateien">8.1 Erforderliche Excel-Dateien</h3>
+<p>Folgende Excel-Dateien müssen vorhanden sein:</p>
+<ol>
+<li><strong>System.xls</strong> - System-Konfiguration</li>
+<li>Sheet 14: Platinen-Konfiguration</li>
+<li>Sheet 15: Nebenuhr-Konfiguration</li>
+<li>Sheet 9: Vorschwingen-Konfiguration</li>
+<li>Sheet 12: Osterfeiertage</li>
+<li>
+<p>Sheet 13: Fixe Feiertage</p>
+</li>
+<li>
+<p><strong>Normalprogramm.xls</strong> - Normalprogramm</p>
+</li>
+<li>
+<p><strong>Beschriftung-Tasten.xls</strong> - Tasten-Beschriftungen und Relais-Zuordnung</p>
+</li>
+<li>
+<p><strong>Weitere Programm-Dateien:</strong></p>
+</li>
+<li>Feiertagsprogramme (z.B. <code>Weihnachten.xls</code>)</li>
+<li>Benutzerprogramme</li>
+</ol>
+<h3 id="82-import-uber-web-ui">8.2 Import über Web-UI</h3>
+<ol>
+<li><strong>Programme importieren:</strong></li>
+<li>Öffnen Sie die Web-UI</li>
+<li>Navigieren Sie zu "Programm-Editor"</li>
+<li>Klicken Sie auf "Import Excel Programmtage"</li>
+<li>
+<p>Warten Sie, bis der Import abgeschlossen ist</p>
+</li>
+<li>
+<p><strong>Feiertage importieren:</strong></p>
+</li>
+<li><strong>Osterfeiertage:</strong> Klicken Sie auf "Aus Excel importieren" in der Osterfeiertage-Seite</li>
+<li>
+<p><strong>Fixe Feiertage:</strong> Klicken Sie auf "Aus Excel importieren" in der Fixe Feiertage-Seite</p>
+</li>
+<li>
+<p><strong>Vorschwingen importieren:</strong></p>
+</li>
+<li>Navigieren Sie zu "Vorschwingen Config"</li>
+<li>Klicken Sie auf "Aus Excel importieren"</li>
+</ol>
+<h3 id="83-import-status">8.3 Import-Status</h3>
+<p>Nach dem Import:<br />
+- Programme werden in der Datenbank gespeichert<br />
+- Excel-Dateien bleiben als Backup erhalten<br />
+- Die App verwendet primär die Datenbank</p>
+<hr />
+<h2 id="9-web-ui-zugriff-einrichten">9. Web-UI Zugriff einrichten</h2>
+<h3 id="91-web-server-starten">9.1 Web-Server starten</h3>
+<p>Der Web-Server startet automatisch beim Start der App:</p>
+<ul>
+<li><strong>Port:</strong> 8080 (Standard)</li>
+<li><strong>Zugriff:</strong> <code>http://&lt;IP-Adresse&gt;:8080</code></li>
+<li><strong>Lokal:</strong> <code>http://localhost:8080</code> (vom Android-Gerät aus)</li>
+</ul>
+<h3 id="92-ip-adresse-ermitteln">9.2 IP-Adresse ermitteln</h3>
+<p><strong>Auf dem Android-Gerät:</strong><br />
+1. Öffnen Sie "Einstellungen" → "WLAN"<br />
+2. Tippen Sie auf das verbundene Netzwerk<br />
+3. Notieren Sie die IP-Adresse (z.B. <code>192.168.1.100</code>)</p>
+<p><strong>Alternative:</strong><br />
+- Die IP-Adresse wird in der App angezeigt (falls implementiert)<br />
+- Oder über ADB: <code>adb shell ip addr show wlan0</code></p>
+<h3 id="93-zugriff-vom-pctablet">9.3 Zugriff vom PC/Tablet</h3>
+<ol>
+<li><strong>Stellen Sie sicher, dass Geräte im gleichen Netzwerk sind:</strong></li>
+<li>
+<p>Android-Gerät und PC/Tablet müssen im gleichen WiFi-Netzwerk sein</p>
+</li>
+<li>
+<p><strong>Öffnen Sie Browser:</strong></p>
+</li>
+<li>Geben Sie ein: <code>http://&lt;IP-Adresse&gt;:8080</code></li>
+<li>
+<p>Beispiel: <code>http://192.168.1.100:8080</code></p>
+</li>
+<li>
+<p><strong>Hauptmenü:</strong></p>
+</li>
+<li>Sie sehen das Hauptmenü mit allen verfügbaren Konfigurationsseiten</li>
+</ol>
+<h3 id="94-browser-kompatibilitat">9.4 Browser-Kompatibilität</h3>
+<p><strong>Empfohlene Browser:</strong><br />
+- Chrome (empfohlen)<br />
+- Firefox<br />
+- Edge<br />
+- Safari (iOS/macOS)</p>
+<p><strong>Nicht unterstützt:</strong><br />
+- Internet Explorer (veraltet)</p>
+<hr />
+<h2 id="10-berechtigungen">10. Berechtigungen</h2>
+<h3 id="101-standard-berechtigungen">10.1 Standard-Berechtigungen</h3>
+<p>Die App benötigt folgende Berechtigungen (werden automatisch angefordert):</p>
+<ul>
+<li><strong>INTERNET</strong> - Für Web-UI und Zeitsynchronisation</li>
+<li><strong>ACCESS_NETWORK_STATE</strong> - Netzwerk-Status prüfen</li>
+<li><strong>BLUETOOTH</strong> - Bluetooth-Kommunikation (optional)</li>
+<li><strong>BLUETOOTH_ADMIN</strong> - Bluetooth-Verwaltung (optional)</li>
+<li><strong>WAKE_LOCK</strong> - Gerät wachhalten</li>
+<li><strong>RECEIVE_BOOT_COMPLETED</strong> - Autostart</li>
+<li><strong>WRITE_EXTERNAL_STORAGE</strong> - Excel-Dateien lesen/schreiben</li>
+<li><strong>READ_EXTERNAL_STORAGE</strong> - Excel-Dateien lesen</li>
+</ul>
+<h3 id="102-write_secure_settings-permission">10.2 WRITE_SECURE_SETTINGS Permission</h3>
+<p>Diese Permission ist <strong>erforderlich</strong> für die automatische Zeitsynchronisation, kann aber <strong>nicht</strong> über die normalen App-Einstellungen vergeben werden.</p>
+<p><strong>Vergabe über ADB:</strong></p>
+<ol>
+<li><strong>USB-Debugging aktivieren:</strong></li>
+<li>Einstellungen → Über das Telefon → Build-Nummer 7x antippen</li>
+<li>
+<p>Einstellungen → Entwickleroptionen → USB-Debugging aktivieren</p>
+</li>
+<li>
+<p><strong>Gerät per USB verbinden:</strong></p>
+</li>
+<li>Android-Gerät per USB-Kabel mit Computer verbinden</li>
+<li>
+<p>"USB-Debugging zulassen" bestätigen</p>
+</li>
+<li>
+<p><strong>ADB-Befehl ausführen:</strong><br />
+<code>bash
+   adb shell pm grant tom.turmtechnik android.permission.WRITE_SECURE_SETTINGS</code></p>
+</li>
+<li>
+<p><strong>Permission prüfen:</strong><br />
+<code>bash
+   adb shell dumpsys package tom.turmtechnik | grep WRITE_SECURE_SETTINGS</code></p>
+</li>
+<li>
+<p><strong>App neu starten:</strong></p>
+</li>
+<li>App vollständig beenden</li>
+<li>App neu starten</li>
+</ol>
+<p><strong>Hinweis:</strong> Die Permission bleibt auch nach Neustart erhalten.</p>
+<p><strong>Detaillierte Anleitung:</strong> Siehe <code>WRITE_SECURE_SETTINGS_ANLEITUNG.md</code></p>
+<hr />
+<h2 id="11-netzwerk-konfiguration">11. Netzwerk-Konfiguration</h2>
+<h3 id="111-wifi-konfiguration">11.1 WiFi-Konfiguration</h3>
+<p><strong>Für Web-UI Zugriff:</strong></p>
+<ol>
+<li><strong>WiFi aktivieren:</strong></li>
+<li>Einstellungen → WLAN aktivieren</li>
+<li>
+<p>Mit dem gewünschten Netzwerk verbinden</p>
+</li>
+<li>
+<p><strong>Statische IP (optional):</strong></p>
+</li>
+<li>Für stabilen Zugriff kann eine statische IP konfiguriert werden</li>
+<li>Einstellungen → WLAN → Netzwerk → Erweitert → Statische IP</li>
+</ol>
+<h3 id="112-firewall-einstellungen">11.2 Firewall-Einstellungen</h3>
+<p><strong>Falls Web-UI nicht erreichbar:</strong></p>
+<ol>
+<li><strong>Android Firewall:</strong></li>
+<li>Stellen Sie sicher, dass die App Internet-Zugriff hat</li>
+<li>
+<p>Einstellungen → Apps → Turmtechnik → Datenverbrauch → Unbegrenzt</p>
+</li>
+<li>
+<p><strong>Router Firewall:</strong></p>
+</li>
+<li>Port 8080 muss für lokale Verbindungen offen sein</li>
+<li>Normalerweise kein Problem im lokalen Netzwerk</li>
+</ol>
+<h3 id="113-bluetooth-konfiguration">11.3 Bluetooth-Konfiguration</h3>
+<p><strong>Für Bluetooth-Modus:</strong></p>
+<ol>
+<li><strong>Bluetooth aktivieren:</strong></li>
+<li>
+<p>Einstellungen → Bluetooth aktivieren</p>
+</li>
+<li>
+<p><strong>Platinen im Bluetooth-Modus:</strong></p>
+</li>
+<li>In der Platinen-Konfiguration: Modus auf "Bluetooth" setzen</li>
+<li>MAC-Adressen der Platinen eintragen</li>
+</ol>
+<hr />
+<h2 id="12-programmsteuerung">12. Programmsteuerung</h2>
+<h3 id="121-programmtypen">12.1 Programmtypen</h3>
+<p>Die App unterstützt verschiedene Programmtypen:</p>
+<ol>
+<li><strong>Normalprogramm</strong> (<code>Normalprogramm.xls</code>)</li>
+<li>Standard-Programm für normale Wochentage</li>
+<li>
+<p>Wird verwendet, wenn kein Feiertag oder Benutzerprogramm aktiv ist</p>
+</li>
+<li>
+<p><strong>Feiertagsprogramme</strong> (z.B. <code>Weihnachten.xls</code>)</p>
+</li>
+<li>Programme für spezielle Feiertage</li>
+<li>
+<p>Werden automatisch an Feiertagen verwendet</p>
+</li>
+<li>
+<p><strong>Benutzerprogramme</strong></p>
+</li>
+<li>Individuelle Programme für bestimmte Tage</li>
+<li>Können manuell erstellt werden</li>
+</ol>
+<h3 id="122-programm-parameter">12.2 Programm-Parameter</h3>
+<p>Jedes Programm hat folgende Parameter:</p>
+<h4 id="startzeit-spalte-a">Startzeit (Spalte A)</h4>
+<ul>
+<li><strong>Format:</strong> <code>HH:MM:SS</code> (z.B. <code>12:00:00</code>)</li>
+<li><strong>Sonderwerte:</strong></li>
+<li><code>SA</code> - Sonnenaufgang (wird automatisch berechnet)</li>
+<li><code>SU</code> - Sonnenuntergang (wird automatisch berechnet)</li>
+</ul>
+<h4 id="funktion-spalte-b">Funktion (Spalte B)</h4>
+<ul>
+<li><strong>Melodie:</strong> Läutet eine Melodie</li>
+<li><strong>Heizung:</strong> Aktiviert Heizung für bestimmte Dauer</li>
+</ul>
+<h4 id="melodienname-spalte-c">Melodienname (Spalte C)</h4>
+<ul>
+<li>Name der Melodie-Datei (ohne <code>.xls</code>)</li>
+<li>Beispiel: <code>Glocke1</code>, <code>Glocke2</code></li>
+</ul>
+<h4 id="dauer-heizung-spalte-d">Dauer Heizung (Spalte D)</h4>
+<ul>
+<li><strong>Format:</strong> <code>hh:mm:ss</code> (z.B. <code>01:30:00</code> = 1 Stunde 30 Minuten)</li>
+<li>Nur bei Funktion "Heizung" relevant</li>
+</ul>
+<h4 id="wochentage-spalte-e-k">Wochentage (Spalte E-K)</h4>
+<ul>
+<li><strong>Montag (E):</strong> <code>x</code> = aktiv, leer = nicht aktiv</li>
+<li><strong>Dienstag (F):</strong> <code>x</code> = aktiv, leer = nicht aktiv</li>
+<li><strong>Mittwoch (G):</strong> <code>x</code> = aktiv, leer = nicht aktiv</li>
+<li><strong>Donnerstag (H):</strong> <code>x</code> = aktiv, leer = nicht aktiv</li>
+<li><strong>Freitag (I):</strong> <code>x</code> = aktiv, leer = nicht aktiv</li>
+<li><strong>Samstag (J):</strong> <code>x</code> = aktiv, leer = nicht aktiv</li>
+<li><strong>Sonntag (K):</strong> <code>x</code> = aktiv, leer = nicht aktiv</li>
+</ul>
+<h4 id="immer-spalte-l">Immer (Spalte L)</h4>
+<ul>
+<li><code>1</code> = Programm ist immer aktiv (unabhängig von verknüpfter Taste)</li>
+<li><code>0</code> oder leer = Programm ist nur aktiv, wenn verknüpfte Taste aktiv ist</li>
+</ul>
+<h4 id="periodisch-spalte-m">Periodisch (Spalte M)</h4>
+<ul>
+<li><code>1</code> = Nur in Sommerzeit aktiv</li>
+<li><code>2</code> = Nur in Winterzeit aktiv</li>
+<li>Leer = Immer aktiv (Sommer und Winter)</li>
+</ul>
+<h4 id="start-datum-spalte-n">Start-Datum (Spalte N)</h4>
+<ul>
+<li><strong>Format:</strong> <code>TT.MM</code> (z.B. <code>01.03</code>)</li>
+<li><strong>Wiederholung:</strong> <code>TT.MM.JJJJ.A</code> (z.B. <code>23.03.2016.7.A</code> = alle 7 Tage ab 23.03.2016)</li>
+<li><strong>Tag-Bereich:</strong> <code>TT.T</code> (z.B. <code>8.T</code> = ab 8. Tag des Monats)</li>
+</ul>
+<h4 id="ende-datum-spalte-o">Ende-Datum (Spalte O)</h4>
+<ul>
+<li><strong>Format:</strong> <code>TT.MM</code> (z.B. <code>31.10</code>)</li>
+<li><strong>Wiederholung:</strong> <code>TT.MM.JJJJ.A</code></li>
+<li><strong>Tag-Bereich:</strong> <code>TT.T</code> (z.B. <code>14.T</code> = bis 14. Tag des Monats)</li>
+</ul>
+<h4 id="verknupfte-taste-spalte-p">Verknüpfte Taste (Spalte P)</h4>
+<ul>
+<li>Name der Taste (z.B. <code>Schlagwerk</code>)</li>
+<li>Programm ist nur aktiv, wenn diese Taste aktiv ist</li>
+<li>Leer = keine verknüpfte Taste</li>
+</ul>
+<h4 id="prioritat-spalte-q">Priorität (Spalte Q)</h4>
+<ul>
+<li><strong>Werte:</strong> <code>1</code> bis <code>9</code> (höhere Zahl = höhere Priorität)</li>
+<li>Bei mehreren passenden Programmen wird das mit höchster Priorität ausgewählt</li>
+<li>Leer = Priorität 0 (niedrigste)</li>
+</ul>
+<h3 id="123-programm-editor-web-ui">12.3 Programm-Editor (Web-UI)</h3>
+<p><strong>Zugriff:</strong><br />
+- Web-UI → Programm-Editor</p>
+<p><strong>Funktionen:</strong><br />
+- Programme anzeigen (nach Tagtyp gefiltert)<br />
+- Programm hinzufügen<br />
+- Programm bearbeiten<br />
+- Programm löschen<br />
+- Programme kopieren (von einem Tagtyp zu einem anderen)<br />
+- Import aus Excel<br />
+- Export (wird automatisch in Excel gespeichert)</p>
+<p><strong>Bearbeitung:</strong><br />
+1. Wählen Sie einen Tagtyp aus (z.B. "Normalprogramm.xls")<br />
+2. Klicken Sie auf "Neues Programm" oder bearbeiten Sie ein bestehendes<br />
+3. Füllen Sie alle Felder aus<br />
+4. Klicken Sie auf "Speichern"</p>
+<h3 id="124-programm-editor-android-ui">12.4 Programm-Editor (Android-UI)</h3>
+<p><strong>Zugriff:</strong><br />
+- Hauptbildschirm → Editor-Button</p>
+<p><strong>Funktionen:</strong><br />
+- Programme anzeigen<br />
+- Programm bearbeiten<br />
+- Programm löschen<br />
+- Excel-Dateien direkt bearbeiten</p>
+<p><strong>Hinweis:</strong> Die Web-UI wird empfohlen, da sie benutzerfreundlicher ist.</p>
+<h3 id="125-programm-ausfuhrung">12.5 Programm-Ausführung</h3>
+<p><strong>Prüfreihenfolge:</strong><br />
+1. <strong>Zeitprüfung:</strong> Startzeit muss mit aktueller Zeit übereinstimmen<br />
+2. <strong>Wochentagprüfung:</strong> Aktueller Wochentag muss aktiviert sein<br />
+3. <strong>Prioritätsprüfung:</strong> Programme mit höherer Priorität werden zuerst geprüft<br />
+4. <strong>Verknüpfte Taste:</strong> Taste muss aktiv sein (außer "Immer" = 1)<br />
+5. <strong>Periodisch:</strong> Sommer/Winter-Zeit muss passen<br />
+6. <strong>Start/Ende-Datum:</strong> Aktuelles Datum muss im Bereich liegen</p>
+<p><strong>Sonnenaufgang/Sonnenuntergang:</strong><br />
+- Programme mit <code>SA</code> oder <code>SU</code> werden automatisch zur berechneten Zeit ausgeführt<br />
+- Berechnung basiert auf GPS-Koordinaten (aus System.xls)<br />
+- Anpassung möglich (Minuten vor/nach)</p>
+<hr />
+<h2 id="13-feiertage-verwaltung">13. Feiertage-Verwaltung</h2>
+<h3 id="131-osterfeiertage-variable-feiertage">13.1 Osterfeiertage (Variable Feiertage)</h3>
+<p>Osterfeiertage sind Feiertage, die sich nach dem Osterdatum richten (z.B. Karfreitag, Ostermontag).</p>
+<p><strong>Zugriff:</strong><br />
+- Web-UI → Osterfeiertage</p>
+<p><strong>Funktionen:</strong><br />
+- Osterfeiertage anzeigen<br />
+- Osterfeiertag hinzufügen<br />
+- Osterfeiertag bearbeiten<br />
+- Osterfeiertag löschen<br />
+- Import aus Excel</p>
+<p><strong>Parameter:</strong><br />
+- <strong>Name:</strong> Feiertagsname (z.B. "Karfreitag")<br />
+- <strong>Oster-Offset:</strong> Tage +/- zum Osterdatum (z.B. -2 für Karfreitag)<br />
+- <strong>Tagtyp:</strong> Tagtyp-Dateiname (z.B. "Karfreitag.xls")</p>
+<p><strong>Standard-Osterfeiertage:</strong><br />
+- Aschermittwoch (-46)<br />
+- Palmsonntag (-7)<br />
+- Gründonnerstag (-3)<br />
+- Karfreitag (-2)<br />
+- Karsamstag (-1)<br />
+- Ostersonntag (0)<br />
+- Ostermontag (+1)<br />
+- Christi Himmelfahrt (+39)<br />
+- Pfingstsonntag (+49)<br />
+- Pfingstmontag (+50)<br />
+- Fronleichnam (+60)</p>
+<h3 id="132-fixe-feiertage">13.2 Fixe Feiertage</h3>
+<p>Fixe Feiertage haben ein festes Datum (z.B. Weihnachten am 25.12.).</p>
+<p><strong>Zugriff:</strong><br />
+- Web-UI → Fixe Feiertage</p>
+<p><strong>Funktionen:</strong><br />
+- Fixe Feiertage anzeigen<br />
+- Fixen Feiertag hinzufügen<br />
+- Fixen Feiertag bearbeiten<br />
+- Fixen Feiertag löschen<br />
+- Import aus Excel</p>
+<p><strong>Parameter:</strong><br />
+- <strong>Name:</strong> Feiertagsname (z.B. "Weihnachten")<br />
+- <strong>Datum:</strong> Fixes Datum im Format <code>TT.MM</code> (z.B. <code>25.12</code>)<br />
+- <strong>Tagtyp:</strong> Tagtyp-Dateiname (z.B. "Weihnachten.xls")<br />
+- <strong>Verschiebung:</strong> <br />
+  - Keine Verschiebung<br />
+  - Näher zum Sonntag<br />
+  - 1.-4. Sonntag im Monat</p>
+<p><strong>Verschiebung auf Sonntag:</strong><br />
+- <strong>Näher zum Sonntag:</strong> Verschiebt auf den nächsten Sonntag (vorher oder nachher)<br />
+- <strong>1.-4. Sonntag im Monat:</strong> Verschiebt auf den 1., 2., 3. oder 4. Sonntag im Monat</p>
+<h3 id="133-sonderfeiertage-verschobene-feiertage">13.3 Sonderfeiertage (Verschobene Feiertage)</h3>
+<p>Sonderfeiertage sind verschobene Feiertage, die automatisch berechnet werden.</p>
+<p><strong>Zugriff:</strong><br />
+- Web-UI → Sonderfeiertage</p>
+<p><strong>Funktionen:</strong><br />
+- Sonderfeiertage anzeigen<br />
+- Sonderfeiertag berechnen (für Test-Jahr)<br />
+- Sonderfeiertag bearbeiten<br />
+- Sonderfeiertag löschen<br />
+- Alle Sonderfeiertage löschen<br />
+- Alle neu berechnen</p>
+<p><strong>Dynamische Berechnung:</strong><br />
+- Sonderfeiertage werden automatisch bei Bedarf berechnet (wie Osterfeiertage)<br />
+- Wenn ein Datum abgefragt wird, das noch nicht berechnet wurde, wird es automatisch berechnet und gespeichert<br />
+- Keine Vorberechnung für mehrere Jahre nötig</p>
+<p><strong>Vorfeiertag:</strong><br />
+- Für jeden verschobenen Feiertag wird automatisch ein "Vorfeiertag" erstellt<br />
+- Vorfeiertag = Tag vor dem berechneten Feiertag<br />
+- Name: "Vorfeiertag" (einheitlich)</p>
+<p><strong>Berechnung:</strong><br />
+- <strong>Näher zum Sonntag:</strong> Verschiebt auf den nächsten Sonntag<br />
+- <strong>1.-4. Sonntag im Monat:</strong> Berechnet den n-ten Sonntag im Monat</p>
+<h3 id="134-tagtyp-zuordnung">13.4 Tagtyp-Zuordnung</h3>
+<p>Jeder Feiertag kann einem Tagtyp zugeordnet werden:</p>
+<ul>
+<li><strong>Tagtyp:</strong> Dateiname des Programms (z.B. "Weihnachten.xls")</li>
+<li>Wenn kein Tagtyp zugeordnet ist, wird "Normalprogramm" verwendet</li>
+<li>Tagtyp kann in der Web-UI geändert werden</li>
+</ul>
+<hr />
+<h2 id="14-platinen-konfiguration">14. Platinen-Konfiguration</h2>
+<h3 id="141-platinen-ubersicht">14.1 Platinen-Übersicht</h3>
+<p>Platinen sind Carambola-Module, die über WiFi oder Bluetooth kommunizieren.</p>
+<p><strong>Zugriff:</strong><br />
+- Web-UI → Platinen-Konfiguration</p>
+<p><strong>Funktionen:</strong><br />
+- Platinen anzeigen<br />
+- Platine hinzufügen<br />
+- Platine bearbeiten<br />
+- Platine löschen<br />
+- Online-Status anzeigen</p>
+<h3 id="142-platine-parameter">14.2 Platine-Parameter</h3>
+<p><strong>Platine-Nummer:</strong><br />
+- Eindeutige Nummer (1, 2, 3, ...)<br />
+- Wird für Relais-Berechnung verwendet</p>
+<p><strong>IP-Adresse:</strong><br />
+- IPv4-Adresse (z.B. <code>192.168.1.100</code>)<br />
+- Nur im WiFi-Modus relevant</p>
+<p><strong>Port:</strong><br />
+- Port-Nummer (Standard: 80)<br />
+- Nur im WiFi-Modus relevant</p>
+<p><strong>MAC-Adresse:</strong><br />
+- MAC-Adresse der Platine (z.B. <code>AA:BB:CC:DD:EE:FF</code>)<br />
+- Nur im Bluetooth-Modus relevant</p>
+<p><strong>Relais-Anzahl:</strong><br />
+- Anzahl der Relais pro Platine (Standard: 32)<br />
+- Wird für Relais-Berechnung verwendet</p>
+<p><strong>Aktiv:</strong><br />
+- Platine aktivieren/deaktivieren<br />
+- Inaktive Platinen werden nicht verwendet</p>
+<p><strong>Online-Status:</strong><br />
+- Wird automatisch aktualisiert<br />
+- Zeigt, ob die Platine erreichbar ist</p>
+<h3 id="143-modus-konfiguration">14.3 Modus-Konfiguration</h3>
+<p><strong>WiFi-Modus:</strong><br />
+- Kommunikation über IP-Adresse und Port<br />
+- Mehrere Platinen möglich<br />
+- IP-Adressen müssen konfiguriert sein</p>
+<p><strong>Bluetooth-Modus:</strong><br />
+- Kommunikation über MAC-Adressen<br />
+- Nur eine Platine möglich<br />
+- MAC-Adressen müssen konfiguriert sein</p>
+<p><strong>Modus wechseln:</strong><br />
+- In der Platinen-Konfiguration: Modus auswählen<br />
+- Bei Bluetooth-Modus: Nur eine Platine anzeigen</p>
+<h3 id="144-scan-relais-und-antwortzeit">14.4 Scan-Relais und Antwortzeit</h3>
+<p><strong>Scan-Relais:</strong><br />
+- Relais-Nummer für Scan-Operationen<br />
+- Wird für Kommunikationstests verwendet</p>
+<p><strong>Antwortzeit:</strong><br />
+- Berechnete Antwortzeit basierend auf Scan-Relais<br />
+- Wird automatisch angezeigt</p>
+<p><strong>Konfiguration:</strong><br />
+- Scan-Relais kann in der Web-UI gesetzt werden<br />
+- Antwortzeit wird automatisch berechnet</p>
+<h3 id="145-power-off-bei-akku">14.5 Power off bei % Akku</h3>
+<p><strong>Konfiguration:</strong><br />
+- Schwellwert für automatisches Abschalten (Standard: 75%)<br />
+- Kann in der Web-UI geändert werden</p>
+<p><strong>Funktion:</strong><br />
+- Wenn Akku-Stand unter Schwellwert fällt, wird automatisch abgeschaltet<br />
+- Schützt vor Tiefentladung</p>
+<hr />
+<h2 id="15-nebenuhr-konfiguration">15. Nebenuhr-Konfiguration</h2>
+<h3 id="151-nebenuhr-ubersicht">15.1 Nebenuhr-Übersicht</h3>
+<p>Die App unterstützt 4 Nebenuhren:<br />
+- <strong>Nebenuhr A</strong><br />
+- <strong>Nebenuhr B</strong><br />
+- <strong>Nebenuhr C</strong><br />
+- <strong>Monduhr D</strong></p>
+<p><strong>Zugriff:</strong><br />
+- Web-UI → Nebenuhr Config<br />
+- Android-UI: Hauptbildschirm → Nebenuhr-Button</p>
+<h3 id="152-nebenuhr-parameter">15.2 Nebenuhr-Parameter</h3>
+<p><strong>Uhr-Name:</strong><br />
+- "A", "B", "C" oder "D"<br />
+- Eindeutige Identifikation</p>
+<p><strong>Relais A / Relais B:</strong><br />
+- Wechselschaltung: Zwei Relais wechseln sich ab<br />
+- Relais A: Für eine Hälfte der Zeit<br />
+- Relais B: Für die andere Hälfte der Zeit<br />
+- Verhindert gleichzeitiges Schalten</p>
+<p><strong>Impuls-Dauer 1:</strong><br />
+- Dauer des Impulses in <strong>Sekunden</strong><br />
+- Standard: 1 Sekunde</p>
+<p><strong>Impuls-Dauer 2 (Pause):</strong><br />
+- Pause zwischen Impulsen in <strong>Sekunden</strong><br />
+- Standard: 1 Sekunde</p>
+<p><strong>Modus:</strong><br />
+- <strong>12-Stunden-Modus:</strong> Standard (immer aktiv)<br />
+- <strong>24-Stunden-Modus:</strong> Nicht mehr verwendet<br />
+- <strong>MOND:</strong> Nur für Monduhr D</p>
+<p><strong>Angezeigte Zeit:</strong><br />
+- Aktuelle angezeigte Zeit (Minuten seit Mitternacht, 0-1439)<br />
+- Wird automatisch aktualisiert</p>
+<p><strong>Aktiv:</strong><br />
+- Nebenuhr aktivieren/deaktivieren<br />
+- Inaktive Nebenuhren werden nicht gesteuert</p>
+<h3 id="153-monduhr-d">15.3 Monduhr (D)</h3>
+<p><strong>Besonderheiten:</strong><br />
+- Zeigt Mondphasen an<br />
+- Mondphase kann manuell gesetzt werden (Slider)<br />
+- Mondphase wird auf Hauptbildschirm angezeigt</p>
+<p><strong>Konfiguration:</strong><br />
+- Relais A/B für Wechselschaltung<br />
+- Impuls-Längen und Pause<br />
+- Mondphase (0-59)</p>
+<p><strong>Anzeige:</strong><br />
+- Mondbild auf Hauptbildschirm<br />
+- Position: Zentral auf dem Logo<br />
+- Größe: Angepasst</p>
+<h3 id="154-wechselschaltung">15.4 Wechselschaltung</h3>
+<p><strong>Funktionsweise:</strong><br />
+- Zwei Relais wechseln sich ab<br />
+- Verhindert gleichzeitiges Schalten<br />
+- <strong>last_relais_a:</strong> Speichert, welches Relais zuletzt verwendet wurde (1=A, 0=B)</p>
+<p><strong>Vorteile:</strong><br />
+- Gleichmäßige Belastung beider Relais<br />
+- Keine gleichzeitigen Schaltvorgänge<br />
+- Längere Lebensdauer</p>
+<h3 id="155-layout-konfiguration">15.5 Layout-Konfiguration</h3>
+<p><strong>Android-UI:</strong><br />
+- Nebenuhr-Einstellungen: 2x2 Grid-Layout<br />
+- Buttons sind kleiner und übersichtlicher</p>
+<p><strong>Hauptbildschirm:</strong><br />
+- Monduhr-Anzeige: Zentral auf Logo<br />
+- Größe: Angepasst</p>
+<hr />
+<h2 id="16-vorschwingen-konfiguration">16. Vorschwingen-Konfiguration</h2>
+<h3 id="161-vorschwingen-ubersicht">16.1 Vorschwingen-Übersicht</h3>
+<p>Vorschwingen ist das Vorschwingen der Glocke vor dem eigentlichen Läuten.</p>
+<p><strong>Zugriff:</strong><br />
+- Web-UI → Vorschwingen Config</p>
+<p><strong>Funktionen:</strong><br />
+- Vorschwingen-Einträge anzeigen<br />
+- Vorschwingen-Eintrag hinzufügen<br />
+- Vorschwingen-Eintrag bearbeiten<br />
+- Vorschwingen-Eintrag löschen<br />
+- Import aus Excel</p>
+<h3 id="162-vorschwingen-parameter">16.2 Vorschwingen-Parameter</h3>
+<p><strong>Vorschwingen Relais:</strong><br />
+- Relais-Nummer für Vorschwingen (1-32)<br />
+- Dropdown-Auswahl: Tasten mit Funktion "Schwingen"</p>
+<p><strong>Läuten Relais:</strong><br />
+- Relais-Nummer für Läuten (1-32)<br />
+- Dropdown-Auswahl: Tasten mit Funktion "Melodie"</p>
+<p><strong>Vorschwingzeit:</strong><br />
+- Zeit in <strong>Sekunden</strong><br />
+- Wie lange vorgeschwungen wird, bevor geläutet wird</p>
+<p><strong>Vorschwingen Platine:</strong><br />
+- Platine-Nummer für Vorschwingen-Relais (1-3)</p>
+<p><strong>Läuten Platine:</strong><br />
+- Platine-Nummer für Läuten-Relais (1-3)</p>
+<p><strong>Berechnete Relais-Nummern:</strong><br />
+- Werden automatisch berechnet<br />
+- Für Kompatibilität mit alter Berechnung</p>
+<p><strong>Aktiv:</strong><br />
+- Vorschwingen-Eintrag aktivieren/deaktivieren<br />
+- Inaktive Einträge werden nicht verwendet</p>
+<p><strong>Sortierung:</strong><br />
+- Sortierreihenfolge (für Anzeige)</p>
+<h3 id="163-dropdown-auswahl">16.3 Dropdown-Auswahl</h3>
+<p><strong>Schwingen-Tasten:</strong><br />
+- Zeigt alle Tasten mit Funktion "Schwingen" an<br />
+- Aus <code>Beschriftung-Tasten.xls</code></p>
+<p><strong>Melodie-Tasten:</strong><br />
+- Zeigt alle Tasten mit Funktion "Melodie" an<br />
+- Aus <code>Beschriftung-Tasten.xls</code></p>
+<hr />
+<h2 id="17-relais-verwaltung">17. Relais-Verwaltung</h2>
+<h3 id="171-relais-status-bar-web-ui">17.1 Relais-Status-Bar (Web-UI)</h3>
+<p><strong>Zugriff:</strong><br />
+- Wird oben auf allen Web-UI-Seiten angezeigt</p>
+<p><strong>Funktionen:</strong><br />
+- Zeigt alle zugewiesenen Relais an<br />
+- <strong>Grün:</strong> Relais wird nur einmal verwendet<br />
+- <strong>Rot:</strong> Relais wird mehrfach verwendet (Duplikat)<br />
+- Tooltip: Zeigt Verwendung an (z.B. "Vorschwingen", "Nebenuhr A")</p>
+<h3 id="172-relais-zuordnung">17.2 Relais-Zuordnung</h3>
+<p>Relais werden verschiedenen Komponenten zugeordnet:</p>
+<ol>
+<li><strong>Platinen:</strong> Jede Platine hat eine bestimmte Anzahl Relais</li>
+<li><strong>Nebenuhren:</strong> Relais A/B für jede Nebenuhr</li>
+<li><strong>Vorschwingen:</strong> Vorschwingen-Relais und Läuten-Relais</li>
+<li><strong>Programme:</strong> Über verknüpfte Tasten</li>
+</ol>
+<h3 id="173-duplikat-erkennung">17.3 Duplikat-Erkennung</h3>
+<p><strong>Automatische Erkennung:</strong><br />
+- System prüft, ob ein Relais mehrfach verwendet wird<br />
+- Duplikate werden rot angezeigt</p>
+<p><strong>Tooltip:</strong><br />
+- Beim Hovern über ein Relais wird angezeigt, wo es verwendet wird<br />
+- Beispiel: "Vorschwingen, Nebenuhr A"</p>
+<h3 id="174-aktiveinaktive-relais">17.4 Aktive/Inaktive Relais</h3>
+<p><strong>Anzeige:</strong><br />
+- Nur aktive Relais werden angezeigt<br />
+- Inaktive Platinen/Nebenuhren werden nicht berücksichtigt</p>
+<hr />
+<h2 id="18-melodien-verwaltung">18. Melodien-Verwaltung</h2>
+<h3 id="181-melodien-ubersicht">18.1 Melodien-Übersicht</h3>
+<p>Melodien sind Excel-Dateien, die die Läut-Sequenzen definieren.</p>
+<p><strong>Speicherort:</strong><br />
+- <code>/sdcard/Turmtechnik/Melodien/</code><br />
+- Format: <code>.xls</code> Dateien</p>
+<p><strong>Verwendung:</strong><br />
+- Programme verweisen auf Melodien-Namen (ohne <code>.xls</code>)<br />
+- Beispiel: Programm mit Melodienname "Glocke1" verwendet <code>Glocke1.xls</code></p>
+<h3 id="182-melodie-struktur">18.2 Melodie-Struktur</h3>
+<p><strong>Spalten:</strong><br />
+- <strong>Spalte A:</strong> Zeit (Sekunden seit Start)<br />
+- <strong>Spalte B:</strong> Relais-Nummer<br />
+- <strong>Spalte C:</strong> Ein/Aus (1/0)</p>
+<p><strong>Zeilen:</strong><br />
+- Jede Zeile definiert einen Schaltvorgang<br />
+- Zeitpunkt, Relais und Zustand</p>
+<h3 id="183-melodien-bearbeiten">18.3 Melodien bearbeiten</h3>
+<p><strong>Excel-Editor:</strong><br />
+- Melodien können direkt in Excel bearbeitet werden<br />
+- Dateien müssen im Melodien-Verzeichnis gespeichert werden</p>
+<p><strong>Web-UI (geplant):</strong><br />
+- Melodien-Verwaltung über Web-UI<br />
+- Noch nicht implementiert</p>
+<hr />
+<h2 id="19-zeitsynchronisation">19. Zeitsynchronisation</h2>
+<h3 id="191-zeitserver-konfiguration">19.1 Zeitserver-Konfiguration</h3>
+<p><strong>Zugriff:</strong><br />
+- System.xls → Zeitserver-Konfiguration<br />
+- Web-UI (geplant)</p>
+<p><strong>Parameter:</strong><br />
+- <strong>Zeitserver IP:</strong> IP-Adresse des Zeitservers<br />
+- <strong>Zeitserver Port:</strong> Port (Standard: 123 für NTP)<br />
+- <strong>Synchronisations-Intervall:</strong> Wie oft synchronisiert wird</p>
+<h3 id="192-gps-zeitsynchronisation">19.2 GPS-Zeitsynchronisation</h3>
+<p><strong>NMEA-GPS-Integration:</strong><br />
+- Unterstützung für NMEA-GPS-Module<br />
+- Präzise Zeitsynchronisation über GPS</p>
+<p><strong>Konfiguration:</strong><br />
+- GPS IP/Port in System.xls<br />
+- Automatische Synchronisation</p>
+<h3 id="193-manuelle-zeiteinstellung">19.3 Manuelle Zeiteinstellung</h3>
+<p><strong>Android-Einstellungen:</strong><br />
+- Zeit kann manuell in Android-Einstellungen geändert werden<br />
+- App verwendet System-Zeit</p>
+<p><strong>Zeitsynchronisation deaktivieren:</strong><br />
+- Kann in den Einstellungen deaktiviert werden<br />
+- App funktioniert weiterhin mit manueller Zeit</p>
+<h3 id="194-write_secure_settings">19.4 WRITE_SECURE_SETTINGS</h3>
+<p><strong>Erforderlich für:</strong><br />
+- Automatische Zeitsynchronisation<br />
+- Direkte Änderung der System-Zeit</p>
+<p><strong>Vergabe:</strong><br />
+- Siehe Kapitel 10.2</p>
+<hr />
+<h2 id="20-schlagwerk">20. Schlagwerk</h2>
+<h3 id="201-schlagwerk-ubersicht">20.1 Schlagwerk-Übersicht</h3>
+<p>Das Schlagwerk schlägt zu bestimmten Zeiten (z.B. jede Stunde).</p>
+<p><strong>Zugriff:</strong><br />
+- System.xls → Schlagwerk-Konfiguration<br />
+- Web-UI (geplant)</p>
+<p><strong>Funktionen:</strong><br />
+- Schlagwerk-Zeiten konfigurieren<br />
+- Schlagwerk ein/aus<br />
+- Beginn/Ende-Zeiten</p>
+<h3 id="202-schlagwerk-konfiguration">20.2 Schlagwerk-Konfiguration</h3>
+<p><strong>Parameter:</strong><br />
+- <strong>Schlagwerk-Zeiten:</strong> Liste von Zeiten, zu denen geschlagen wird<br />
+- <strong>Beginn-Zeit:</strong> Ab wann Schlagwerk aktiv ist<br />
+- <strong>Ende-Zeit:</strong> Bis wann Schlagwerk aktiv ist<br />
+- <strong>Ein/Aus:</strong> Schlagwerk aktivieren/deaktivieren</p>
+<hr />
+<h2 id="21-heizung">21. Heizung</h2>
+<h3 id="211-heizungssteuerung">21.1 Heizungssteuerung</h3>
+<p><strong>Automatische Heizung:</strong><br />
+- Programme mit Funktion "Heizung"<br />
+- Dauer wird in Programm definiert (Spalte D)</p>
+<p><strong>Manuelle Heizung:</strong><br />
+- Kann manuell über Android-UI gestartet werden<br />
+- Dauer kann eingestellt werden</p>
+<h3 id="212-heizungs-parameter">21.2 Heizungs-Parameter</h3>
+<p><strong>Dauer:</strong><br />
+- Format: <code>hh:mm:ss</code> (z.B. <code>01:30:00</code>)<br />
+- Wird in Minuten umgerechnet</p>
+<p><strong>Relais:</strong><br />
+- Heizungs-Relais wird über verknüpfte Taste definiert<br />
+- Oder direkt in Programm</p>
+<hr />
+<h2 id="22-web-ui-konfiguration">22. Web-UI Konfiguration</h2>
+<h3 id="221-verfugbare-seiten">22.1 Verfügbare Seiten</h3>
+<p><strong>Hauptmenü:</strong><br />
+- Programm-Editor<br />
+- Osterfeiertage<br />
+- Fixe Feiertage<br />
+- Sonderfeiertage<br />
+- Nebenuhr Config<br />
+- Vorschwingen Config<br />
+- Platinen-Konfiguration<br />
+- Zeitserver &amp; GPS (geplant)<br />
+- Schlagwerk (geplant)</p>
+<h3 id="222-rest-api-ubersicht">22.2 REST API Übersicht</h3>
+<p><strong>Programme:</strong><br />
+- <code>GET /api/programme?tagtyp=...</code> - Programme abrufen<br />
+- <code>POST /api/programme</code> - Programm erstellen<br />
+- <code>PUT /api/programme/:id?tagtyp=...</code> - Programm aktualisieren<br />
+- <code>DELETE /api/programme/:id?tagtyp=...</code> - Programm löschen<br />
+- <code>POST /api/programme/import-all</code> - Alle Programme importieren<br />
+- <code>POST /api/programme/reload?tagtyp=...</code> - Programme neu laden<br />
+- <code>POST /api/programme/copy?tagtypName=...&amp;sourceTagtyp=...</code> - Programme kopieren</p>
+<p><strong>Feiertage:</strong><br />
+- <code>GET /api/osterfeiertage</code> - Osterfeiertage abrufen<br />
+- <code>PUT /api/osterfeiertage</code> - Osterfeiertag aktualisieren<br />
+- <code>DELETE /api/osterfeiertage/:id</code> - Osterfeiertag löschen<br />
+- <code>POST /api/osterfeiertage/migrate</code> - Aus Excel importieren<br />
+- <code>GET /api/feste-feiertage</code> - Fixe Feiertage abrufen<br />
+- <code>PUT /api/feste-feiertage</code> - Fixen Feiertag aktualisieren<br />
+- <code>DELETE /api/feste-feiertage/:id</code> - Fixen Feiertag löschen<br />
+- <code>POST /api/feste-feiertage/migrate</code> - Aus Excel importieren<br />
+- <code>GET /api/sonderfeiertage</code> - Sonderfeiertage abrufen<br />
+- <code>POST /api/sonderfeiertage/berechnen</code> - Sonderfeiertag berechnen<br />
+- <code>POST /api/sonderfeiertage/neuberechnen</code> - Alle neu berechnen<br />
+- <code>DELETE /api/sonderfeiertage/alle-loeschen</code> - Alle löschen<br />
+- <code>PUT /api/sonderfeiertage/:id</code> - Sonderfeiertag aktualisieren<br />
+- <code>DELETE /api/sonderfeiertage/:id</code> - Sonderfeiertag löschen</p>
+<p><strong>Platinen:</strong><br />
+- <code>GET /api/platinen</code> - Platinen abrufen<br />
+- <code>POST /api/platinen</code> - Platine erstellen<br />
+- <code>PUT /api/platinen/:nummer</code> - Platine aktualisieren<br />
+- <code>DELETE /api/platinen/:nummer</code> - Platine löschen<br />
+- <code>GET /api/platinen/config</code> - Modus-Konfiguration abrufen<br />
+- <code>PUT /api/platinen/config</code> - Modus-Konfiguration speichern<br />
+- <code>GET /api/platinen/scan-relais</code> - Scan-Relais abrufen<br />
+- <code>PUT /api/platinen/scan-relais</code> - Scan-Relais speichern</p>
+<p><strong>Nebenuhren:</strong><br />
+- <code>GET /api/nebenuhren</code> - Nebenuhren abrufen<br />
+- <code>PUT /api/nebenuhren</code> - Nebenuhren speichern</p>
+<p><strong>Vorschwingen:</strong><br />
+- <code>GET /api/vorschwingen</code> - Vorschwingen abrufen<br />
+- <code>POST /api/vorschwingen</code> - Vorschwingen erstellen<br />
+- <code>PUT /api/vorschwingen</code> - Vorschwingen aktualisieren<br />
+- <code>DELETE /api/vorschwingen/:id</code> - Vorschwingen löschen<br />
+- <code>POST /api/vorschwingen/migrate</code> - Aus Excel importieren</p>
+<p><strong>Weitere:</strong><br />
+- <code>GET /api/tagtypen</code> - Tagtypen abrufen<br />
+- <code>POST /api/tagtypen</code> - Tagtyp erstellen<br />
+- <code>DELETE /api/tagtypen/:id</code> - Tagtyp löschen<br />
+- <code>GET /api/verknuepfte-tasten</code> - Verknüpfte Tasten abrufen<br />
+- <code>GET /api/schwingen-tasten</code> - Schwingen-Tasten abrufen<br />
+- <code>GET /api/melodie-tasten</code> - Melodie-Tasten abrufen<br />
+- <code>GET /api/power-off-akku</code> - Power off Akku Prozent abrufen<br />
+- <code>PUT /api/power-off-akku</code> - Power off Akku Prozent speichern</p>
+<h3 id="223-browser-kompatibilitat">22.3 Browser-Kompatibilität</h3>
+<p><strong>Empfohlen:</strong><br />
+- Chrome (Desktop/Android)<br />
+- Firefox (Desktop/Android)<br />
+- Edge (Desktop)<br />
+- Safari (iOS/macOS)</p>
+<p><strong>Nicht unterstützt:</strong><br />
+- Internet Explorer (veraltet)</p>
+<hr />
+<h2 id="23-datenbank-migration">23. Datenbank-Migration</h2>
+<h3 id="231-excel-zu-datenbank">23.1 Excel zu Datenbank</h3>
+<p><strong>Automatische Migration:</strong><br />
+- Beim ersten Start werden Standard-Daten erstellt<br />
+- Programme müssen manuell importiert werden</p>
+<p><strong>Manuelle Migration:</strong><br />
+- Web-UI → Programm-Editor → "Import Excel Programmtage"<br />
+- Web-UI → Osterfeiertage → "Aus Excel importieren"<br />
+- Web-UI → Fixe Feiertage → "Aus Excel importieren"<br />
+- Web-UI → Vorschwingen Config → "Aus Excel importieren"</p>
+<h3 id="232-datenbank-schema">23.2 Datenbank-Schema</h3>
+<p>Siehe Anhang B für vollständiges Datenbank-Schema.</p>
+<h3 id="233-backup-und-wiederherstellung">23.3 Backup und Wiederherstellung</h3>
+<p><strong>Backup:</strong></p>
+<pre class="codehilite"><code class="language-bash">adb pull /data/data/tom.turmtechnik/databases/turmtechnik_config.db backup.db
+</code></pre>
+
+<p><strong>Wiederherstellung:</strong></p>
+<pre class="codehilite"><code class="language-bash">adb push backup.db /data/data/tom.turmtechnik/databases/turmtechnik_config.db
+</code></pre>
+
+<p><strong>App neu starten:</strong><br />
+- Nach Wiederherstellung App neu starten</p>
+<hr />
+<h2 id="24-system-konfiguration">24. System-Konfiguration</h2>
+<h3 id="241-autostart">24.1 Autostart</h3>
+<p><strong>Aktivierung:</strong><br />
+- App startet automatisch beim Boot des Geräts<br />
+- Kann in Android-Einstellungen deaktiviert werden</p>
+<p><strong>Konfiguration:</strong><br />
+- System.xls → Autostart-Flag<br />
+- Standard: Aktiviert</p>
+<h3 id="242-serial-number">24.2 Serial Number</h3>
+<p><strong>Anzeige:</strong><br />
+- Serial Number wird in System.xls gespeichert<br />
+- Wird für Identifikation verwendet</p>
+<h3 id="243-version">24.3 Version</h3>
+<p><strong>Anzeige:</strong><br />
+- App-Version wird in System.xls gespeichert<br />
+- Wird für Updates verwendet</p>
+<h3 id="244-thread-status">24.4 Thread-Status</h3>
+<p><strong>Überwachung:</strong><br />
+- Alle Threads werden überwacht<br />
+- Status wird in Logs angezeigt</p>
+<h3 id="245-logging">24.5 Logging</h3>
+<p><strong>Log-Dateien:</strong><br />
+- Logs werden in <code>/sdcard/Turmtechnik/Logs/</code> gespeichert<br />
+- Format: Text-Dateien</p>
+<p><strong>Debug-Modus:</strong><br />
+- Kann in StaticConstants.java aktiviert werden<br />
+- <code>DEBUG = true</code></p>
+<hr />
+<h2 id="25-grundfunktionen">25. Grundfunktionen</h2>
+<h3 id="251-hauptbildschirm">25.1 Hauptbildschirm</h3>
+<p><strong>Layout:</strong><br />
+- Landscape-Modus (Querformat)<br />
+- Vollbild-Anzeige<br />
+- Tasten-Grid (8x3)</p>
+<p><strong>Anzeigen:</strong><br />
+- Aktuelle Zeit<br />
+- Nächste Programm-Zeit<br />
+- Status-Informationen<br />
+- Monduhr (falls aktiv)</p>
+<h3 id="252-navigation">25.2 Navigation</h3>
+<p><strong>Tasten:</strong><br />
+- <strong>Home:</strong> Zurück zum Hauptbildschirm<br />
+- <strong>Hilfe:</strong> Hilfe-Seite öffnen<br />
+- <strong>Editor:</strong> Programm-Editor öffnen<br />
+- <strong>Programm-Abfrage:</strong> Programme für Datum anzeigen<br />
+- <strong>Nebenuhr:</strong> Nebenuhr-Einstellungen<br />
+- <strong>Manueller Start:</strong> Manuelle Steuerung</p>
+<h3 id="253-tasten-funktionen">25.3 Tasten-Funktionen</h3>
+<p><strong>Tasten-Grid:</strong><br />
+- 8 Spalten × 3 Zeilen = 24 Tasten<br />
+- Tasten können konfiguriert werden<br />
+- Beschriftungen aus <code>Beschriftung-Tasten.xls</code></p>
+<p><strong>Funktionen:</strong><br />
+- <strong>Melodie:</strong> Startet Melodie<br />
+- <strong>Heizung:</strong> Aktiviert Heizung<br />
+- <strong>Schwingen:</strong> Vorschwingen<br />
+- <strong>Verknüpft:</strong> Verknüpfte Tasten</p>
+<h3 id="254-status-anzeigen">25.4 Status-Anzeigen</h3>
+<p><strong>Anzeigen:</strong><br />
+- Aktuelle Zeit<br />
+- Nächste Programm-Zeit<br />
+- Feiertag (falls vorhanden)<br />
+- Sonnenaufgang/Sonnenuntergang (falls Programme vorhanden)<br />
+- Online-Status der Platinen</p>
+<hr />
+<h2 id="26-programm-abfrage">26. Programm-Abfrage</h2>
+<h3 id="261-datum-auswahlen">26.1 Datum auswählen</h3>
+<p><strong>Zugriff:</strong><br />
+- Hauptbildschirm → Programm-Abfrage-Button<br />
+- Kalender-Popup öffnet sich</p>
+<p><strong>Auswahl:</strong><br />
+- Jahr, Monat, Tag auswählen<br />
+- Klicken Sie auf "OK"</p>
+<h3 id="262-programme-anzeigen">26.2 Programme anzeigen</h3>
+<p><strong>Anzeige:</strong><br />
+- Alle Programme für das ausgewählte Datum<br />
+- Sortiert nach Zeit<br />
+- Mit Melodienname oder Heizungsdauer</p>
+<p><strong>Informationen:</strong><br />
+- Startzeit<br />
+- Funktion (Melodie/Heizung)<br />
+- Melodienname oder Heizungsdauer<br />
+- Beginn-Zeit (für verknüpfte Tasten)</p>
+<h3 id="263-sonnenaufgangsonnenuntergang">26.3 Sonnenaufgang/Sonnenuntergang</h3>
+<p><strong>Anzeige:</strong><br />
+- Wird nur angezeigt, wenn Programme mit SA/SU vorhanden sind<br />
+- Format: <code>Sonnenaufgang HH:MM  Sonnenuntergang HH:MM</code></p>
+<p><strong>Berechnung:</strong><br />
+- Basiert auf GPS-Koordinaten (aus System.xls)<br />
+- Anpassung möglich (Minuten vor/nach)</p>
+<h3 id="264-feiertags-anzeige">26.4 Feiertags-Anzeige</h3>
+<p><strong>Anzeige:</strong><br />
+- Wird angezeigt, wenn das Datum ein Feiertag ist<br />
+- Format: <code>Feiertag: [Name] ([Datum])</code><br />
+- Beispiel: <code>Feiertag: Weihnachten (25.12.2026)</code></p>
+<hr />
+<h2 id="27-manuelle-steuerung">27. Manuelle Steuerung</h2>
+<h3 id="271-manueller-start">27.1 Manueller Start</h3>
+<p><strong>Zugriff:</strong><br />
+- Hauptbildschirm → Manueller Start-Button</p>
+<p><strong>Funktionen:</strong><br />
+- Melodie manuell starten<br />
+- Heizung manuell starten<br />
+- Dauer einstellen</p>
+<h3 id="272-sofort-start">27.2 Sofort-Start</h3>
+<p><strong>Zugriff:</strong><br />
+- Hauptbildschirm → Sofort-Start-Button (falls vorhanden)</p>
+<p><strong>Funktion:</strong><br />
+- Startet sofort eine Melodie<br />
+- Ohne Zeitverzögerung</p>
+<h3 id="273-stop-funktion">27.3 Stop-Funktion</h3>
+<p><strong>Zugriff:</strong><br />
+- Hauptbildschirm → Stop-Button</p>
+<p><strong>Funktion:</strong><br />
+- Stoppt alle laufenden Programme<br />
+- Notfall-Stopp</p>
+<hr />
+<h2 id="28-konfiguration-uber-web-ui">28. Konfiguration über Web-UI</h2>
+<h3 id="281-zugriff-auf-web-ui">28.1 Zugriff auf Web-UI</h3>
+<p><strong>Schritte:</strong><br />
+1. Ermitteln Sie die IP-Adresse des Android-Geräts<br />
+2. Öffnen Sie Browser auf PC/Tablet<br />
+3. Geben Sie ein: <code>http://&lt;IP-Adresse&gt;:8080</code><br />
+4. Hauptmenü wird angezeigt</p>
+<h3 id="282-programme-bearbeiten">28.2 Programme bearbeiten</h3>
+<p><strong>Schritte:</strong><br />
+1. Web-UI → Programm-Editor<br />
+2. Tagtyp auswählen (z.B. "Normalprogramm.xls")<br />
+3. Programm hinzufügen oder bearbeiten<br />
+4. Felder ausfüllen<br />
+5. Speichern</p>
+<h3 id="283-feiertage-verwalten">28.3 Feiertage verwalten</h3>
+<p><strong>Osterfeiertage:</strong><br />
+1. Web-UI → Osterfeiertage<br />
+2. Feiertag hinzufügen oder bearbeiten<br />
+3. Name, Offset, Tagtyp eingeben<br />
+4. Speichern</p>
+<p><strong>Fixe Feiertage:</strong><br />
+1. Web-UI → Fixe Feiertage<br />
+2. Feiertag hinzufügen oder bearbeiten<br />
+3. Name, Datum, Tagtyp, Verschiebung eingeben<br />
+4. Speichern</p>
+<p><strong>Sonderfeiertage:</strong><br />
+1. Web-UI → Sonderfeiertage<br />
+2. Sonderfeiertag berechnen (für Test-Jahr)<br />
+3. Oder bestehende Sonderfeiertage bearbeiten/löschen</p>
+<h3 id="284-platinen-konfigurieren">28.4 Platinen konfigurieren</h3>
+<p><strong>Schritte:</strong><br />
+1. Web-UI → Platinen-Konfiguration<br />
+2. Platine hinzufügen oder bearbeiten<br />
+3. IP-Adresse, Port, MAC-Adresse, Relais-Anzahl eingeben<br />
+4. Aktivieren<br />
+5. Speichern</p>
+<hr />
+<h2 id="29-architektur">29. Architektur</h2>
+<h3 id="291-android-app-struktur">29.1 Android-App Struktur</h3>
+<p><strong>Hauptkomponenten:</strong><br />
+- <code>TurmtechnikActivity.java</code> - Haupt-Activity<br />
+- <code>ConfigWebServer.java</code> - Web-Server und REST API<br />
+- <code>PlatinenDatabaseHelper.java</code> - Datenbank-Helper<br />
+- <code>TagesSuche.java</code> - Programm-Suche<br />
+- <code>UhrThread.java</code> - Haupt-Thread für Programm-Ausführung<br />
+- <code>MelodieThreadNew.java</code> - Melodien-Ausführung<br />
+- <code>NebenUhrA_thread.java</code>, <code>NebenUhrB_thread.java</code>, etc. - Nebenuhr-Threads</p>
+<p><strong>Repository-Pattern:</strong><br />
+- <code>ProgrammRepository.java</code> - Interface<br />
+- <code>ExcelProgrammRepository.java</code> - Excel-Implementierung<br />
+- <code>MultiFileProgrammRepository.java</code> - Multi-File-Implementierung<br />
+- <code>RepositoryFactory.java</code> - Factory für Repository-Auswahl</p>
+<h3 id="292-datenbank-schema-sqlite">29.2 Datenbank-Schema (SQLite)</h3>
+<p><strong>Tabellen:</strong><br />
+- <code>platinen_config</code> - Platinen<br />
+- <code>io_config</code> - I/O-Konfiguration<br />
+- <code>nebenuhr_config</code> - Nebenuhren<br />
+- <code>tagtypen</code> - Tagtypen<br />
+- <code>programme</code> - Programme<br />
+- <code>osterfeiertage</code> - Osterfeiertage<br />
+- <code>feste_feiertage</code> - Fixe Feiertage<br />
+- <code>sonderfeiertage</code> - Sonderfeiertage<br />
+- <code>vorschwingen_config</code> - Vorschwingen</p>
+<p><strong>Version:</strong><br />
+- Aktuelle Version: 12<br />
+- Automatische Migration bei Updates</p>
+<h3 id="293-excel-integration">29.3 Excel-Integration</h3>
+<p><strong>Dateiformat:</strong><br />
+- <code>.xls</code> (Excel 97-2003)<br />
+- Bibliothek: <code>jxl.jar</code></p>
+<p><strong>Verwendung:</strong><br />
+- Import von Konfigurationsdaten<br />
+- Backup und Export<br />
+- Kompatibilität mit bestehenden Systemen</p>
+<h3 id="294-web-server-simplehttpserver">29.4 Web-Server (SimpleHttpServer)</h3>
+<p><strong>Implementierung:</strong><br />
+- Eigener HTTP-Server (keine externe Bibliothek)<br />
+- Port: 8080 (Standard)<br />
+- REST API für alle Konfigurationsbereiche<br />
+- HTML-Seiten für Web-UI</p>
+<h3 id="295-rest-api">29.5 REST API</h3>
+<p><strong>Format:</strong><br />
+- JSON (Request/Response)<br />
+- HTTP-Methoden: GET, POST, PUT, DELETE<br />
+- Fehlerbehandlung: HTTP-Status-Codes</p>
+<hr />
+<h2 id="30-dateistruktur">30. Dateistruktur</h2>
+<h3 id="301-excel-dateien">30.1 Excel-Dateien</h3>
+<p><strong>Speicherort:</strong><br />
+- <code>/sdcard/Turmtechnik/</code></p>
+<p><strong>Dateien:</strong><br />
+- <code>System.xls</code> - System-Konfiguration<br />
+- <code>Normalprogramm.xls</code> - Normalprogramm<br />
+- <code>Beschriftung-Tasten.xls</code> - Tasten-Beschriftungen<br />
+- <code>[Feiertag].xls</code> - Feiertagsprogramme<br />
+- <code>Melodien/[Melodie].xls</code> - Melodien</p>
+<h3 id="302-datenbank-dateien">30.2 Datenbank-Dateien</h3>
+<p><strong>Speicherort:</strong><br />
+- <code>/data/data/tom.turmtechnik/databases/turmtechnik_config.db</code></p>
+<p><strong>Backup:</strong><br />
+- Manuelles Backup empfohlen<br />
+- Siehe Kapitel 7.4</p>
+<h3 id="303-konfigurationsdateien">30.3 Konfigurationsdateien</h3>
+<p><strong>Speicherort:</strong><br />
+- <code>/data/data/tom.turmtechnik/shared_prefs/</code><br />
+- Android SharedPreferences</p>
+<h3 id="304-log-dateien">30.4 Log-Dateien</h3>
+<p><strong>Speicherort:</strong><br />
+- <code>/sdcard/Turmtechnik/Logs/</code><br />
+- Format: Text-Dateien<br />
+- Rotation: Automatisch</p>
+<hr />
+<h2 id="31-api-dokumentation">31. API-Dokumentation</h2>
+<h3 id="311-alle-rest-api-endpunkte">31.1 Alle REST API Endpunkte</h3>
+<p>Siehe Kapitel 22.2 für vollständige Liste.</p>
+<h3 id="312-requestresponse-formate">31.2 Request/Response Formate</h3>
+<p><strong>Request (JSON):</strong></p>
+<pre class="codehilite"><code class="language-json">{
+  &quot;feld1&quot;: &quot;wert1&quot;,
+  &quot;feld2&quot;: 123
+}
+</code></pre>
+
+<p><strong>Response (JSON):</strong></p>
+<pre class="codehilite"><code class="language-json">{
+  &quot;success&quot;: true,
+  &quot;message&quot;: &quot;Erfolgreich&quot;,
+  &quot;data&quot;: { ... }
+}
+</code></pre>
+
+<p><strong>Fehler-Response:</strong></p>
+<pre class="codehilite"><code class="language-json">{
+  &quot;error&quot;: &quot;Fehlermeldung&quot;
+}
+</code></pre>
+
+<h3 id="313-fehlerbehandlung">31.3 Fehlerbehandlung</h3>
+<p><strong>HTTP-Status-Codes:</strong><br />
+- <code>200</code> - Erfolg<br />
+- <code>400</code> - Ungültige Anfrage<br />
+- <code>404</code> - Nicht gefunden<br />
+- <code>500</code> - Server-Fehler</p>
+<p><strong>Fehlermeldungen:</strong><br />
+- Werden im JSON-Response zurückgegeben<br />
+- Feld: <code>error</code></p>
+<hr />
+<h2 id="32-anhang-a-excel-datei-format">32. Anhang A: Excel-Datei-Format</h2>
+<h3 id="321-programm-dateien">32.1 Programm-Dateien</h3>
+<p><strong>Spalten:</strong><br />
+- <strong>A:</strong> Startzeit (<code>HH:MM:SS</code> oder <code>SA</code>/<code>SU</code>)<br />
+- <strong>B:</strong> Funktion (<code>Melodie</code> oder <code>Heizung</code>)<br />
+- <strong>C:</strong> Melodienname (ohne <code>.xls</code>)<br />
+- <strong>D:</strong> Dauer Heizung (<code>hh:mm:ss</code>)<br />
+- <strong>E-K:</strong> Wochentage (<code>x</code> = aktiv)<br />
+- <strong>L:</strong> Immer (<code>1</code> = immer aktiv)<br />
+- <strong>M:</strong> Periodisch (<code>1</code> = Sommer, <code>2</code> = Winter)<br />
+- <strong>N:</strong> Start-Datum (<code>TT.MM</code> oder <code>TT.MM.JJJJ.A</code> oder <code>TT.T</code>)<br />
+- <strong>O:</strong> Ende-Datum (<code>TT.MM</code> oder <code>TT.MM.JJJJ.A</code> oder <code>TT.T</code>)<br />
+- <strong>P:</strong> Verknüpfte Taste (Name)<br />
+- <strong>Q:</strong> Priorität (<code>1</code>-<code>9</code>)</p>
+<p><strong>Detaillierte Beschreibung:</strong> Siehe <code>SPALTEN_PROGRAMMSUCHE.md</code></p>
+<h3 id="322-systemxls">32.2 System.xls</h3>
+<p><strong>Sheet 14 - Platinen:</strong><br />
+- Zeile 1: Überschriften<br />
+- Zeile 2+: Platinen-Daten</p>
+<p><strong>Sheet 15 - Nebenuhren:</strong><br />
+- Zeile 3: Nebenuhr A<br />
+- Zeile 4: Nebenuhr B<br />
+- Zeile 5: Nebenuhr C<br />
+- Zeile 6: Nebenuhr D (Monduhr)</p>
+<p><strong>Sheet 9 - Vorschwingen:</strong><br />
+- Zeile 1: Überschriften<br />
+- Zeile 2+: Vorschwingen-Daten</p>
+<p><strong>Sheet 12 - Osterfeiertage:</strong><br />
+- Spalte A: Tagtyp-Name</p>
+<p><strong>Sheet 13 - Fixe Feiertage:</strong><br />
+- Spalte A: Tagtyp<br />
+- Spalte B: Bezeichnung<br />
+- Spalte D: Datum</p>
+<h3 id="323-beschriftung-tastenxls">32.3 Beschriftung-Tasten.xls</h3>
+<p><strong>Spalten:</strong><br />
+- Tasten-Name<br />
+- Relais-Nummer<br />
+- Platine-Nummer<br />
+- Funktion (<code>verknuepft</code>, <code>Schwingen</code>, <code>Melodie</code>)</p>
+<hr />
+<h2 id="33-anhang-b-datenbank-schema">33. Anhang B: Datenbank-Schema</h2>
+<h3 id="331-tabellen-ubersicht">33.1 Tabellen-Übersicht</h3>
+<p><strong>platinen_config:</strong><br />
+- <code>id</code> (INTEGER PRIMARY KEY)<br />
+- <code>platine_nummer</code> (INTEGER UNIQUE)<br />
+- <code>ip_adresse</code> (TEXT)<br />
+- <code>port</code> (INTEGER)<br />
+- <code>aktiv</code> (BOOLEAN)<br />
+- <code>mac_adresse</code> (TEXT)<br />
+- <code>online</code> (BOOLEAN)<br />
+- <code>relais_anzahl</code> (INTEGER)<br />
+- <code>created_at</code> (TIMESTAMP)<br />
+- <code>updated_at</code> (TIMESTAMP)</p>
+<p><strong>io_config:</strong><br />
+- <code>id</code> (INTEGER PRIMARY KEY)<br />
+- <code>key</code> (TEXT UNIQUE)<br />
+- <code>value</code> (TEXT)<br />
+- <code>updated_at</code> (TIMESTAMP)</p>
+<p><strong>nebenuhr_config:</strong><br />
+- <code>id</code> (INTEGER PRIMARY KEY)<br />
+- <code>uhr_name</code> (TEXT) - "A", "B", "C", "D"<br />
+- <code>zeile_index</code> (INTEGER)<br />
+- <code>relais_a</code> (INTEGER)<br />
+- <code>relais_b</code> (INTEGER)<br />
+- <code>impuls_dauer_1</code> (INTEGER) - Sekunden<br />
+- <code>impuls_dauer_2</code> (INTEGER) - Sekunden (Pause)<br />
+- <code>uhr_name_display</code> (TEXT)<br />
+- <code>modus</code> (TEXT) - "12", "24", "MOND"<br />
+- <code>angezeigte_zeit</code> (INTEGER) - Minuten seit Mitternacht<br />
+- <code>mondphase_ist</code> (INTEGER) - 0-59 (nur Monduhr)<br />
+- <code>last_relais_a</code> (INTEGER) - 1=A, 0=B<br />
+- <code>aktiv</code> (INTEGER)<br />
+- <code>created_at</code> (TIMESTAMP)<br />
+- <code>updated_at</code> (TIMESTAMP)</p>
+<p><strong>tagtypen:</strong><br />
+- <code>id</code> (INTEGER PRIMARY KEY)<br />
+- <code>name</code> (TEXT UNIQUE) - Dateiname<br />
+- <code>programm_typ</code> (TEXT) - "normal", "festtag_variabel", "festtag_fest", "benutzer"<br />
+- <code>created_at</code> (TIMESTAMP)<br />
+- <code>updated_at</code> (TIMESTAMP)</p>
+<p><strong>programme:</strong><br />
+- <code>id</code> (INTEGER PRIMARY KEY)<br />
+- <code>tagtyp_id</code> (INTEGER) - Foreign Key zu tagtypen<br />
+- <code>zeile_index</code> (INTEGER)<br />
+- <code>startzeit</code> (TEXT) - "HH:MM:SS" oder "SA"/"SU"<br />
+- <code>funktion</code> (TEXT) - "Melodie" oder "Heizung"<br />
+- <code>melodie_name</code> (TEXT)<br />
+- <code>dauer_heizung</code> (TEXT) - "hh:mm:ss"<br />
+- <code>montag</code> (BOOLEAN)<br />
+- <code>dienstag</code> (BOOLEAN)<br />
+- <code>mittwoch</code> (BOOLEAN)<br />
+- <code>donnerstag</code> (BOOLEAN)<br />
+- <code>freitag</code> (BOOLEAN)<br />
+- <code>samstag</code> (BOOLEAN)<br />
+- <code>sonntag</code> (BOOLEAN)<br />
+- <code>immer</code> (BOOLEAN)<br />
+- <code>periodisch</code> (INTEGER) - 0=immer, 1=Sommer, 2=Winter<br />
+- <code>start_datum</code> (TEXT)<br />
+- <code>ende_datum</code> (TEXT)<br />
+- <code>verknuepfte_taste</code> (TEXT)<br />
+- <code>prioritaet</code> (INTEGER) - 1-9<br />
+- <code>festtag_datum</code> (TEXT)<br />
+- <code>festtag_jahr</code> (INTEGER)<br />
+- <code>created_at</code> (TIMESTAMP)<br />
+- <code>updated_at</code> (TIMESTAMP)</p>
+<p><strong>osterfeiertage:</strong><br />
+- <code>id</code> (INTEGER PRIMARY KEY)<br />
+- <code>name</code> (TEXT UNIQUE)<br />
+- <code>oster_offset</code> (INTEGER) - Tage +/- zum Osterdatum<br />
+- <code>tagtyp_name</code> (TEXT)<br />
+- <code>created_at</code> (TIMESTAMP)<br />
+- <code>updated_at</code> (TIMESTAMP)</p>
+<p><strong>feste_feiertage:</strong><br />
+- <code>id</code> (INTEGER PRIMARY KEY)<br />
+- <code>name</code> (TEXT)<br />
+- <code>datum</code> (TEXT) - "TT.MM"<br />
+- <code>tagtyp_name</code> (TEXT)<br />
+- <code>verschieben_auf_sonntag</code> (BOOLEAN)<br />
+- <code>sonntag_im_monat</code> (INTEGER) - 0=nächster, -1=näher zum Sonntag, 1-4=n-ter Sonntag<br />
+- <code>created_at</code> (TIMESTAMP)<br />
+- <code>updated_at</code> (TIMESTAMP)</p>
+<p><strong>sonderfeiertage:</strong><br />
+- <code>id</code> (INTEGER PRIMARY KEY)<br />
+- <code>feiertag_id</code> (INTEGER) - Foreign Key zu feste_feiertage<br />
+- <code>jahr</code> (INTEGER)<br />
+- <code>berechnetes_datum</code> (TEXT) - "TT.MM"<br />
+- <code>tagtyp_name</code> (TEXT)<br />
+- <code>created_at</code> (TIMESTAMP)<br />
+- <code>updated_at</code> (TIMESTAMP)</p>
+<p><strong>vorschwingen_config:</strong><br />
+- <code>id</code> (INTEGER PRIMARY KEY)<br />
+- <code>vorschwingen_relais</code> (INTEGER) - 1-32<br />
+- <code>laeuten_relais</code> (INTEGER) - 1-32<br />
+- <code>zeit_sekunden</code> (INTEGER)<br />
+- <code>vorschwingen_platine</code> (INTEGER) - 1-3<br />
+- <code>laeuten_platine</code> (INTEGER) - 1-3<br />
+- <code>vorschwingen_relais_berechnet</code> (INTEGER)<br />
+- <code>laeuten_relais_berechnet</code> (INTEGER)<br />
+- <code>aktiv</code> (INTEGER)<br />
+- <code>sortierung</code> (INTEGER)<br />
+- <code>created_at</code> (TIMESTAMP)<br />
+- <code>updated_at</code> (TIMESTAMP)</p>
+<h3 id="332-indizes">33.2 Indizes</h3>
+<ul>
+<li><code>idx_platinen_nummer</code> auf <code>platinen_config(platine_nummer)</code></li>
+<li><code>idx_nebenuhr_uhr_name</code> auf <code>nebenuhr_config(uhr_name)</code></li>
+<li><code>idx_tagtypen_name</code> auf <code>tagtypen(name)</code></li>
+<li><code>idx_programme_tagtyp</code> auf <code>programme(tagtyp_id)</code></li>
+<li><code>idx_programme_startzeit</code> auf <code>programme(startzeit)</code></li>
+<li><code>idx_osterfeiertage_name</code> auf <code>osterfeiertage(name)</code></li>
+<li><code>idx_feste_feiertage_datum</code> auf <code>feste_feiertage(datum)</code></li>
+<li><code>idx_sonderfeiertage_datum</code> auf <code>sonderfeiertage(berechnetes_datum, jahr)</code></li>
+<li><code>idx_vorschwingen_aktiv</code> auf <code>vorschwingen_config(aktiv)</code></li>
+</ul>
+<h3 id="333-beziehungen">33.3 Beziehungen</h3>
+<ul>
+<li><code>programme.tagtyp_id</code> → <code>tagtypen.id</code> (ON DELETE CASCADE)</li>
+<li><code>sonderfeiertage.feiertag_id</code> → <code>feste_feiertage.id</code> (ON DELETE CASCADE)</li>
+</ul>
+<hr />
+<h2 id="34-anhang-c-api-referenz">34. Anhang C: API-Referenz</h2>
+<h3 id="341-vollstandige-api-liste">34.1 Vollständige API-Liste</h3>
+<p>Siehe Kapitel 22.2 für vollständige Liste aller API-Endpunkte.</p>
+<h3 id="342-code-beispiele">34.2 Code-Beispiele</h3>
+<p><strong>Programm abrufen:</strong></p>
+<pre class="codehilite"><code class="language-javascript">fetch('/api/programme?tagtyp=Normalprogramm.xls')
+  .then(response =&gt; response.json())
+  .then(data =&gt; console.log(data));
+</code></pre>
+
+<p><strong>Programm erstellen:</strong></p>
+<pre class="codehilite"><code class="language-javascript">fetch('/api/programme?tagtyp=Normalprogramm.xls', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    startzeit: '12:00:00',
+    funktion: 'Melodie',
+    melodie_name: 'Glocke1',
+    montag: true,
+    dienstag: true,
+    // ... weitere Felder
+  })
+});
+</code></pre>
+
+<p><strong>Programm aktualisieren:</strong></p>
+<pre class="codehilite"><code class="language-javascript">fetch('/api/programme/123?tagtyp=Normalprogramm.xls', {
+  method: 'PUT',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    startzeit: '13:00:00',
+    // ... geänderte Felder
+  })
+});
+</code></pre>
+
+<p><strong>Programm löschen:</strong></p>
+<pre class="codehilite"><code class="language-javascript">fetch('/api/programme/123?tagtyp=Normalprogramm.xls', {
+  method: 'DELETE'
+});
+</code></pre>
+
+<h3 id="343-fehlercodes">34.3 Fehlercodes</h3>
+<p><strong>HTTP-Status-Codes:</strong><br />
+- <code>200</code> - Erfolg<br />
+- <code>400</code> - Ungültige Anfrage (z.B. fehlende Parameter)<br />
+- <code>404</code> - Nicht gefunden (z.B. Programm-ID existiert nicht)<br />
+- <code>500</code> - Server-Fehler (interner Fehler)</p>
+<p><strong>JSON-Fehler-Response:</strong></p>
+<pre class="codehilite"><code class="language-json">{
+  &quot;error&quot;: &quot;Fehlermeldung&quot;
+}
+</code></pre>
+
+<hr />
+<h2 id="35-anhang-d-glossar">35. Anhang D: Glossar</h2>
+<h3 id="351-fachbegriffe">35.1 Fachbegriffe</h3>
+<p><strong>Tagtyp:</strong><br />
+- Programm-Typ (Normalprogramm, Feiertagsprogramm, etc.)<br />
+- Wird durch Dateiname identifiziert (z.B. "Normalprogramm.xls")</p>
+<p><strong>Platine:</strong><br />
+- Carambola-Modul für WiFi/Bluetooth-Kommunikation<br />
+- Steuert Relais</p>
+<p><strong>Relais:</strong><br />
+- Elektrischer Schalter<br />
+- Wird für Glocken, Heizung, etc. verwendet</p>
+<p><strong>Nebenuhr:</strong><br />
+- Zusätzliche Uhr (neben Hauptuhr)<br />
+- Kann verschiedene Zeiten anzeigen</p>
+<p><strong>Monduhr:</strong><br />
+- Spezielle Nebenuhr, die Mondphasen anzeigt<br />
+- Nebenuhr D</p>
+<p><strong>Vorschwingen:</strong><br />
+- Vorschwingen der Glocke vor dem Läuten<br />
+- Reduziert Belastung</p>
+<p><strong>Osterfeiertag:</strong><br />
+- Variable Feiertag, der sich nach Osterdatum richtet<br />
+- Beispiel: Karfreitag, Ostermontag</p>
+<p><strong>Fester Feiertag:</strong><br />
+- Feiertag mit festem Datum<br />
+- Beispiel: Weihnachten (25.12.)</p>
+<p><strong>Sonderfeiertag:</strong><br />
+- Verschobener Feiertag (auf Sonntag)<br />
+- Wird automatisch berechnet</p>
+<p><strong>Vorfeiertag:</strong><br />
+- Tag vor einem Feiertag<br />
+- Wird automatisch erstellt</p>
+<p><strong>Wechselschaltung:</strong><br />
+- Zwei Relais wechseln sich ab<br />
+- Verhindert gleichzeitiges Schalten</p>
+<p><strong>Sonnenaufgang/Sonnenuntergang (SA/SU):</strong><br />
+- Sonderwerte für Startzeit in Programmen<br />
+- Werden automatisch berechnet</p>
+<p><strong>Periodisch:</strong><br />
+- Sommer/Winter-Zeit<br />
+- Programme können nur in bestimmter Zeit aktiv sein</p>
+<p><strong>Verknüpfte Taste:</strong><br />
+- Taste, die aktiv sein muss, damit Programm ausgeführt wird<br />
+- Beispiel: "Schlagwerk"</p>
+<p><strong>Priorität:</strong><br />
+- 1-9 (höhere Zahl = höhere Priorität)<br />
+- Bei mehreren passenden Programmen wird das mit höchster Priorität ausgewählt</p>
+<h3 id="352-abkurzungen">35.2 Abkürzungen</h3>
+<ul>
+<li><strong>API:</strong> Application Programming Interface</li>
+<li><strong>CRUD:</strong> Create, Read, Update, Delete</li>
+<li><strong>GPS:</strong> Global Positioning System</li>
+<li><strong>HTTP:</strong> Hypertext Transfer Protocol</li>
+<li><strong>IP:</strong> Internet Protocol</li>
+<li><strong>MAC:</strong> Media Access Control</li>
+<li><strong>NMEA:</strong> National Marine Electronics Association</li>
+<li><strong>NTP:</strong> Network Time Protocol</li>
+<li><strong>REST:</strong> Representational State Transfer</li>
+<li><strong>SQLite:</strong> SQL Database Engine</li>
+<li><strong>UI:</strong> User Interface</li>
+<li><strong>Web-UI:</strong> Web User Interface</li>
+<li><strong>WiFi:</strong> Wireless Fidelity</li>
+</ul>
+<h3 id="353-erklarungen">35.3 Erklärungen</h3>
+<p><strong>Dynamische Berechnung:</strong><br />
+- Sonderfeiertage werden bei Bedarf berechnet (nicht vorberechnet)<br />
+- Spart Datenbank-Speicher<br />
+- Funktioniert wie Osterfeiertage</p>
+<p><strong>Repository-Pattern:</strong><br />
+- Abstraktionsschicht zwischen Datenquelle und Anwendung<br />
+- Ermöglicht Wechsel zwischen Excel und Datenbank</p>
+<p><strong>REST API:</strong><br />
+- Architektur-Stil für Web-Services<br />
+- Verwendet HTTP-Methoden (GET, POST, PUT, DELETE)<br />
+- JSON als Datenformat</p>
+<hr />
+<h2 id="36-anhang-e-fehlerbehebung">36. Anhang E: Fehlerbehebung</h2>
+<h3 id="361-haufige-probleme">36.1 Häufige Probleme</h3>
+<p><strong>Problem: Web-UI nicht erreichbar</strong><br />
+- <strong>Lösung:</strong> <br />
+  - Prüfen Sie, ob Geräte im gleichen Netzwerk sind<br />
+  - Prüfen Sie die IP-Adresse<br />
+  - Prüfen Sie, ob Port 8080 nicht blockiert ist<br />
+  - App neu starten</p>
+<p><strong>Problem: Programme werden nicht ausgeführt</strong><br />
+- <strong>Lösung:</strong><br />
+  - Prüfen Sie, ob Programme in Datenbank vorhanden sind<br />
+  - Import aus Excel durchführen<br />
+  - Prüfen Sie Zeit und Datum<br />
+  - Prüfen Sie Wochentags-Filter</p>
+<p><strong>Problem: Feiertage werden nicht erkannt</strong><br />
+- <strong>Lösung:</strong><br />
+  - Prüfen Sie, ob Feiertage in Datenbank vorhanden sind<br />
+  - Import aus Excel durchführen<br />
+  - Prüfen Sie Tagtyp-Zuordnung</p>
+<p><strong>Problem: Platinen nicht erreichbar</strong><br />
+- <strong>Lösung:</strong><br />
+  - Prüfen Sie IP-Adressen und Ports<br />
+  - Prüfen Sie Netzwerk-Verbindung<br />
+  - Prüfen Sie, ob Platinen aktiv sind</p>
+<p><strong>Problem: WRITE_SECURE_SETTINGS Permission fehlt</strong><br />
+- <strong>Lösung:</strong><br />
+  - Siehe Kapitel 10.2<br />
+  - Permission über ADB vergeben</p>
+<h3 id="362-log-dateien">36.2 Log-Dateien</h3>
+<p><strong>Speicherort:</strong><br />
+- <code>/sdcard/Turmtechnik/Logs/</code></p>
+<p><strong>Logcat (Android):</strong></p>
+<pre class="codehilite"><code class="language-bash">adb logcat | grep Turmtechnik
+</code></pre>
+
+<p><strong>Wichtige Log-Tags:</strong><br />
+- <code>TurmtechnikActivity</code><br />
+- <code>ConfigWebServer</code><br />
+- <code>PlatinenDatabaseHelper</code><br />
+- <code>TagesSuche</code><br />
+- <code>UhrThread</code></p>
+<h3 id="363-debug-modus">36.3 Debug-Modus</h3>
+<p><strong>Aktivierung:</strong><br />
+- <code>StaticConstants.java</code>: <code>DEBUG = true</code><br />
+- App neu kompilieren und installieren</p>
+<p><strong>Auswirkungen:</strong><br />
+- Ausführlichere Logs<br />
+- Mehr Debug-Informationen</p>
+<h3 id="364-support-informationen">36.4 Support-Informationen</h3>
+<p><strong>Bei Problemen bitte bereitstellen:</strong><br />
+- Android-Version<br />
+- App-Version<br />
+- Log-Dateien<br />
+- Beschreibung des Problems<br />
+- Schritte zur Reproduktion</p>
+<p><strong>Kontakt:</strong><br />
+- Siehe Projekt-Dokumentation für Support-Kontakt</p>
+<hr />
+<h2 id="ende-der-dokumentation">Ende der Dokumentation</h2>
+<p><strong>Version:</strong> 1.0<br />
+<strong>Datum:</strong> 2026<br />
+<strong>Projekt:</strong> Turmtechnik Android App</p>
+<p><strong>Hinweis:</strong> Diese Dokumentation wird kontinuierlich aktualisiert. Bitte prüfen Sie regelmäßig auf neue Versionen.</p>
+    <script>
+        // Automatisches Scrollen zu Anker-Links
+        if (window.location.hash) {
+            setTimeout(function() {
+                document.querySelector(window.location.hash).scrollIntoView();
+            }, 100);
+        }
+    </script>
+</body>
+</html>

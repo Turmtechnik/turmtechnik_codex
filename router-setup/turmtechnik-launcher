@@ -1,0 +1,85 @@
+#!/bin/ash
+# CGI-Launcher für Turmtechnik-Setup (OpenWrt uhttpd)
+# Zeigt eine Seite mit Button "Installation starten" und führt das Setup-Script vom USB-Stick aus.
+# Einmal installieren mit install-launcher.sh (per SSH).
+
+SCRIPT_NAME="turmtechnik-setup.sh"
+LOG="/tmp/turmtechnik-setup.log"
+# Typische USB-Mountpunkte (GL.iNet / OpenWrt)
+SEARCH_PATHS="/mnt/sda1 /mnt/sdb1 /mnt/usb"
+
+# HTTP-Header ausgeben
+output_header() {
+    printf "Content-Type: text/html; charset=utf-8\r\n\r\n"
+}
+
+# HTML-Seite mit Button (ohne Installation starten)
+output_form() {
+    output_header
+    cat << 'HTMLEOF'
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>Turmtechnik Setup</title></head>
+<body style="font-family:sans-serif; max-width:600px; margin:2em;">
+<h1>Turmtechnik Setup</h1>
+<p>USB-Stick mit <code>turmtechnik-setup.sh</code> einstecken, dann:</p>
+<p><a href="?action=run" style="display:inline-block; padding:12px 24px; background:#0a84; color:#fff; text-decoration:none; border-radius:8px;">Installation starten</a></p>
+<p><small>Das Script wird auf dem Router ausgeführt. Bei vielen Paketen kann es einige Minuten dauern.</small></p>
+<hr>
+<p><a href="?action=log">Letztes Log anzeigen</a></p>
+</body></html>
+HTMLEOF
+}
+
+# Script-Pfad auf USB suchen
+find_script() {
+    for base in $SEARCH_PATHS; do
+        if [ -f "$base/$SCRIPT_NAME" ] && [ -r "$base/$SCRIPT_NAME" ]; then
+            echo "$base/$SCRIPT_NAME"
+            return 0
+        fi
+    done
+    return 1
+}
+
+# Installation ausführen und Log als HTML anzeigen
+run_and_show() {
+    output_header
+    echo "<!DOCTYPE html><html><head><meta charset=\"utf-8\"><title>Turmtechnik Setup – Ausgabe</title></head><body style=\"font-family:monospace; white-space:pre-wrap; margin:1em;\">"
+    echo "<h2>Installation</h2>"
+    SCRIPT_PATH=$(find_script)
+    if [ -z "$SCRIPT_PATH" ]; then
+        echo "<p style='color:red'>Fehler: $SCRIPT_NAME wurde nicht gefunden. Bitte USB-Stick einstecken (z.B. /mnt/sda1).</p>"
+        echo "</body></html>"
+        return
+    fi
+    echo "<p>Script: $SCRIPT_PATH</p><hr>"
+    sh "$SCRIPT_PATH" || true
+    if [ -f "$LOG" ] && [ -r "$LOG" ]; then
+        echo "<pre>"
+        cat "$LOG" | sed 's/</\&lt;/g; s/>/\&gt;/g; s/&/\&amp;/g'
+        echo "</pre>"
+    fi
+    echo "<hr><p><a href=\"?\">Zurück</a></p>"
+    echo "</body></html>"
+}
+
+# Nur Log anzeigen
+show_log() {
+    output_header
+    echo "<!DOCTYPE html><html><head><meta charset=\"utf-8\"><title>Turmtechnik Setup – Log</title></head><body style=\"font-family:monospace; white-space:pre-wrap; margin:1em;\">"
+    echo "<h2>Letztes Setup-Log</h2>"
+    if [ -f "$LOG" ] && [ -r "$LOG" ]; then
+        cat "$LOG" | sed 's/</\&lt;/g; s/>/\&gt;/g'
+    else
+        echo "Noch kein Log vorhanden. Starten Sie einmal die Installation."
+    fi
+    echo "<hr><p><a href=\"?\">Zurück</a></p>"
+    echo "</body></html>"
+}
+
+# QUERY_STRING auswerten (uhttpd setzt das)
+case "$QUERY_STRING" in
+    action=run)  run_and_show ;;
+    action=log)   show_log ;;
+    *)            output_form ;;
+esac

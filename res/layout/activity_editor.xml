@@ -1,0 +1,270 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/activity_edienstagtor"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:paddingBottom="@dimen/activity_vertical_margin"
+    android:paddingLeft="@dimen/activity_horizontal_margin"
+    android:paddingRight="@dimen/activity_horizontal_margin"
+    android:paddingTop="@dimen/activity_vertical_margin"
+
+    tools:context="tom.turmtechnik.EditorActivity"
+    android:layout_margin="0dp"
+    android:layout_marginBottom="0dp"
+    android:layout_marginEnd="0dp"
+    android:layout_marginRight="0dp"
+    android:layout_marginLeft="0dp"
+    android:layout_marginStart="0dp"
+    android:layout_marginTop="0dp">
+
+
+    <RelativeLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true"
+        android:layout_marginBottom="42dp">
+
+    <Button
+        android:text="Normalprogramm Zeilennummer"
+        android:textSize="20dp"
+        android:padding="20dp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+
+        android:layout_alignParentTop="true"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true"
+        android:id="@+id/button_programm_zeilennnummer"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentEnd="true"/>
+
+    <Button
+        android:text="Uhrzeit"
+        android:textSize="20dp"
+        android:padding="20dp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/button_uhrzeit"
+        android:layout_below="@+id/button_programm_zeilennnummer"
+        android:layout_toLeftOf="@+id/button_sommer_winter_immer"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true"/>
+
+    <Button
+        android:text="Melodien/Ausgang"
+        android:textSize="20dp"
+        android:padding="20dp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/button_programm_zeilennnummer"
+        android:id="@+id/button_melodie_ausgang"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentEnd="true"
+
+        android:layout_alignLeft="@+id/button_sommer_winter_immer"
+        android:layout_alignStart="@+id/button_sommer_winter_immer"/>
+
+    <Button
+        android:text="MO"
+        android:textSize="20dp"
+        android:paddingTop="20dp"
+        android:paddingBottom="20dp"
+        android:paddingLeft="40dp"
+        android:paddingRight="40dp"
+        android:layout_margin="4dp"
+        android:layout_height="wrap_content"
+
+
+        android:id="@+id/button_montag"
+        android:layout_below="@+id/button_uhrzeit"
+
+        android:layout_width="wrap_content"/>
+
+    <Button
+        android:text="MI"
+        android:textSize="20dp"
+        android:paddingTop="20dp"
+        android:paddingBottom="20dp"
+        android:paddingLeft="40dp"
+        android:paddingRight="40dp"
+        android:layout_margin="4dp"
+        android:layout_height="wrap_content"
+        android:id="@+id/button_mittwoch"
+        android:layout_below="@+id/button_uhrzeit"
+        android:layout_toRightOf="@+id/button_dienstag"
+        android:layout_toEndOf="@+id/button_dienstag"
+        android:layout_width="wrap_content"/>
+
+    <Button
+        android:text="DI"
+        android:textSize="20dp"
+        android:paddingTop="20dp"
+        android:paddingBottom="20dp"
+        android:paddingLeft="40dp"
+        android:paddingRight="40dp"
+        android:layout_margin="4dp"
+        android:layout_height="wrap_content"
+        android:id="@+id/button_dienstag"
+        android:layout_below="@+id/button_uhrzeit"
+        android:layout_toRightOf="@+id/button_montag"
+        android:layout_toEndOf="@+id/button_montag"
+        android:layout_width="wrap_content"/>
+
+        <Button
+        android:text="Immer/Einmalig"
+        android:textSize="20dp"
+        android:padding="20dp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/button_immer_einmalig"
+        android:layout_below="@+id/button_montag"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true"
+        android:layout_toStartOf="@+id/button_donnerstag"
+        android:layout_toLeftOf="@+id/button_donnerstag"/>
+
+    <Button
+        android:text="Sommer/Winter/Immer"
+        android:textSize="20dp"
+        android:padding="20dp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/button_sommer_winter_immer"
+        android:layout_below="@+id/button_mittwoch"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentEnd="true"
+        android:layout_toRightOf="@+id/button_mittwoch"
+        android:layout_toEndOf="@+id/button_mittwoch"/>
+
+    <Button
+        android:text="Anfang"
+        android:textSize="20dp"
+        android:padding="20dp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/button_immer_einmalig"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true"
+        android:id="@+id/button_anfang"
+        android:layout_toLeftOf="@+id/button_sommer_winter_immer"
+        android:layout_toStartOf="@+id/button_sommer_winter_immer"/>
+
+    <Button
+        android:text="Ende"
+        android:textSize="20dp"
+        android:padding="20dp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/button_ende"
+        android:layout_below="@+id/button_sommer_winter_immer"
+        android:layout_alignLeft="@+id/button_sommer_winter_immer"
+        android:layout_alignStart="@+id/button_sommer_winter_immer"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentEnd="true"/>
+
+    <Button
+        android:text="Speichern"
+        android:textSize="20dp"
+        android:padding="20dp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/button_speichern"
+        android:layout_below="@+id/button_anfang"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true"
+        android:layout_toLeftOf="@+id/button_freitag"
+        android:layout_toStartOf="@+id/button_freitag"/>
+
+    <Button
+        android:text="Abbruch"
+        android:textSize="20dp"
+        android:padding="20dp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/button_abbruch"
+        android:layout_below="@+id/button_ende"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentEnd="true"/>
+
+    <Button
+        android:text="Kopieren"
+        android:textSize="20dp"
+        android:padding="20dp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/button_kopieren"
+        android:layout_alignBaseline="@+id/button_speichern"
+        android:layout_alignBottom="@+id/button_speichern"
+        android:layout_toLeftOf="@+id/button_abbruch"
+        android:layout_toRightOf="@+id/button_speichern"
+        android:layout_toEndOf="@+id/button_speichern"/>
+
+        <Button
+            android:text="DO"
+            android:textSize="20dp"
+            android:paddingTop="20dp"
+            android:paddingBottom="20dp"
+            android:paddingLeft="40dp"
+            android:paddingRight="40dp"
+            android:layout_margin="4dp"
+            android:layout_height="wrap_content"
+            android:id="@+id/button_donnerstag"
+
+            android:layout_width="wrap_content"
+            android:layout_below="@+id/button_melodie_ausgang"
+            android:layout_toRightOf="@+id/button_uhrzeit"
+            android:layout_toEndOf="@+id/button_uhrzeit"/>
+
+        <Button
+            android:text="FR"
+            android:textSize="20dp"
+            android:paddingTop="20dp"
+            android:paddingBottom="20dp"
+            android:paddingLeft="40dp"
+            android:paddingRight="40dp"
+            android:layout_margin="4dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/button_freitag"
+            android:layout_below="@+id/button_melodie_ausgang"
+            android:layout_toRightOf="@+id/button_donnerstag"
+            android:layout_toEndOf="@+id/button_donnerstag"/>
+
+        <Button
+            android:text="SO"
+            android:textSize="20dp"
+            android:paddingTop="20dp"
+            android:paddingBottom="20dp"
+            android:paddingLeft="40dp"
+            android:paddingRight="40dp"
+            android:layout_margin="4dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/button_sonntag"
+            android:layout_below="@+id/button_melodie_ausgang"
+            android:layout_toRightOf="@+id/button_kopieren"
+            android:layout_toEndOf="@+id/button_kopieren"/>
+
+        <Button
+            android:text="SA"
+            android:textSize="20dp"
+            android:paddingTop="20dp"
+            android:paddingBottom="20dp"
+            android:paddingLeft="40dp"
+            android:paddingRight="40dp"
+            android:layout_margin="4dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/button_samstag"
+            android:layout_alignBaseline="@+id/button_sonntag"
+            android:layout_alignBottom="@+id/button_sonntag"
+            android:layout_toLeftOf="@+id/button_sonntag"
+            android:layout_toStartOf="@+id/button_sonntag"/>
+
+    </RelativeLayout>
+
+</RelativeLayout>

@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <title>Turmtechnik - Konfiguration</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root { --tt-bg: #0a0a0a; --tt-surface: #141414; --tt-card: #1a1a1a; --tt-border: #2a2a2a; --tt-text: #e8e8e8; --tt-muted: #888; --tt-accent: #c9a227; --tt-accent-hover: #dbb83a; }
+        * { box-sizing: border-box; }
+        body { font-family: 'Inter', -apple-system, sans-serif; background: var(--tt-bg); color: var(--tt-text); min-height: 100vh; margin: 0; }
+        .tt-header { background: var(--tt-surface); border-bottom: 1px solid var(--tt-border); padding: 1rem 0; }
+        .tt-header h1 { font-size: 1.5rem; font-weight: 700; margin: 0; color: var(--tt-text); letter-spacing: -0.02em; }
+        .tt-header .sub { font-size: 0.85rem; color: var(--tt-muted); margin-top: 0.2rem; }
+        .tt-section { margin-bottom: 2rem; }
+        .tt-section-title { font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--tt-muted); margin-bottom: 0.75rem; }
+        .tt-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 0.75rem; }
+        .tt-card { display: block; background: var(--tt-card); border: 1px solid var(--tt-border); border-radius: 10px; padding: 1rem 1.25rem; text-decoration: none; color: inherit; transition: border-color 0.2s, background 0.2s, transform 0.15s; }
+        .tt-card:hover { border-color: var(--tt-accent); background: #1f1f1f; transform: translateY(-1px); }
+        .tt-card:active { transform: translateY(0); }
+        .tt-card.disabled { opacity: 0.5; cursor: not-allowed; pointer-events: none; }
+        .tt-card .title { font-weight: 600; font-size: 1rem; margin-bottom: 0.25rem; color: var(--tt-text); }
+        .tt-card .desc { font-size: 0.8rem; color: var(--tt-muted); line-height: 1.35; }
+        .tt-card .arrow { float: right; color: var(--tt-muted); font-size: 0.9rem; }
+        .tt-card:hover .arrow { color: inherit; }
+        .container { max-width: 960px; }
+        .tt-section--router .tt-section-title { color: #8fbc8f; }
+        .tt-section--router .tt-card:hover { border-color: #8fbc8f; }
+        .tt-section--router .tt-card:hover .arrow { color: #8fbc8f; }
+        .tt-section--programme .tt-section-title { color: #6b9bd1; }
+        .tt-section--programme .tt-card:hover { border-color: #6b9bd1; }
+        .tt-section--programme .tt-card:hover .arrow { color: #6b9bd1; }
+        .tt-section--uhren .tt-section-title { color: #7eb8da; }
+        .tt-section--uhren .tt-card:hover { border-color: #7eb8da; }
+        .tt-section--uhren .tt-card:hover .arrow { color: #7eb8da; }
+        .tt-section--laeuten .tt-section-title { color: #c9a227; }
+        .tt-section--laeuten .tt-card:hover { border-color: #c9a227; }
+        .tt-section--laeuten .tt-card:hover .arrow { color: #c9a227; }
+        .tt-section--hardware .tt-section-title { color: #8fbc8f; }
+        .tt-section--hardware .tt-card:hover { border-color: #8fbc8f; }
+        .tt-section--hardware .tt-card:hover .arrow { color: #8fbc8f; }
+        .tt-section--daten .tt-section-title { color: #c495b0; }
+        .tt-section--daten .tt-card:hover { border-color: #c495b0; }
+        .tt-section--daten .tt-card:hover .arrow { color: #c495b0; }
+    </style>
+</head>
+<body>
+    <header class="tt-header">
+        <div class="container">
+            <h1>Turmtechnik</h1>
+            <div class="sub">Konfiguration &amp; Steuerung</div>
+        </div>
+    </header>
+    <main class="container py-4">
+        <!-- Auf dem Router: Einstieg API & Status -->
+        <section class="tt-section tt-section--router">
+            <div class="tt-section-title">Router / API</div>
+            <div class="tt-grid">
+                <a href="/hauptuhr/" class="tt-card"><span class="arrow">→</span><div class="title">Hauptuhr2025</div><div class="desc">Master Clock System (aus dist) – /hauptuhr/</div></a>
+                <a href="/cgi-bin/turmtechnik-api" class="tt-card"><span class="arrow">→</span><div class="title">API &amp; Status</div><div class="desc">Dashboard, Status (JSON), Config – Turmtechnik auf Beryl AX</div></a>
+                <a href="/cgi-bin/turmtechnik-launcher" class="tt-card"><span class="arrow">→</span><div class="title">Setup / Installation</div><div class="desc">Pakete &amp; Verzeichnisse per Klick installieren</div></a>
+            </div>
+        </section>
+        <section class="tt-section tt-section--programme">
+            <div class="tt-section-title">Programme</div>
+            <div class="tt-grid">
+                <a href="/programm-editor.html" class="tt-card"><span class="arrow">→</span><div class="title">Programm-Editor</div><div class="desc">Normalprogramm, Feiertage, Benutzerprogramme</div></a>
+                <a href="/osterfeiertage.html" class="tt-card"><span class="arrow">→</span><div class="title">Osterfeiertage</div><div class="desc">Variable Feiertage bearbeiten</div></a>
+                <a href="/fixe-feiertage.html" class="tt-card"><span class="arrow">→</span><div class="title">Fixe Feiertage</div><div class="desc">Feste Feiertage bearbeiten</div></a>
+                <a href="/benutzerprogramme.html" class="tt-card"><span class="arrow">→</span><div class="title">Benutzerprogramme</div><div class="desc">Datum, Zeit, Melodie</div></a>
+            </div>
+        </section>
+        <section class="tt-section tt-section--uhren">
+            <div class="tt-section-title">Uhren &amp; Zeiten</div>
+            <div class="tt-grid">
+                <a href="/nebenuhr-config.html" class="tt-card"><span class="arrow">→</span><div class="title">Nebenuhr Config</div><div class="desc">Nebenuhr-Konfiguration</div></a>
+                <span class="tt-card disabled"><span class="arrow">—</span><div class="title">Zeitserver &amp; GPS</div><div class="desc">In Entwicklung</div></span>
+            </div>
+        </section>
+        <section class="tt-section tt-section--laeuten">
+            <div class="tt-section-title">Läuten &amp; Melodien</div>
+            <div class="tt-grid">
+                <a href="/vorschwingen-config.html" class="tt-card"><span class="arrow">→</span><div class="title">Vorschwingen</div><div class="desc">Vorschwingen-Konfiguration</div></a>
+                <a href="/midi-config.html" class="tt-card"><span class="arrow">→</span><div class="title">MIDI Config</div><div class="desc">MIDI-Dateien, Noten-zu-Relais</div></a>
+                <a href="/melodien-editor.html" class="tt-card"><span class="arrow">→</span><div class="title">Melodien-Editor</div><div class="desc">Melodien importieren &amp; verwalten</div></a>
+                <a href="/schlagwerk-config.html" class="tt-card"><span class="arrow">→</span><div class="title">Schlagwerk</div><div class="desc">Schlagwerk-Zeiten Typ 1 &amp; 2</div></a>
+            </div>
+        </section>
+        <section class="tt-section tt-section--hardware">
+            <div class="tt-section-title">Hardware &amp; Tasten</div>
+            <div class="tt-grid">
+                <a href="/platinen-config.html" class="tt-card"><span class="arrow">→</span><div class="title">Platinen-Konfiguration</div><div class="desc">Carambola, IP-Adressen, Ports</div></a>
+                <a href="/beschriftung-tasten-config.html" class="tt-card"><span class="arrow">→</span><div class="title">Beschriftung Tasten</div><div class="desc">Reihenfolge &amp; Typ (Drag &amp; Drop)</div></a>
+            </div>
+        </section>
+        <section class="tt-section tt-section--daten">
+            <div class="tt-section-title">Daten &amp; Export</div>
+            <div class="tt-grid">
+                <a href="/anlagendaten.html" class="tt-card"><span class="arrow">→</span><div class="title">Anlagendaten</div><div class="desc">Baustelle, Fernsteuern, Anlagenstandort</div></a>
+                <a href="/daten-sicherung.html" class="tt-card"><span class="arrow">→</span><div class="title">Daten sichern &amp; Import</div><div class="desc">Backup &amp; Wiederherstellung</div></a>
+                <a href="/export-pdf.html" class="tt-card"><span class="arrow">→</span><div class="title">PDF-Export</div><div class="desc">Anlagenconfig &amp; Programmtage drucken</div></a>
+            </div>
+        </section>
+    </main>
+</body>
+</html>

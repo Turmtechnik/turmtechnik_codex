@@ -1,0 +1,56 @@
+#!/bin/ash
+# Turmtechnik-API (CGI) für Beryl AX / OpenWrt
+# Aufruf: /cgi-bin/turmtechnik-api  oder  ?action=status | config | dashboard
+# Ohne action: zeigt kleines Dashboard (HTML). Mit action=status/config: JSON.
+
+CONFIG_DIR="/overlay/turmtechnik/config"
+CONFIG_FILE="$CONFIG_DIR/config.json"
+
+# Query-String auswerten (action=...)
+get_action() {
+    echo "$QUERY_STRING" | sed -n 's/.*[?&]action=\([^&]*\).*/\1/p'
+}
+
+# JSON: Status
+json_status() {
+    printf "Content-Type: application/json; charset=utf-8\r\n\r\n"
+    printf '{"status":"ok","service":"turmtechnik","version":"0.1","time":"%s"}\n' "$(date)"
+}
+
+# JSON: Config (aus Datei oder leer)
+json_config() {
+    printf "Content-Type: application/json; charset=utf-8\r\n\r\n"
+    if [ -f "$CONFIG_FILE" ] && [ -r "$CONFIG_FILE" ]; then
+        cat "$CONFIG_FILE"
+    else
+        printf '{"message":"Keine Konfiguration","path":"%s"}\n' "$CONFIG_FILE"
+    fi
+}
+
+# HTML: Mini-Dashboard
+html_dashboard() {
+    printf "Content-Type: text/html; charset=utf-8\r\n\r\n"
+    cat << 'HTMLEOF'
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Turmtechnik</title></head>
+<body style="font-family:sans-serif; max-width:640px; margin:1em auto; padding:0 1em;">
+<h1>Turmtechnik</h1>
+<p>Router-Basis l&auml;uft. API und Steuerung folgen.</p>
+<ul>
+<li><a href="/cgi-bin/turmtechnik-api?action=status">API: Status (JSON)</a></li>
+<li><a href="/cgi-bin/turmtechnik-api?action=config">API: Config (JSON)</a></li>
+<li><a href="/cgi-bin/turmtechnik-launcher">Setup / Installation starten</a></li>
+</ul>
+<hr>
+<p><small>Turmtechnik auf Beryl AX (OpenWrt)</small></p>
+</body></html>
+HTMLEOF
+}
+
+# Hauptteil
+action=$(get_action)
+case "$action" in
+    status)  json_status ;;
+    config)  json_config ;;
+    *)       html_dashboard ;;
+esac
