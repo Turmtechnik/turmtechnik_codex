@@ -747,13 +747,8 @@ public class Seite2Activity extends Activity {
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
         if ((keyCode == KeyEvent.KEYCODE_BACK)) {
-            //Log.i("Acitiviti2", "back");
-
-
-            // finish();
-            endActivitiSeite2();
+            TurmtechnikActivity.showExitPasswordDialogFrom(this);
             return true;
-
         }
         return false;
     }
@@ -833,7 +828,9 @@ public class Seite2Activity extends Activity {
             }
         });
 
-        alert.show();
+        AlertDialog d = alert.create();
+        TurmtechnikActivity.applyDialogAboveKeyboard(d);
+        d.show();
     }
 
     private void startSeite2() {

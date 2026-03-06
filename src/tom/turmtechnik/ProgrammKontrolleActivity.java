@@ -1381,13 +1381,9 @@ public class ProgrammKontrolleActivity extends Activity {
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
         if ((keyCode == KeyEvent.KEYCODE_BACK)) {
-            //Log.i("Acitivity 3", "back");
-
-            // finish();
-            endActivityProgrammKontrolle();
+            TurmtechnikActivity.showExitPasswordDialogFrom(this);
             return true;
         }
-
         return false;
     }
 

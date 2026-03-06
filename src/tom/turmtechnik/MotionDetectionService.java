@@ -4,25 +4,28 @@ import android.Manifest;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.ImageFormat;
+import android.hardware.camera2.CameraAccessException;
+import android.hardware.camera2.CameraCaptureSession;
+import android.hardware.camera2.CameraCharacteristics;
+import android.hardware.camera2.CameraDevice;
+import android.hardware.camera2.CameraManager;
+import android.hardware.camera2.CaptureRequest;
+import android.media.Image;
+import android.media.ImageReader;
 import android.os.Build;
 import android.os.Handler;
+import android.os.HandlerThread;
 import android.os.Looper;
 import android.os.PowerManager;
 import android.util.Log;
+import android.util.Size;
 
-import androidx.annotation.NonNull;
-import androidx.camera.core.CameraSelector;
-import androidx.camera.core.ImageAnalysis;
-import androidx.camera.core.ImageProxy;
-import androidx.camera.lifecycle.ProcessCameraProvider;
 import androidx.core.content.ContextCompat;
 import androidx.lifecycle.LifecycleService;
 
-import com.google.common.util.concurrent.ListenableFuture;
-
 import java.nio.ByteBuffer;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.Arrays;
 
 /**
  * Foreground-Service: Nutzt die Frontkamera zur Bewegungserkennung und weckt bei
@@ -37,11 +40,16 @@ public class MotionDetectionService extends LifecycleService {
     /** Mindestabstand (ms) zwischen zwei Aufweck-Aktionen. */
     private static final long DEBOUNCE_MS = 30_000L;
 
-    private ExecutorService executor;
     private Handler mainHandler;
-    private ProcessCameraProvider cameraProvider;
+    private volatile boolean stopped = false;
+    private CameraDevice cameraDevice;
+    private ImageReader imageReader;
+    private HandlerThread cameraThread;
+    private Handler cameraHandler;
     private long lastWakeMs = 0L;
+    private int frameCount = 0;
     private byte[] previousLuma;
+    private static final long FRAME_WAIT_LOG_INTERVAL_MS = 15_000L;
     private long lastComparisonMs = 0L;
     private int configIntervalSec = 2;
     private int configSensitivity = 50; // 1–100, höher = weniger empfindlich
@@ -50,7 +58,6 @@ public class MotionDetectionService extends LifecycleService {
     @Override
     public void onCreate() {
         super.onCreate();
-        executor = Executors.newSingleThreadExecutor();
         mainHandler = new Handler(Looper.getMainLooper());
     }
 
@@ -71,21 +78,33 @@ public class MotionDetectionService extends LifecycleService {
             return START_NOT_STICKY;
         }
         startForegroundWithNotification();
-        startCamera();
+        // Kamera erst nach kurzer Verzögerung starten – auf manchen Geräten (z. B. T830) crasht sofortiger Start im nativen Code
+        mainHandler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                if (!stopped) startCamera();
+            }
+        }, 3000);
         return START_STICKY;
     }
 
     @Override
     public void onDestroy() {
-        if (executor != null && !executor.isShutdown()) {
-            executor.shutdown();
-        }
-        if (cameraProvider != null) {
-            try {
-                cameraProvider.unbindAll();
-            } catch (Exception e) {
-                Log.w(TAG, "unbindAll: " + e.getMessage());
+        stopped = true;
+        try {
+            if (imageReader != null) {
+                imageReader.close();
+                imageReader = null;
             }
+            if (cameraDevice != null) {
+                cameraDevice.close();
+                cameraDevice = null;
+            }
+            if (cameraThread != null && cameraThread.isAlive()) {
+                cameraThread.quitSafely();
+            }
+        } catch (Exception e) {
+            Log.w(TAG, "onDestroy Kamera: " + e.getMessage());
         }
         super.onDestroy();
     }
@@ -102,7 +121,7 @@ public class MotionDetectionService extends LifecycleService {
             if (configSensitivity < 1) configSensitivity = 1;
             if (configSensitivity > 100) configSensitivity = 100;
             v = db.getConfigValue("anlage_bewegungserkennung_nur_bei_bildschirm_aus");
-            configOnlyWhenScreenOff = "ein".equalsIgnoreCase(v != null ? v.trim() : "ein");
+            configOnlyWhenScreenOff = "ein".equalsIgnoreCase((v != null && !v.trim().isEmpty()) ? v.trim() : "");
         } catch (Exception e) {
             Log.w(TAG, "Config laden: " + e.getMessage());
         }
@@ -162,76 +181,180 @@ public class MotionDetectionService extends LifecycleService {
         }
     }
 
+    /** Kamera per Camera2-API öffnen (liefert auf manchen Geräten Frames, wo CameraX im Service keine liefert). */
     private void startCamera() {
-        ListenableFuture<ProcessCameraProvider> future = ProcessCameraProvider.getInstance(this);
-        future.addListener(new Runnable() {
+        CameraManager manager = (CameraManager) getSystemService(Context.CAMERA_SERVICE);
+        if (manager == null) {
+            Log.e(TAG, "CameraManager null");
+            return;
+        }
+        String frontId = null;
+        try {
+            for (String id : manager.getCameraIdList()) {
+                CameraCharacteristics cc = manager.getCameraCharacteristics(id);
+                Integer facing = cc.get(CameraCharacteristics.LENS_FACING);
+                if (facing != null && facing == CameraCharacteristics.LENS_FACING_FRONT) {
+                    frontId = id;
+                    break;
+                }
+            }
+        } catch (CameraAccessException e) {
+            Log.e(TAG, "Kamera-Liste: " + e.getMessage());
+            return;
+        }
+        if (frontId == null) {
+            Log.e(TAG, "Keine Frontkamera gefunden");
+            return;
+        }
+        Size size = pickImageSize(manager, frontId);
+        if (size == null) {
+            Log.e(TAG, "Keine passende Auflösung für YUV_420_888");
+            return;
+        }
+        cameraThread = new HandlerThread("MotionCam");
+        cameraThread.start();
+        cameraHandler = new Handler(cameraThread.getLooper());
+        imageReader = ImageReader.newInstance(size.getWidth(), size.getHeight(), ImageFormat.YUV_420_888, 2);
+        imageReader.setOnImageAvailableListener(new ImageReader.OnImageAvailableListener() {
+            @Override
+            public void onImageAvailable(ImageReader reader) {
+                if (stopped) return;
+                Image image = null;
+                try {
+                    image = reader.acquireLatestImage();
+                    if (image == null) return;
+                    frameCount++;
+                    if (frameCount <= 5 || frameCount % 50 == 0) {
+                        Log.i(TAG, "Kamera: Frame #" + frameCount + " empfangen (Camera2)");
+                    }
+                    long now = System.currentTimeMillis();
+                    if (now - lastComparisonMs < configIntervalSec * 1000L) return;
+                    lastComparisonMs = now;
+                    byte[] luma = copyLumaFromImage(image);
+                    if (luma == null) {
+                        if (frameCount <= 3) Log.w(TAG, "Kamera: copyLuma fehlgeschlagen (null)");
+                        return;
+                    }
+                    if (previousLuma == null) {
+                        previousLuma = luma;
+                        Log.i(TAG, "Kamera: Erster Frame gespeichert – Vergleich ab nächstem Intervall (alle " + configIntervalSec + " s)");
+                        return;
+                    }
+                    boolean motion = detectMotion(previousLuma, luma, configSensitivity);
+                    previousLuma = luma;
+                    if (motion) {
+                        Log.i(TAG, "Kamera: Werteveränderung erkannt (Bewegung)");
+                        // Immer: Layout1 (Hauptseite) in den Vordergrund und Bildschirm hell
+                        mainHandler.post(new Runnable() {
+                            @Override
+                            public void run() {
+                                wakeScreenIfDebounce();
+                            }
+                        });
+                    }
+                } catch (Exception e) {
+                    Log.w(TAG, "onImageAvailable: " + e.getMessage());
+                } finally {
+                    if (image != null) image.close();
+                }
+            }
+        }, cameraHandler);
+        try {
+            manager.openCamera(frontId, new CameraDevice.StateCallback() {
+                @Override
+                public void onOpened(CameraDevice camera) {
+                    if (stopped) {
+                        camera.close();
+                        return;
+                    }
+                    cameraDevice = camera;
+                    try {
+                        final CaptureRequest.Builder builder = camera.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW);
+                        builder.addTarget(imageReader.getSurface());
+                        camera.createCaptureSession(Arrays.asList(imageReader.getSurface()), new CameraCaptureSession.StateCallback() {
+                            @Override
+                            public void onConfigured(CameraCaptureSession session) {
+                                if (stopped || cameraDevice == null) return;
+                                try {
+                                    builder.set(CaptureRequest.CONTROL_AF_MODE, CaptureRequest.CONTROL_AF_MODE_OFF);
+                                    session.setRepeatingRequest(builder.build(), null, cameraHandler);
+                                    Log.i(TAG, "Kamera gebunden (Camera2, " + size.getWidth() + "x" + size.getHeight() + "), Bewegungserkennung aktiv");
+                                    scheduleFrameWaitLog();
+                                } catch (Exception e) {
+                                    Log.e(TAG, "setRepeatingRequest: " + e.getMessage());
+                                }
+                            }
+                            @Override
+                            public void onConfigureFailed(CameraCaptureSession session) {
+                                Log.e(TAG, "createCaptureSession fehlgeschlagen");
+                            }
+                        }, cameraHandler);
+                    } catch (Exception e) {
+                        Log.e(TAG, "createCaptureSession: " + e.getMessage());
+                    }
+                }
+                @Override
+                public void onDisconnected(CameraDevice camera) {
+                    camera.close();
+                    if (cameraDevice == camera) cameraDevice = null;
+                }
+                @Override
+                public void onError(CameraDevice camera, int error) {
+                    Log.e(TAG, "Kamera onError: " + error);
+                    camera.close();
+                    if (cameraDevice == camera) cameraDevice = null;
+                }
+            }, cameraHandler);
+        } catch (CameraAccessException e) {
+            Log.e(TAG, "openCamera: " + e.getMessage());
+        }
+    }
+
+    private Size pickImageSize(CameraManager manager, String cameraId) {
+        try {
+            CameraCharacteristics cc = manager.getCameraCharacteristics(cameraId);
+            android.hardware.camera2.params.StreamConfigurationMap map = cc.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP);
+            if (map == null) return null;
+            Size[] sizes = map.getOutputSizes(ImageFormat.YUV_420_888);
+            if (sizes == null || sizes.length == 0) return null;
+            for (Size s : sizes) {
+                if (s.getWidth() == 320 && s.getHeight() == 240) return s;
+            }
+            // Sonst kleinste verfügbare Auflösung (weniger Daten = schnellere Auswertung)
+            Size smallest = sizes[0];
+            int minPixels = smallest.getWidth() * smallest.getHeight();
+            for (Size s : sizes) {
+                int p = s.getWidth() * s.getHeight();
+                if (p < minPixels && p >= 160 * 120) {
+                    minPixels = p;
+                    smallest = s;
+                }
+            }
+            return smallest;
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    /** Loggt periodisch, ob bereits Frames angekommen sind (zum Debuggen). */
+    private void scheduleFrameWaitLog() {
+        mainHandler.postDelayed(new Runnable() {
             @Override
             public void run() {
-                try {
-                    ProcessCameraProvider provider = future.get();
-                    cameraProvider = provider;
-                    bindUseCases(provider);
-                } catch (Exception e) {
-                    Log.e(TAG, "Kamera starten: " + e.getMessage(), e);
+                if (stopped) return;
+                if (frameCount == 0) {
+                    Log.w(TAG, "Kamera: bisher keine Frames empfangen – prüfen ob Gerät Frames liefert");
+                } else {
+                    Log.i(TAG, "Kamera: " + frameCount + " Frames empfangen");
                 }
+                scheduleFrameWaitLog();
             }
-        }, ContextCompat.getMainExecutor(this));
+        }, FRAME_WAIT_LOG_INTERVAL_MS);
     }
 
-    private void bindUseCases(ProcessCameraProvider provider) {
+    private byte[] copyLumaFromImage(Image image) {
         try {
-            provider.unbindAll();
-            // Nur Frontkamera
-            CameraSelector selector = new CameraSelector.Builder()
-                    .requireLensFacing(CameraSelector.LENS_FACING_FRONT)
-                    .build();
-            ImageAnalysis imageAnalysis = new ImageAnalysis.Builder()
-                    .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
-                    .setOutputImageFormat(ImageAnalysis.OUTPUT_IMAGE_FORMAT_YUV_420_888)
-                    .build();
-            imageAnalysis.setAnalyzer(executor, new MotionAnalyzer());
-            provider.bindToLifecycle(this, selector, imageAnalysis);
-        } catch (Exception e) {
-            Log.e(TAG, "bindUseCases: " + e.getMessage(), e);
-        }
-    }
-
-    private class MotionAnalyzer implements ImageAnalysis.Analyzer {
-        @Override
-        public void analyze(@NonNull ImageProxy image) {
-            try {
-                long now = System.currentTimeMillis();
-                if (now - lastComparisonMs < configIntervalSec * 1000L) {
-                    image.close();
-                    return;
-                }
-                lastComparisonMs = now;
-                if (configOnlyWhenScreenOff && !StaticVariable.screenIsOff) {
-                    image.close();
-                    return;
-                }
-                byte[] luma = copyLuma(image);
-                image.close();
-                if (luma == null) return;
-                boolean motion = previousLuma != null && detectMotion(previousLuma, luma, configSensitivity);
-                previousLuma = luma;
-                if (motion) {
-                    mainHandler.post(new Runnable() {
-                        @Override
-                        public void run() {
-                            wakeScreenIfDebounce();
-                        }
-                    });
-                }
-            } catch (Exception e) {
-                Log.w(TAG, "analyze: " + e.getMessage());
-            }
-        }
-    }
-
-    private byte[] copyLuma(ImageProxy image) {
-        try {
-            ImageProxy.PlaneProxy plane = image.getPlanes()[0];
+            Image.Plane plane = image.getPlanes()[0];
             ByteBuffer buffer = plane.getBuffer();
             int rowStride = plane.getRowStride();
             int pixelStride = plane.getPixelStride();
@@ -268,13 +391,32 @@ public class MotionDetectionService extends LifecycleService {
         double avgDiff = (double) sumDiff / samples;
         // sensitivity 1 = sehr empfindlich (schon kleine Änderung), 100 = unempfindlich
         double threshold = 5 + (100 - sensitivity) * 0.5;
-        return avgDiff > threshold;
+        boolean motion = avgDiff > threshold;
+        Log.i(TAG, "Kamera-Vergleich: avgDiff=" + String.format("%.1f", avgDiff) + ", Schwellwert=" + String.format("%.1f", threshold) + ", Bewegung=" + (motion ? "ja" : "nein"));
+        return motion;
+    }
+
+    /** Bildschirm aus? */
+    private boolean isScreenOff() {
+        try {
+            PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
+            if (pm != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT_WATCH) {
+                return !pm.isInteractive();
+            }
+        } catch (Exception e) {
+            Log.w(TAG, "isScreenOff: " + e.getMessage());
+        }
+        return false;
     }
 
     private void wakeScreenIfDebounce() {
         long now = System.currentTimeMillis();
-        if (now - lastWakeMs < DEBOUNCE_MS) return;
+        if (now - lastWakeMs < DEBOUNCE_MS) {
+            Log.i(TAG, "Schaltung unterdrückt (Debounce) – nächste Schaltung erst nach " + (DEBOUNCE_MS / 1000) + " s");
+            return;
+        }
         lastWakeMs = now;
+        Log.i(TAG, "Schaltung: Bildschirm aufwecken / Activity in den Vordergrund");
         PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
         if (pm == null) return;
         PowerManager.WakeLock wl = pm.newWakeLock(

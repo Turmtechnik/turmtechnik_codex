@@ -164,6 +164,9 @@ public class ConfigWebServer {
             if (uri.equals("/test-platine.html")) {
                 return serveTestPlatinePage();
             }
+            if (uri.equals("/relais-zuordnung.html")) {
+                return serveRelaisZuordnungPage();
+            }
 
             if (uri.equals("/app-seite1.html")) {
                 return serveAppSeitePage(1);
@@ -646,6 +649,35 @@ public class ConfigWebServer {
         // /api/nebenuhr-stellen/confirm - Nebenuhr-Zeit bestätigen (Uhr läuft wieder)
         if (uri.equals(API_PREFIX + "/nebenuhr-stellen/confirm") && "POST".equals(method)) {
             return handleNebenuhrStellenConfirm(request);
+        }
+        
+        // /api/relais-zuordnung/aufloesen?software_id=1000 - Software-Relais in Hardware auflösen (für App)
+        if (uri.startsWith(API_PREFIX + "/relais-zuordnung/aufloesen") && "GET".equals(method)) {
+            return handleGetRelaisZuordnungAufloesen(uri);
+        }
+        // /api/relais-kategorien - Kategorien CRUD
+        if (uri.equals(API_PREFIX + "/relais-kategorien") && "GET".equals(method)) {
+            return handleGetRelaisKategorien();
+        }
+        if (uri.equals(API_PREFIX + "/relais-kategorien") && "POST".equals(method)) {
+            return handlePostRelaisKategorie(request);
+        }
+        if (uri.matches(API_PREFIX + "/relais-kategorien/\\d+")) {
+            String[] parts = uri.split("/");
+            int id = Integer.parseInt(parts[parts.length - 1]);
+            if ("PUT".equals(method)) return handlePutRelaisKategorie(request, id);
+            if ("DELETE".equals(method)) return handleDeleteRelaisKategorie(id);
+        }
+        // /api/relais-zuordnung - Zuordnung CRUD (GET optional ?kategorie_id=)
+        if (uri.equals(API_PREFIX + "/relais-zuordnung") || uri.startsWith(API_PREFIX + "/relais-zuordnung?")) {
+            if ("GET".equals(method)) return handleGetRelaisZuordnung(uri);
+            if ("POST".equals(method)) return handlePostRelaisZuordnung(request);
+        }
+        if (uri.matches(API_PREFIX + "/relais-zuordnung/\\d+")) {
+            String[] parts = uri.split("/");
+            int id = Integer.parseInt(parts[parts.length - 1]);
+            if ("PUT".equals(method)) return handlePutRelaisZuordnung(request, id);
+            if ("DELETE".equals(method)) return handleDeleteRelaisZuordnung(id);
         }
         
         // /api/schlagwerk - Schlagwerk-Konfiguration (Typ 1 und 2)
@@ -4071,6 +4103,7 @@ public class ConfigWebServer {
                 "            <div class=\"tt-section-title\">Hardware &amp; Tasten</div>\n" +
                 "            <div class=\"tt-grid\">\n" +
                 "                <a href=\"/platinen-config.html\" class=\"tt-card\"><span class=\"arrow\">→</span><div class=\"title\">Platinen-Konfiguration</div><div class=\"desc\">Carambola, IP-Adressen, Ports</div></a>\n" +
+                "                <a href=\"/relais-zuordnung.html\" class=\"tt-card\"><span class=\"arrow\">→</span><div class=\"title\">Relais-Zuordnung</div><div class=\"desc\">Kategorien, Software-Relais (1000, 2000, …), Hardware-Zuordnung &amp; Namen</div></a>\n" +
                 "                <a href=\"/beschriftung-tasten-config.html\" class=\"tt-card\"><span class=\"arrow\">→</span><div class=\"title\">Beschriftung Tasten</div><div class=\"desc\">Reihenfolge &amp; Typ (Drag &amp; Drop)</div></a>\n" +
                 "            </div>\n" +
                 "        </section>\n" +
@@ -5644,6 +5677,11 @@ public class ConfigWebServer {
         return new SimpleHttpServer.HttpResponse(200, "text/html; charset=UTF-8", html);
     }
     
+    private SimpleHttpServer.HttpResponse serveRelaisZuordnungPage() {
+        String html = getRelaisZuordnungHTML();
+        return new SimpleHttpServer.HttpResponse(200, "text/html; charset=UTF-8", html);
+    }
+    
     private SimpleHttpServer.HttpResponse serveNebenuhrConfigPage() {
         String html = getNebenuhrConfigHTML();
         return new SimpleHttpServer.HttpResponse(200, "text/html; charset=UTF-8", html);
@@ -5677,6 +5715,36 @@ public class ConfigWebServer {
     private SimpleHttpServer.HttpResponse serveMidiConfigPage() {
         String html = getMidiConfigHTML();
         return new SimpleHttpServer.HttpResponse(200, "text/html; charset=UTF-8", html);
+    }
+    
+    private String getRelaisZuordnungHTML() {
+        StringBuilder sb = new StringBuilder();
+        sb.append("<!DOCTYPE html>\n<html lang=\"de\">\n<head>\n<meta charset=\"UTF-8\">\n<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n<title>Relais-Zuordnung - Turmtechnik</title>\n");
+        sb.append("<link href=\"https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css\" rel=\"stylesheet\">\n<style>body{background:#1a1d21;color:#e4e6eb;min-height:100vh}.navbar{background:#111!important}.card{background:#242628;border:1px solid #3e4247}.card-header{background:#2d3035;color:#fff}.form-control,.form-select{background:#3a3d42;color:#e4e6eb}.table{color:#e4e6eb}</style>\n</head>\n<body>\n");
+        sb.append("<nav class=\"navbar navbar-expand-lg navbar-dark\"><div class=\"container-fluid\"><a class=\"navbar-brand\" href=\"/\">Turmtechnik</a><div class=\"navbar-nav\"><a class=\"nav-link\" href=\"/\">Start</a><a class=\"nav-link\" href=\"/platinen-config.html\">Platinen</a><a class=\"nav-link active\" href=\"/relais-zuordnung.html\">Relais-Zuordnung</a></div></div></nav>\n");
+        sb.append("<div class=\"container mt-4\"><h1 class=\"mb-4\">Relais-Zuordnung</h1><p class=\"text-muted mb-4\">Kategorien und Software-Relais (z.B. 1000, 2000) mit Namen zu Hardware (Platine + Relais) zuordnen.</p>\n");
+        sb.append("<div class=\"card mb-4\"><div class=\"card-header d-flex justify-content-between align-items-center\"><span>Kategorien</span><button class=\"btn btn-sm btn-primary\" onclick=\"openKategorieModal()\">Kategorie hinzufügen</button></div><div class=\"card-body\"><table class=\"table table-striped\"><thead><tr><th>Name</th><th>Sortierung</th><th>Aktionen</th></tr></thead><tbody id=\"kategorienTable\"></tbody></table></div></div>\n");
+        sb.append("<div class=\"card\"><div class=\"card-header d-flex justify-content-between align-items-center\"><span>Software-Relais-Zuordnung</span><div><select id=\"filterKategorie\" class=\"form-select form-select-sm d-inline-block w-auto me-2\" onchange=\"loadZuordnung()\"><option value=\"\">Alle Kategorien</option></select><button class=\"btn btn-sm btn-primary\" onclick=\"openZuordnungModal()\">Zuordnung hinzufügen</button></div></div><div class=\"card-body\"><table class=\"table table-striped\"><thead><tr><th>Software-ID</th><th>Name</th><th>Kategorie</th><th>Hardware</th><th>Aktionen</th></tr></thead><tbody id=\"zuordnungTable\"></tbody></table></div></div>\n");
+        sb.append("</div>\n");
+        sb.append("<div class=\"modal fade\" id=\"kategorieModal\" tabindex=\"-1\"><div class=\"modal-dialog\"><div class=\"modal-content bg-dark text-light\"><div class=\"modal-header\"><h5 class=\"modal-title\" id=\"kategorieModalTitle\">Kategorie</h5><button type=\"button\" class=\"btn-close btn-close-white\" data-bs-dismiss=\"modal\"></button></div><div class=\"modal-body\"><input type=\"hidden\" id=\"kategorieId\"><div class=\"mb-2\"><label class=\"form-label\">Name</label><input type=\"text\" class=\"form-control\" id=\"kategorieName\" placeholder=\"z.B. Nebenuhr\"></div><div class=\"mb-2\"><label class=\"form-label\">Sortierung</label><input type=\"number\" class=\"form-control\" id=\"kategorieSortierung\" value=\"0\"></div></div><div class=\"modal-footer\"><button type=\"button\" class=\"btn btn-secondary\" data-bs-dismiss=\"modal\">Abbrechen</button><button type=\"button\" class=\"btn btn-primary\" onclick=\"saveKategorie()\">Speichern</button></div></div></div></div>\n");
+        sb.append("<div class=\"modal fade\" id=\"zuordnungModal\" tabindex=\"-1\"><div class=\"modal-dialog\"><div class=\"modal-content bg-dark text-light\"><div class=\"modal-header\"><h5 class=\"modal-title\" id=\"zuordnungModalTitle\">Zuordnung</h5><button type=\"button\" class=\"btn-close btn-close-white\" data-bs-dismiss=\"modal\"></button></div><div class=\"modal-body\"><input type=\"hidden\" id=\"zuordnungId\"><div class=\"mb-2\"><label class=\"form-label\">Software-Relais-ID</label><input type=\"number\" class=\"form-control\" id=\"zuordnungSoftwareId\" placeholder=\"1000\"></div><div class=\"mb-2\"><label class=\"form-label\">Name</label><input type=\"text\" class=\"form-control\" id=\"zuordnungName\" placeholder=\"z.B. Nebenuhr A\"></div><div class=\"mb-2\"><label class=\"form-label\">Kategorie</label><select class=\"form-select\" id=\"zuordnungKategorie\"><option value=\"\">—</option></select></div><div class=\"mb-2\"><label class=\"form-label\">Platine</label><select class=\"form-select\" id=\"zuordnungPlatine\"></select></div><div class=\"mb-2\"><label class=\"form-label\">Relais</label><select class=\"form-select\" id=\"zuordnungRelais\"></select></div></div><div class=\"modal-footer\"><button type=\"button\" class=\"btn btn-secondary\" data-bs-dismiss=\"modal\">Abbrechen</button><button type=\"button\" class=\"btn btn-primary\" onclick=\"saveZuordnung()\">Speichern</button></div></div></div></div>\n");
+        sb.append("<script src=\"https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js\"></script>\n<script>\n");
+        sb.append("var kategorien=[],zuordnungList=[],platinen=[];\nfunction esc(s){if(s==null)return '';return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\"/g,'&quot;');}\n");
+        sb.append("async function loadKategorien(){try{var r=await fetch('/api/relais-kategorien');kategorien=await r.json();}catch(e){kategorien=[];}var t=document.getElementById('kategorienTable');t.innerHTML='';kategorien.forEach(function(k){t.innerHTML+='<tr><td>'+esc(k.name)+'</td><td>'+k.sortierung+'</td><td><button class=\"btn btn-sm btn-outline-secondary me-1\" onclick=\"editKategorie('+k.id+')\">Bearbeiten</button><button class=\"btn btn-sm btn-outline-danger\" onclick=\"deleteKategorie('+k.id+')\">Löschen</button></td></tr>';});var sel=document.getElementById('filterKategorie');sel.innerHTML='<option value=\"\">Alle Kategorien</option>';kategorien.forEach(function(k){sel.innerHTML+='<option value=\"'+k.id+'\">'+esc(k.name)+'</option>';});var zKat=document.getElementById('zuordnungKategorie');zKat.innerHTML='<option value=\"\">—</option>';kategorien.forEach(function(k){zKat.innerHTML+='<option value=\"'+k.id+'\">'+esc(k.name)+'</option>';});}\n");
+        sb.append("function openKategorieModal(){document.getElementById('kategorieModalTitle').textContent='Kategorie hinzufügen';document.getElementById('kategorieId').value='';document.getElementById('kategorieName').value='';document.getElementById('kategorieSortierung').value='0';new bootstrap.Modal(document.getElementById('kategorieModal')).show();}\n");
+        sb.append("function editKategorie(id){var k=kategorien.find(function(x){return x.id===id;});if(!k)return;document.getElementById('kategorieModalTitle').textContent='Kategorie bearbeiten';document.getElementById('kategorieId').value=k.id;document.getElementById('kategorieName').value=k.name||'';document.getElementById('kategorieSortierung').value=k.sortierung||0;new bootstrap.Modal(document.getElementById('kategorieModal')).show();}\n");
+        sb.append("async function saveKategorie(){var id=document.getElementById('kategorieId').value;var name=document.getElementById('kategorieName').value.trim();var sortierung=parseInt(document.getElementById('kategorieSortierung').value,10)||0;if(!name){alert('Name eingeben');return;}var url,method,body;if(id){url='/api/relais-kategorien/'+id;method='PUT';body=JSON.stringify({name:name,sortierung:sortierung});}else{url='/api/relais-kategorien';method='POST';body=JSON.stringify({name:name,sortierung:sortierung});}var r=await fetch(url,{method:method,headers:{'Content-Type':'application/json'},body:body});if(!r.ok){var e=await r.json();alert(e.error||'Fehler');return;}bootstrap.Modal.getInstance(document.getElementById('kategorieModal')).hide();loadKategorien();}\n");
+        sb.append("async function deleteKategorie(id){if(!confirm('Kategorie löschen? Zuordnungen werden entkettet.'))return;var r=await fetch('/api/relais-kategorien/'+id,{method:'DELETE'});if(!r.ok){alert('Fehler');return;}loadKategorien();loadZuordnung();}\n");
+        sb.append("async function loadPlatinen(){try{var r=await fetch('/api/platinen');var data=await r.json();platinen=Array.isArray(data)?data:(data.platinen||[]);}catch(e){platinen=[];}var sel=document.getElementById('zuordnungPlatine');sel.innerHTML='';platinen.forEach(function(p){var nr=p.platineNummer!=null?p.platineNummer:(p.platine_nummer||0);if(nr)sel.innerHTML+='<option value=\"'+nr+'\">Platine '+nr+'</option>';});if(platinen.length===0)sel.innerHTML='<option value=\"1\">Platine 1</option>';fillRelaisDropdown(1);}\n");
+        sb.append("function fillRelaisDropdown(platineNr){var relaisSel=document.getElementById('zuordnungRelais');relaisSel.innerHTML='';var p=platinen.find(function(x){return(x.platineNummer||x.platine_nummer)==platineNr;});var n=p&&(p.relaisAnzahl||p.relais_anzahl)?(p.relaisAnzahl||p.relais_anzahl):32;for(var i=1;i<=n;i++)relaisSel.innerHTML+='<option value=\"'+i+'\">'+i+'</option>';}\n");
+        sb.append("document.getElementById('zuordnungPlatine').onchange=function(){fillRelaisDropdown(parseInt(this.value,10)||1);};\n");
+        sb.append("async function loadZuordnung(){var kid=document.getElementById('filterKategorie').value;var url=kid?'/api/relais-zuordnung?kategorie_id='+kid:'/api/relais-zuordnung';try{var r=await fetch(url);zuordnungList=await r.json();}catch(e){zuordnungList=[];}var t=document.getElementById('zuordnungTable');t.innerHTML='';zuordnungList.forEach(function(z){t.innerHTML+='<tr><td>'+z.software_relais_id+'</td><td>'+esc(z.name)+'</td><td>'+esc(z.kategorie_name||'—')+'</td><td>Platine '+z.platine_nummer+', Relais '+z.relais_nummer+'</td><td><button class=\"btn btn-sm btn-outline-secondary me-1\" onclick=\"editZuordnung('+z.id+')\">Bearbeiten</button><button class=\"btn btn-sm btn-outline-danger\" onclick=\"deleteZuordnung('+z.id+')\">Löschen</button></td></tr>';});}\n");
+        sb.append("function openZuordnungModal(){document.getElementById('zuordnungModalTitle').textContent='Zuordnung hinzufügen';document.getElementById('zuordnungId').value='';document.getElementById('zuordnungSoftwareId').value='1000';document.getElementById('zuordnungName').value='';document.getElementById('zuordnungKategorie').value='';document.getElementById('zuordnungPlatine').value=platinen.length?(platinen[0].platineNummer||platinen[0].platine_nummer):1;fillRelaisDropdown(parseInt(document.getElementById('zuordnungPlatine').value,10)||1);new bootstrap.Modal(document.getElementById('zuordnungModal')).show();}\n");
+        sb.append("function editZuordnung(id){var z=zuordnungList.find(function(x){return x.id===id;});if(!z)return;document.getElementById('zuordnungModalTitle').textContent='Zuordnung bearbeiten';document.getElementById('zuordnungId').value=z.id;document.getElementById('zuordnungSoftwareId').value=z.software_relais_id;document.getElementById('zuordnungName').value=z.name||'';document.getElementById('zuordnungKategorie').value=z.kategorie_id!=null?z.kategorie_id:'';document.getElementById('zuordnungPlatine').value=z.platine_nummer;fillRelaisDropdown(z.platine_nummer);document.getElementById('zuordnungRelais').value=z.relais_nummer;new bootstrap.Modal(document.getElementById('zuordnungModal')).show();}\n");
+        sb.append("async function saveZuordnung(){var id=document.getElementById('zuordnungId').value;var softwareId=parseInt(document.getElementById('zuordnungSoftwareId').value,10)||0;var name=document.getElementById('zuordnungName').value.trim();var kid=document.getElementById('zuordnungKategorie').value;var platine=parseInt(document.getElementById('zuordnungPlatine').value,10)||1;var relais=parseInt(document.getElementById('zuordnungRelais').value,10)||1;if(platine<1||platine>4){alert('Platine 1–4');return;}if(relais<1||relais>32){alert('Relais 1–32');return;}var payload={software_relais_id:softwareId,name:name,kategorie_id:kid?parseInt(kid,10):null,platine_nummer:platine,relais_nummer:relais};var url,method;if(id){url='/api/relais-zuordnung/'+id;method='PUT';}else{url='/api/relais-zuordnung';method='POST';}var r=await fetch(url,{method:method,headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});if(!r.ok){var e=await r.json();alert(e.error||'Fehler');return;}bootstrap.Modal.getInstance(document.getElementById('zuordnungModal')).hide();loadZuordnung();}\n");
+        sb.append("async function deleteZuordnung(id){if(!confirm('Zuordnung löschen?'))return;var r=await fetch('/api/relais-zuordnung/'+id,{method:'DELETE'});if(!r.ok){var e=await r.json();alert(e.error||'Fehler');return;}loadZuordnung();}\n");
+        sb.append("(async function(){await loadPlatinen();await loadKategorien();await loadZuordnung();})();\n</script></body></html>");
+        return sb.toString();
     }
     
     private String getNebenuhrConfigHTML() {
@@ -9753,6 +9821,218 @@ public class ConfigWebServer {
             return new SimpleHttpServer.HttpResponse(200, "application/json", json);
         } catch (Exception e) {
             Log.e(TAG, "Fehler bei nebenuhr-stellen/confirm", e);
+            return new SimpleHttpServer.HttpResponse(500, "application/json", "{\"error\":\"" + escapeJsonString(e.getMessage()) + "\"}");
+        }
+    }
+    
+    // ---------- Relais-Kategorien & Relais-Zuordnung API ----------
+    
+    private SimpleHttpServer.HttpResponse handleGetRelaisKategorien() {
+        try {
+            PlatinenDatabaseHelper dbHelper = PlatinenDatabaseHelper.getInstance(context);
+            List<PlatinenDatabaseHelper.RelaisKategorie> list = dbHelper.getAllRelaisKategorien();
+            List<Map<String, Object>> out = new ArrayList<>();
+            for (PlatinenDatabaseHelper.RelaisKategorie k : list) {
+                Map<String, Object> m = new HashMap<>();
+                m.put("id", k.id);
+                m.put("name", k.name != null ? k.name : "");
+                m.put("sortierung", k.sortierung);
+                out.add(m);
+            }
+            return new SimpleHttpServer.HttpResponse(200, "application/json", gson.toJson(out));
+        } catch (Exception e) {
+            Log.e(TAG, "Fehler GET relais-kategorien", e);
+            return new SimpleHttpServer.HttpResponse(500, "application/json", "{\"error\":\"" + escapeJsonString(e.getMessage()) + "\"}");
+        }
+    }
+    
+    private SimpleHttpServer.HttpResponse handlePostRelaisKategorie(SimpleHttpServer.HttpRequest request) {
+        try {
+            String body = request.body != null ? request.body.trim() : "";
+            if (body.isEmpty()) return new SimpleHttpServer.HttpResponse(400, "application/json", "{\"error\":\"Body erforderlich\"}");
+            Map<String, Object> data = gson.fromJson(body, Map.class);
+            String name = data.get("name") != null ? String.valueOf(data.get("name")).trim() : "";
+            int sortierung = data.get("sortierung") != null ? ((Number) data.get("sortierung")).intValue() : 0;
+            PlatinenDatabaseHelper.RelaisKategorie k = new PlatinenDatabaseHelper.RelaisKategorie();
+            k.name = name;
+            k.sortierung = sortierung;
+            PlatinenDatabaseHelper dbHelper = PlatinenDatabaseHelper.getInstance(context);
+            long id = dbHelper.insertRelaisKategorie(k);
+            Map<String, Object> out = new HashMap<>();
+            out.put("id", (int) id);
+            out.put("name", name);
+            out.put("sortierung", sortierung);
+            return new SimpleHttpServer.HttpResponse(200, "application/json", gson.toJson(out));
+        } catch (Exception e) {
+            Log.e(TAG, "Fehler POST relais-kategorien", e);
+            return new SimpleHttpServer.HttpResponse(500, "application/json", "{\"error\":\"" + escapeJsonString(e.getMessage()) + "\"}");
+        }
+    }
+    
+    private SimpleHttpServer.HttpResponse handlePutRelaisKategorie(SimpleHttpServer.HttpRequest request, int id) {
+        try {
+            String body = request.body != null ? request.body.trim() : "";
+            if (body.isEmpty()) return new SimpleHttpServer.HttpResponse(400, "application/json", "{\"error\":\"Body erforderlich\"}");
+            Map<String, Object> data = gson.fromJson(body, Map.class);
+            PlatinenDatabaseHelper dbHelper = PlatinenDatabaseHelper.getInstance(context);
+            PlatinenDatabaseHelper.RelaisKategorie k = dbHelper.getRelaisKategorie(id);
+            if (k == null) return new SimpleHttpServer.HttpResponse(404, "application/json", "{\"error\":\"Kategorie nicht gefunden\"}");
+            k.name = data.get("name") != null ? String.valueOf(data.get("name")).trim() : k.name;
+            k.sortierung = data.get("sortierung") != null ? ((Number) data.get("sortierung")).intValue() : k.sortierung;
+            dbHelper.updateRelaisKategorie(k);
+            Map<String, Object> out = new HashMap<>();
+            out.put("id", k.id);
+            out.put("name", k.name);
+            out.put("sortierung", k.sortierung);
+            return new SimpleHttpServer.HttpResponse(200, "application/json", gson.toJson(out));
+        } catch (Exception e) {
+            Log.e(TAG, "Fehler PUT relais-kategorien", e);
+            return new SimpleHttpServer.HttpResponse(500, "application/json", "{\"error\":\"" + escapeJsonString(e.getMessage()) + "\"}");
+        }
+    }
+    
+    private SimpleHttpServer.HttpResponse handleDeleteRelaisKategorie(int id) {
+        try {
+            PlatinenDatabaseHelper dbHelper = PlatinenDatabaseHelper.getInstance(context);
+            dbHelper.deleteRelaisKategorie(id);
+            return new SimpleHttpServer.HttpResponse(200, "application/json", "{\"success\":true}");
+        } catch (Exception e) {
+            Log.e(TAG, "Fehler DELETE relais-kategorien", e);
+            return new SimpleHttpServer.HttpResponse(500, "application/json", "{\"error\":\"" + escapeJsonString(e.getMessage()) + "\"}");
+        }
+    }
+    
+    private SimpleHttpServer.HttpResponse handleGetRelaisZuordnung(String uri) {
+        try {
+            Integer kategorieId = null;
+            if (uri != null && uri.contains("kategorie_id=")) {
+                int idx = uri.indexOf("kategorie_id=");
+                String rest = uri.substring(idx + 13);
+                int end = rest.indexOf('&');
+                String val = end >= 0 ? rest.substring(0, end) : rest;
+                try { kategorieId = Integer.parseInt(val.trim()); } catch (NumberFormatException ignored) {}
+            }
+            PlatinenDatabaseHelper dbHelper = PlatinenDatabaseHelper.getInstance(context);
+            List<PlatinenDatabaseHelper.RelaisZuordnung> list = dbHelper.getAllRelaisZuordnung(kategorieId);
+            List<PlatinenDatabaseHelper.RelaisKategorie> kategorien = dbHelper.getAllRelaisKategorien();
+            Map<Integer, String> kategorieNames = new HashMap<>();
+            for (PlatinenDatabaseHelper.RelaisKategorie k : kategorien) kategorieNames.put(k.id, k.name != null ? k.name : "");
+            List<Map<String, Object>> out = new ArrayList<>();
+            for (PlatinenDatabaseHelper.RelaisZuordnung z : list) {
+                Map<String, Object> m = new HashMap<>();
+                m.put("id", z.id);
+                m.put("software_relais_id", z.softwareRelaisId);
+                m.put("name", z.name != null ? z.name : "");
+                m.put("kategorie_id", z.kategorieId);
+                m.put("kategorie_name", z.kategorieId != null ? kategorieNames.get(z.kategorieId) : null);
+                m.put("platine_nummer", z.platineNummer);
+                m.put("relais_nummer", z.relaisNummer);
+                out.add(m);
+            }
+            return new SimpleHttpServer.HttpResponse(200, "application/json", gson.toJson(out));
+        } catch (Exception e) {
+            Log.e(TAG, "Fehler GET relais-zuordnung", e);
+            return new SimpleHttpServer.HttpResponse(500, "application/json", "{\"error\":\"" + escapeJsonString(e.getMessage()) + "\"}");
+        }
+    }
+    
+    private SimpleHttpServer.HttpResponse handlePostRelaisZuordnung(SimpleHttpServer.HttpRequest request) {
+        try {
+            String body = request.body != null ? request.body.trim() : "";
+            if (body.isEmpty()) return new SimpleHttpServer.HttpResponse(400, "application/json", "{\"error\":\"Body erforderlich\"}");
+            Map<String, Object> data = gson.fromJson(body, Map.class);
+            int softwareRelaisId = data.get("software_relais_id") != null ? ((Number) data.get("software_relais_id")).intValue() : 0;
+            String name = data.get("name") != null ? String.valueOf(data.get("name")).trim() : "";
+            Object ko = data.get("kategorie_id");
+            Integer kategorieId = (ko == null) ? null : ((Number) ko).intValue();
+            int platineNummer = data.get("platine_nummer") != null ? ((Number) data.get("platine_nummer")).intValue() : 1;
+            int relaisNummer = data.get("relais_nummer") != null ? ((Number) data.get("relais_nummer")).intValue() : 1;
+            if (platineNummer < 1 || platineNummer > 4) return new SimpleHttpServer.HttpResponse(400, "application/json", "{\"error\":\"platine_nummer 1-4\"}");
+            if (relaisNummer < 1 || relaisNummer > 32) return new SimpleHttpServer.HttpResponse(400, "application/json", "{\"error\":\"relais_nummer 1-32\"}");
+            PlatinenDatabaseHelper.RelaisZuordnung z = new PlatinenDatabaseHelper.RelaisZuordnung();
+            z.softwareRelaisId = softwareRelaisId;
+            z.name = name;
+            z.kategorieId = kategorieId;
+            z.platineNummer = platineNummer;
+            z.relaisNummer = relaisNummer;
+            PlatinenDatabaseHelper dbHelper = PlatinenDatabaseHelper.getInstance(context);
+            long id = dbHelper.insertRelaisZuordnung(z);
+            Map<String, Object> out = new HashMap<>();
+            out.put("id", (int) id);
+            out.put("software_relais_id", softwareRelaisId);
+            out.put("name", name);
+            out.put("kategorie_id", kategorieId);
+            out.put("platine_nummer", platineNummer);
+            out.put("relais_nummer", relaisNummer);
+            return new SimpleHttpServer.HttpResponse(200, "application/json", gson.toJson(out));
+        } catch (Exception e) {
+            Log.e(TAG, "Fehler POST relais-zuordnung", e);
+            return new SimpleHttpServer.HttpResponse(500, "application/json", "{\"error\":\"" + escapeJsonString(e.getMessage()) + "\"}");
+        }
+    }
+    
+    private SimpleHttpServer.HttpResponse handlePutRelaisZuordnung(SimpleHttpServer.HttpRequest request, int id) {
+        try {
+            String body = request.body != null ? request.body.trim() : "";
+            if (body.isEmpty()) return new SimpleHttpServer.HttpResponse(400, "application/json", "{\"error\":\"Body erforderlich\"}");
+            Map<String, Object> data = gson.fromJson(body, Map.class);
+            PlatinenDatabaseHelper dbHelper = PlatinenDatabaseHelper.getInstance(context);
+            PlatinenDatabaseHelper.RelaisZuordnung z = dbHelper.getRelaisZuordnungById(id);
+            if (z == null) return new SimpleHttpServer.HttpResponse(404, "application/json", "{\"error\":\"Zuordnung nicht gefunden\"}");
+            if (data.get("software_relais_id") != null) z.softwareRelaisId = ((Number) data.get("software_relais_id")).intValue();
+            if (data.get("name") != null) z.name = String.valueOf(data.get("name")).trim();
+            Object ko = data.get("kategorie_id");
+            z.kategorieId = (ko == null) ? z.kategorieId : ((Number) ko).intValue();
+            if (data.get("platine_nummer") != null) z.platineNummer = ((Number) data.get("platine_nummer")).intValue();
+            if (data.get("relais_nummer") != null) z.relaisNummer = ((Number) data.get("relais_nummer")).intValue();
+            if (z.platineNummer < 1 || z.platineNummer > 4) return new SimpleHttpServer.HttpResponse(400, "application/json", "{\"error\":\"platine_nummer 1-4\"}");
+            if (z.relaisNummer < 1 || z.relaisNummer > 32) return new SimpleHttpServer.HttpResponse(400, "application/json", "{\"error\":\"relais_nummer 1-32\"}");
+            dbHelper.updateRelaisZuordnung(z);
+            Map<String, Object> out = new HashMap<>();
+            out.put("id", z.id);
+            out.put("software_relais_id", z.softwareRelaisId);
+            out.put("name", z.name);
+            out.put("kategorie_id", z.kategorieId);
+            out.put("platine_nummer", z.platineNummer);
+            out.put("relais_nummer", z.relaisNummer);
+            return new SimpleHttpServer.HttpResponse(200, "application/json", gson.toJson(out));
+        } catch (Exception e) {
+            Log.e(TAG, "Fehler PUT relais-zuordnung", e);
+            return new SimpleHttpServer.HttpResponse(500, "application/json", "{\"error\":\"" + escapeJsonString(e.getMessage()) + "\"}");
+        }
+    }
+    
+    private SimpleHttpServer.HttpResponse handleDeleteRelaisZuordnung(int id) {
+        try {
+            PlatinenDatabaseHelper dbHelper = PlatinenDatabaseHelper.getInstance(context);
+            dbHelper.deleteRelaisZuordnung(id);
+            return new SimpleHttpServer.HttpResponse(200, "application/json", "{\"success\":true}");
+        } catch (Exception e) {
+            Log.e(TAG, "Fehler DELETE relais-zuordnung", e);
+            return new SimpleHttpServer.HttpResponse(500, "application/json", "{\"error\":\"" + escapeJsonString(e.getMessage()) + "\"}");
+        }
+    }
+    
+    private SimpleHttpServer.HttpResponse handleGetRelaisZuordnungAufloesen(String uri) {
+        try {
+            int softwareId = 0;
+            if (uri != null && uri.contains("software_id=")) {
+                int idx = uri.indexOf("software_id=");
+                String rest = uri.substring(idx + 12);
+                int end = rest.indexOf('&');
+                String val = end >= 0 ? rest.substring(0, end) : rest;
+                try { softwareId = Integer.parseInt(val.trim()); } catch (NumberFormatException ignored) {}
+            }
+            if (softwareId == 0) return new SimpleHttpServer.HttpResponse(400, "application/json", "{\"error\":\"software_id erforderlich\"}");
+            PlatinenDatabaseHelper dbHelper = PlatinenDatabaseHelper.getInstance(context);
+            int[] hw = dbHelper.resolveSoftwareRelaisToHardware(softwareId);
+            if (hw == null) return new SimpleHttpServer.HttpResponse(404, "application/json", "{\"error\":\"Software-Relais nicht gefunden\"}");
+            Map<String, Object> out = new HashMap<>();
+            out.put("platine_nummer", hw[0]);
+            out.put("relais_nummer", hw[1]);
+            return new SimpleHttpServer.HttpResponse(200, "application/json", gson.toJson(out));
+        } catch (Exception e) {
+            Log.e(TAG, "Fehler GET relais-zuordnung/aufloesen", e);
             return new SimpleHttpServer.HttpResponse(500, "application/json", "{\"error\":\"" + escapeJsonString(e.getMessage()) + "\"}");
         }
     }

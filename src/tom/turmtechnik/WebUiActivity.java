@@ -12,6 +12,7 @@ import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
 import android.graphics.Color;
+import android.view.Gravity;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.ViewGroup;
@@ -74,6 +75,7 @@ public class WebUiActivity extends Activity {
                 WindowManager.LayoutParams.FLAG_FULLSCREEN,
                 WindowManager.LayoutParams.FLAG_FULLSCREEN);
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+        getWindow().setGravity(Gravity.TOP);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
             setShowWhenLocked(true);
             setTurnScreenOn(true);
@@ -272,6 +274,7 @@ public class WebUiActivity extends Activity {
 
             @Override
             public void onPageFinished(WebView view, String url) {
+                if (view != null) view.scrollTo(0, 0);
                 if (url != null && url.contains("screensaver.html")) {
                     hideSystemUi();
                     new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {

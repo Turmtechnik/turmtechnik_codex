@@ -16,7 +16,7 @@ import java.util.List;
 public class PlatinenDatabaseHelper extends SQLiteOpenHelper {
     private static final String TAG = "PlatinenDatabaseHelper";
     private static final String DATABASE_NAME = "turmtechnik_config.db";
-    private static final int DATABASE_VERSION = 27; // 27: Alle Oster-/feste Feiertage + Vortage tagtyp_name = Normalprogramm
+    private static final int DATABASE_VERSION = 28; // 28: Relais-Kategorien + Relais-Zuordnung (Software-Relais zu Hardware)
     
     private static final String TABLE_PLATINEN = "platinen_config";
     private static final String TABLE_IO_CONFIG = "io_config";
@@ -33,6 +33,8 @@ public class PlatinenDatabaseHelper extends SQLiteOpenHelper {
     private static final String TABLE_MELODIE_ZEILEN = "melodie_zeilen";
     private static final String TABLE_BESCHRIFTUNG_TASTEN = "beschriftung_tasten";
     private static final String TABLE_SCHLAGWERK_CONFIG = "schlagwerk_config";
+    private static final String TABLE_RELAIS_KATEGORIEN = "relais_kategorien";
+    private static final String TABLE_RELAIS_ZUORDNUNG = "relais_zuordnung";
     
     private static final String CREATE_TABLE_PLATINEN = 
         "CREATE TABLE " + TABLE_PLATINEN + " (" +
@@ -271,6 +273,27 @@ public class PlatinenDatabaseHelper extends SQLiteOpenHelper {
         "updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP" +
         ")";
     
+    private static final String CREATE_TABLE_RELAIS_KATEGORIEN =
+        "CREATE TABLE " + TABLE_RELAIS_KATEGORIEN + " (" +
+        "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+        "name TEXT NOT NULL, " +
+        "sortierung INTEGER DEFAULT 0, " +
+        "created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, " +
+        "updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP" +
+        ")";
+    
+    private static final String CREATE_TABLE_RELAIS_ZUORDNUNG =
+        "CREATE TABLE " + TABLE_RELAIS_ZUORDNUNG + " (" +
+        "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+        "software_relais_id INTEGER NOT NULL UNIQUE, " +
+        "name TEXT, " +
+        "kategorie_id INTEGER REFERENCES " + TABLE_RELAIS_KATEGORIEN + "(id), " +
+        "platine_nummer INTEGER NOT NULL, " +
+        "relais_nummer INTEGER NOT NULL, " +
+        "created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, " +
+        "updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP" +
+        ")";
+    
     private static final String CREATE_INDEX = 
         "CREATE INDEX IF NOT EXISTS idx_platinen_nummer ON " + TABLE_PLATINEN + "(platine_nummer)";
     
@@ -315,6 +338,11 @@ public class PlatinenDatabaseHelper extends SQLiteOpenHelper {
     
     private static final String CREATE_INDEX_SCHLAGWERK_CONFIG =
         "CREATE INDEX IF NOT EXISTS idx_schlagwerk_config_typ ON " + TABLE_SCHLAGWERK_CONFIG + "(typ)";
+    
+    private static final String CREATE_INDEX_RELAIS_ZUORDNUNG_SOFTWARE =
+        "CREATE INDEX IF NOT EXISTS idx_relais_zuordnung_software_id ON " + TABLE_RELAIS_ZUORDNUNG + "(software_relais_id)";
+    private static final String CREATE_INDEX_RELAIS_ZUORDNUNG_KATEGORIE =
+        "CREATE INDEX IF NOT EXISTS idx_relais_zuordnung_kategorie ON " + TABLE_RELAIS_ZUORDNUNG + "(kategorie_id)";
     
     private static PlatinenDatabaseHelper instance;
     private Context context;
@@ -373,6 +401,8 @@ public class PlatinenDatabaseHelper extends SQLiteOpenHelper {
         db.execSQL(CREATE_TABLE_MELODIE_ZEILEN);
         db.execSQL(CREATE_TABLE_BESCHRIFTUNG_TASTEN);
         db.execSQL(CREATE_TABLE_SCHLAGWERK_CONFIG);
+        db.execSQL(CREATE_TABLE_RELAIS_KATEGORIEN);
+        db.execSQL(CREATE_TABLE_RELAIS_ZUORDNUNG);
         db.execSQL(CREATE_INDEX);
         db.execSQL(CREATE_INDEX_NEBENUHR);
         db.execSQL(CREATE_INDEX_TAGTYPEN);
@@ -388,6 +418,8 @@ public class PlatinenDatabaseHelper extends SQLiteOpenHelper {
         db.execSQL(CREATE_INDEX_MELODIE_ZEILEN);
         db.execSQL(CREATE_INDEX_BESCHRIFTUNG_TASTEN);
         db.execSQL(CREATE_INDEX_SCHLAGWERK_CONFIG);
+        db.execSQL(CREATE_INDEX_RELAIS_ZUORDNUNG_SOFTWARE);
+        db.execSQL(CREATE_INDEX_RELAIS_ZUORDNUNG_KATEGORIE);
         
         // Default-Modus: wifi
         android.content.ContentValues values = new android.content.ContentValues();
@@ -435,6 +467,9 @@ public class PlatinenDatabaseHelper extends SQLiteOpenHelper {
         // Schlagwerk-Config: Typ 1 und Typ 2
         insertDefaultSchlagwerkConfig(db);
         
+        // Standard-Relais-Kategorien
+        insertDefaultRelaisKategorien(db);
+        
         if (!runExcelMigrations) {
             // Neuanlage/Werkszustand: Normalprogramm + Stop/Automatik + feste Feiertage (ohne Excel)
             insertDefaultNormalprogramm(db);
@@ -472,6 +507,8 @@ public class PlatinenDatabaseHelper extends SQLiteOpenHelper {
         SQLiteDatabase db = getWritableDatabase();
         db.beginTransaction();
         try {
+            db.execSQL("DROP TABLE IF EXISTS " + TABLE_RELAIS_ZUORDNUNG);
+            db.execSQL("DROP TABLE IF EXISTS " + TABLE_RELAIS_KATEGORIEN);
             db.execSQL("DROP TABLE IF EXISTS " + TABLE_SCHLAGWERK_CONFIG);
             db.execSQL("DROP TABLE IF EXISTS " + TABLE_BESCHRIFTUNG_TASTEN);
             db.execSQL("DROP TABLE IF EXISTS " + TABLE_MELODIE_ZEILEN);
@@ -960,6 +997,18 @@ public class PlatinenDatabaseHelper extends SQLiteOpenHelper {
                 Log.d(TAG, "Alle Oster-/feste Feiertage und Vortage auf Normalprogramm gesetzt (Version 27)");
             } catch (Exception e) {
                 Log.w(TAG, "Feiertage auf Normalprogramm setzen (Version 27)", e);
+            }
+        }
+        if (oldVersion < 28) {
+            try {
+                db.execSQL(CREATE_TABLE_RELAIS_KATEGORIEN);
+                db.execSQL(CREATE_TABLE_RELAIS_ZUORDNUNG);
+                db.execSQL(CREATE_INDEX_RELAIS_ZUORDNUNG_SOFTWARE);
+                db.execSQL(CREATE_INDEX_RELAIS_ZUORDNUNG_KATEGORIE);
+                insertDefaultRelaisKategorien(db);
+                Log.d(TAG, "Tabellen relais_kategorien und relais_zuordnung hinzugefügt (Version 28)");
+            } catch (Exception e) {
+                Log.e(TAG, "Fehler beim Hinzufügen der Relais-Kategorien/Zuordnung (Version 28)", e);
             }
         }
     }
@@ -2009,6 +2058,177 @@ public class PlatinenDatabaseHelper extends SQLiteOpenHelper {
         }
     }
     
+    // ---------- Relais-Kategorien & Relais-Zuordnung ----------
+    
+    public List<RelaisKategorie> getAllRelaisKategorien() {
+        SQLiteDatabase db = getReadableDatabase();
+        List<RelaisKategorie> list = new ArrayList<>();
+        Cursor cursor = db.query(TABLE_RELAIS_KATEGORIEN,
+            new String[]{"id", "name", "sortierung"},
+            null, null, null, null, "sortierung ASC, id ASC");
+        try {
+            while (cursor.moveToNext()) {
+                RelaisKategorie k = new RelaisKategorie();
+                k.id = cursor.getInt(0);
+                k.name = cursor.getString(1);
+                k.sortierung = cursor.getInt(2);
+                list.add(k);
+            }
+        } finally {
+            cursor.close();
+        }
+        return list;
+    }
+    
+    public RelaisKategorie getRelaisKategorie(int id) {
+        SQLiteDatabase db = getReadableDatabase();
+        Cursor cursor = db.query(TABLE_RELAIS_KATEGORIEN,
+            new String[]{"id", "name", "sortierung"},
+            "id = ?", new String[]{String.valueOf(id)}, null, null, null);
+        try {
+            if (cursor.moveToFirst()) {
+                RelaisKategorie k = new RelaisKategorie();
+                k.id = cursor.getInt(0);
+                k.name = cursor.getString(1);
+                k.sortierung = cursor.getInt(2);
+                return k;
+            }
+        } finally {
+            cursor.close();
+        }
+        return null;
+    }
+    
+    public long insertRelaisKategorie(RelaisKategorie k) {
+        SQLiteDatabase db = getWritableDatabase();
+        android.content.ContentValues values = new android.content.ContentValues();
+        values.put("name", k.name != null ? k.name : "");
+        values.put("sortierung", k.sortierung);
+        return db.insert(TABLE_RELAIS_KATEGORIEN, null, values);
+    }
+    
+    public int updateRelaisKategorie(RelaisKategorie k) {
+        SQLiteDatabase db = getWritableDatabase();
+        android.content.ContentValues values = new android.content.ContentValues();
+        values.put("name", k.name != null ? k.name : "");
+        values.put("sortierung", k.sortierung);
+        values.put("updated_at", "CURRENT_TIMESTAMP");
+        return db.update(TABLE_RELAIS_KATEGORIEN, values, "id = ?", new String[]{String.valueOf(k.id)});
+    }
+    
+    public int deleteRelaisKategorie(int id) {
+        SQLiteDatabase db = getWritableDatabase();
+        db.execSQL("UPDATE " + TABLE_RELAIS_ZUORDNUNG + " SET kategorie_id = NULL WHERE kategorie_id = ?", new String[]{String.valueOf(id)});
+        return db.delete(TABLE_RELAIS_KATEGORIEN, "id = ?", new String[]{String.valueOf(id)});
+    }
+    
+    public List<RelaisZuordnung> getAllRelaisZuordnung(Integer kategorieId) {
+        SQLiteDatabase db = getReadableDatabase();
+        List<RelaisZuordnung> list = new ArrayList<>();
+        String where = kategorieId != null ? "kategorie_id = ?" : null;
+        String[] whereArgs = kategorieId != null ? new String[]{String.valueOf(kategorieId)} : null;
+        Cursor cursor = db.query(TABLE_RELAIS_ZUORDNUNG,
+            new String[]{"id", "software_relais_id", "name", "kategorie_id", "platine_nummer", "relais_nummer"},
+            where, whereArgs, null, null, "software_relais_id ASC");
+        try {
+            while (cursor.moveToNext()) {
+                RelaisZuordnung z = new RelaisZuordnung();
+                z.id = cursor.getInt(0);
+                z.softwareRelaisId = cursor.getInt(1);
+                z.name = cursor.isNull(2) ? null : cursor.getString(2);
+                z.kategorieId = cursor.isNull(3) ? null : cursor.getInt(3);
+                z.platineNummer = cursor.getInt(4);
+                z.relaisNummer = cursor.getInt(5);
+                list.add(z);
+            }
+        } finally {
+            cursor.close();
+        }
+        return list;
+    }
+    
+    public RelaisZuordnung getRelaisZuordnungBySoftwareId(int softwareRelaisId) {
+        SQLiteDatabase db = getReadableDatabase();
+        Cursor cursor = db.query(TABLE_RELAIS_ZUORDNUNG,
+            new String[]{"id", "software_relais_id", "name", "kategorie_id", "platine_nummer", "relais_nummer"},
+            "software_relais_id = ?", new String[]{String.valueOf(softwareRelaisId)}, null, null, null);
+        try {
+            if (cursor.moveToFirst()) {
+                RelaisZuordnung z = new RelaisZuordnung();
+                z.id = cursor.getInt(0);
+                z.softwareRelaisId = cursor.getInt(1);
+                z.name = cursor.isNull(2) ? null : cursor.getString(2);
+                z.kategorieId = cursor.isNull(3) ? null : cursor.getInt(3);
+                z.platineNummer = cursor.getInt(4);
+                z.relaisNummer = cursor.getInt(5);
+                return z;
+            }
+        } finally {
+            cursor.close();
+        }
+        return null;
+    }
+    
+    public RelaisZuordnung getRelaisZuordnungById(int id) {
+        SQLiteDatabase db = getReadableDatabase();
+        Cursor cursor = db.query(TABLE_RELAIS_ZUORDNUNG,
+            new String[]{"id", "software_relais_id", "name", "kategorie_id", "platine_nummer", "relais_nummer"},
+            "id = ?", new String[]{String.valueOf(id)}, null, null, null);
+        try {
+            if (cursor.moveToFirst()) {
+                RelaisZuordnung z = new RelaisZuordnung();
+                z.id = cursor.getInt(0);
+                z.softwareRelaisId = cursor.getInt(1);
+                z.name = cursor.isNull(2) ? null : cursor.getString(2);
+                z.kategorieId = cursor.isNull(3) ? null : cursor.getInt(3);
+                z.platineNummer = cursor.getInt(4);
+                z.relaisNummer = cursor.getInt(5);
+                return z;
+            }
+        } finally {
+            cursor.close();
+        }
+        return null;
+    }
+    
+    /**
+     * Löst eine Software-Relais-ID in Hardware (Platine + Relais) auf. Für spätere App-Nutzung.
+     * @return int[2] = { platineNummer, relaisNummer } oder null wenn nicht gefunden
+     */
+    public int[] resolveSoftwareRelaisToHardware(int softwareRelaisId) {
+        RelaisZuordnung z = getRelaisZuordnungBySoftwareId(softwareRelaisId);
+        if (z == null) return null;
+        return new int[]{ z.platineNummer, z.relaisNummer };
+    }
+    
+    public long insertRelaisZuordnung(RelaisZuordnung z) {
+        SQLiteDatabase db = getWritableDatabase();
+        android.content.ContentValues values = new android.content.ContentValues();
+        values.put("software_relais_id", z.softwareRelaisId);
+        values.put("name", z.name);
+        values.put("kategorie_id", z.kategorieId);
+        values.put("platine_nummer", z.platineNummer);
+        values.put("relais_nummer", z.relaisNummer);
+        return db.insert(TABLE_RELAIS_ZUORDNUNG, null, values);
+    }
+    
+    public int updateRelaisZuordnung(RelaisZuordnung z) {
+        SQLiteDatabase db = getWritableDatabase();
+        android.content.ContentValues values = new android.content.ContentValues();
+        values.put("software_relais_id", z.softwareRelaisId);
+        values.put("name", z.name);
+        values.put("kategorie_id", z.kategorieId);
+        values.put("platine_nummer", z.platineNummer);
+        values.put("relais_nummer", z.relaisNummer);
+        values.put("updated_at", "CURRENT_TIMESTAMP");
+        return db.update(TABLE_RELAIS_ZUORDNUNG, values, "id = ?", new String[]{String.valueOf(z.id)});
+    }
+    
+    public int deleteRelaisZuordnung(int id) {
+        SQLiteDatabase db = getWritableDatabase();
+        return db.delete(TABLE_RELAIS_ZUORDNUNG, "id = ?", new String[]{String.valueOf(id)});
+    }
+    
     /**
      * Migriert Nebenuhr-Daten aus System.xls Sheet 15 in die Datenbank.
      */
@@ -2158,6 +2378,27 @@ public class PlatinenDatabaseHelper extends SQLiteOpenHelper {
         public boolean aktiv;           // Aktiv-Status (true=aktiv, false=inaktiv)
         /** true = angezeigteZeit wurde vor Impuls gespeichert, Impuls ist noch nicht durch (Absturzfall). Beim Laden dann angezeigteZeit − 1 verwenden. */
         public boolean impulsAusstehend;
+    }
+    
+    /**
+     * Entity für Relais-Kategorie (z. B. Nebenuhr, Schlagwerk).
+     */
+    public static class RelaisKategorie {
+        public int id;
+        public String name;
+        public int sortierung;
+    }
+    
+    /**
+     * Entity für Software-Relais-Zuordnung (software_relais_id → Platine + Relais).
+     */
+    public static class RelaisZuordnung {
+        public int id;
+        public int softwareRelaisId;
+        public String name;
+        public Integer kategorieId;
+        public int platineNummer;
+        public int relaisNummer;
     }
     
     /**
@@ -3863,6 +4104,24 @@ public class PlatinenDatabaseHelper extends SQLiteOpenHelper {
             }
         }
         Log.d(TAG, "Standard-Schlagwerk-Config (Typ 1 und 2) eingefügt");
+    }
+    
+    /**
+     * Fügt Standard-Relais-Kategorien ein (Nebenuhr, Schlagwerk, Vorschwingen, Melodie).
+     */
+    private void insertDefaultRelaisKategorien(SQLiteDatabase db) {
+        String[] namen = {"Nebenuhr", "Schlagwerk", "Vorschwingen", "Melodie"};
+        for (int i = 0; i < namen.length; i++) {
+            android.content.ContentValues values = new android.content.ContentValues();
+            values.put("name", namen[i]);
+            values.put("sortierung", i + 1);
+            try {
+                db.insert(TABLE_RELAIS_KATEGORIEN, null, values);
+            } catch (Exception e) {
+                Log.w(TAG, "Fehler beim Einfügen Relais-Kategorie " + namen[i], e);
+            }
+        }
+        Log.d(TAG, "Standard-Relais-Kategorien eingefügt");
     }
     
     /** Sonder-IDs für Systemtasten (wie in ConfigWebServer/App). */

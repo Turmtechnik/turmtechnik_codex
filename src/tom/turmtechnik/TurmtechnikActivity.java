@@ -44,6 +44,7 @@ import android.text.style.RelativeSizeSpan;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.Display;
+import android.view.Gravity;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -223,6 +224,8 @@ public class TurmtechnikActivity extends Activity {
     private static final int SCREENSAVER_ALARM_REQUEST_CODE = 9002;
     /** Intent-Extra: Bildschirmschoner als Overlay anzeigen (Activity bleibt im Vordergrund, App wird nicht beendet). */
     public static final String EXTRA_SHOW_SCREENSAVER_OVERLAY = "show_screensaver_overlay";
+    /** Extra für Intent: nach Passwort-Dialog aus anderer Activity – Wert "beenden", "15min" oder "delete_beenden". */
+    public static final String EXTRA_EXIT_ACTION = "exit_after_password";
     /** Nach 1 Stunde Inaktivität: KEEP_SCREEN_ON entfernen, damit der Bildschirm nach System-Timeout ausgeht. */
     private static final long SCREEN_OFF_DELAY_MS = 60 * 60 * 1000L;
     /** Heartbeat an StartTurmtechnikService alle 5 s – bei Absturz fehlt er, Service startet Activity nach ~15 s neu. */
@@ -621,8 +624,9 @@ public class TurmtechnikActivity extends Activity {
         }
 
         // Einschalt-Schwelle = Ausschalt + 1 %, damit kein Dauerstart bis Akku 1 % unter Ausschalt
+        // batteryLevel wird in isPowerConnected() gesetzt; 0 = oft „noch nicht gelesen“ nach Installation → Start erlauben
         boolean powerOrBattOk = (isPowerConnected(getBaseContext()) ||
-                batteryLevel >= StaticVariable.getBattEinschaltLevel());
+                batteryLevel >= StaticVariable.getBattEinschaltLevel() || batteryLevel == 0);
 
         if (!powerOrBattOk) {
             finish();
@@ -2552,6 +2556,7 @@ public class TurmtechnikActivity extends Activity {
     @Override
     public void onResume() {
         super.onResume();
+        applyExitActionFromIntent(getIntent());
         isInForeground = true;
         // Web-Server wieder starten, falls Activity z. B. nach Bildschirmschoner neu erstellt wurde (onDestroy hatte ihn gestoppt)
         startConfigWebServer();
@@ -2564,6 +2569,9 @@ public class TurmtechnikActivity extends Activity {
         if (getIntent() != null && getIntent().getBooleanExtra("woke_by_motion", false)) {
             getIntent().removeExtra("woke_by_motion");
             getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+            android.view.WindowManager.LayoutParams lp = getWindow().getAttributes();
+            lp.screenBrightness = 0.9f;
+            getWindow().setAttributes(lp);
             dismissScreensaverOverlay();
         }
         startOrStopMotionDetectionService();
@@ -2587,6 +2595,9 @@ public class TurmtechnikActivity extends Activity {
         if (intent != null && intent.getBooleanExtra("woke_by_motion", false)) {
             intent.removeExtra("woke_by_motion");
             getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+            android.view.WindowManager.LayoutParams lp = getWindow().getAttributes();
+            lp.screenBrightness = 0.9f;
+            getWindow().setAttributes(lp);
             dismissScreensaverOverlay();
         }
         if (intent != null && intent.getBooleanExtra(EXTRA_SHOW_SCREENSAVER_OVERLAY, false)) {
@@ -2602,6 +2613,23 @@ public class TurmtechnikActivity extends Activity {
                 Log.w("Screensaver", "WebUiActivity starten fehlgeschlagen", e);
                 if (screensaverOverlay != null) showScreensaverOverlayNow();
             }
+        }
+        applyExitActionFromIntent(intent);
+    }
+
+    /** Verarbeitet EXTRA_EXIT_ACTION (von showExitPasswordDialogFrom aus anderer Activity). */
+    private void applyExitActionFromIntent(Intent intent) {
+        if (intent == null) return;
+        String action = intent.getStringExtra(EXTRA_EXIT_ACTION);
+        if (action == null) return;
+        intent.removeExtra(EXTRA_EXIT_ACTION);
+        if ("15min".equals(action)) {
+            beendenMit15MinHintergrund();
+        } else if ("beenden".equals(action)) {
+            beenden();
+        } else if ("delete_beenden".equals(action)) {
+            deleteBeschriftungTasten();
+            beenden();
         }
     }
 
@@ -2829,10 +2857,12 @@ public class TurmtechnikActivity extends Activity {
             if (StaticConstants.DEBUG) {
                 // Log.i("key", "back");
             }
-            // beenden(); // 30.8.13 beenden sperren
-
+            // Zuerst Schoner ausblenden, damit die aktuelle Layoutseite sichtbar ist (nicht schwarz), dann Passwort-Dialog
+            if (screensaverOverlay != null && screensaverOverlay.getVisibility() == View.VISIBLE) {
+                dismissScreensaverOverlay();
+                bringMainContentToFront();
+            }
             checkPasswordAndExit();
-
             return true;
         }
 
@@ -3394,6 +3424,16 @@ public class TurmtechnikActivity extends Activity {
         }
     }
 
+    /** Dialog-Fenster oben platzieren und bei geöffneter Tastatur sichtbar halten (nicht überdecken). Von SetNebenuhrActivity genutzt. */
+    public static void applyDialogAboveKeyboard(android.app.AlertDialog dialog) {
+        if (dialog == null) return;
+        Window w = dialog.getWindow();
+        if (w != null) {
+            w.setGravity(Gravity.TOP);
+            w.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE);
+        }
+    }
+
     /**
      * Dialog: Passwort abfragen, dann .db-Dateien aus dem Turmtechnik-Ordner zur Auswahl anzeigen und Anlage importieren.
      * Wird nach 5 Sekunden Logo-Druck aufgerufen.
@@ -3402,7 +3442,7 @@ public class TurmtechnikActivity extends Activity {
         final EditText passwordInput = new EditText(this);
         passwordInput.setHint(getString(R.string.anlage_import_passwort_hinweis));
         passwordInput.setInputType(android.text.InputType.TYPE_CLASS_TEXT | android.text.InputType.TYPE_TEXT_VARIATION_PASSWORD);
-        new AlertDialog.Builder(this)
+        AlertDialog dialog = new AlertDialog.Builder(this)
                 .setTitle(R.string.anlage_import_dialog_titel)
                 .setMessage(R.string.anlage_import_passwort_hinweis)
                 .setView(passwordInput)
@@ -3419,7 +3459,9 @@ public class TurmtechnikActivity extends Activity {
                     }
                 })
                 .setNegativeButton(android.R.string.cancel, null)
-                .show();
+                .create();
+        applyDialogAboveKeyboard(dialog);
+        dialog.show();
     }
 
     /** Menü nach Passworteingabe: Import / Export / Web-UI / Debloat-Skript. */
@@ -4097,7 +4139,9 @@ public class TurmtechnikActivity extends Activity {
                     }
                 });
 
-        alert.show();
+        AlertDialog d = alert.create();
+        applyDialogAboveKeyboard(d);
+        d.show();
     }
 
     private String readPassword(int relais_number) {
@@ -4330,7 +4374,56 @@ public class TurmtechnikActivity extends Activity {
                     }
                 });
 
-        alert.show();
+        AlertDialog d = alert.create();
+        applyDialogAboveKeyboard(d);
+        d.show();
+    }
+
+    /**
+     * Zeigt den Passwort-zum-Beenden-Dialog in einer beliebigen Activity (z. B. Seite2, SetNebenuhr).
+     * Beim ersten BACK in der Navigationsleiste so aufrufen – Dialog erscheint über der aktuellen Layoutseite, nicht über schwarzem Bildschirm.
+     */
+    public static void showExitPasswordDialogFrom(final android.app.Activity activity) {
+        if (activity == null) return;
+        final String pwdNormal;
+        final String pwdDelete;
+        try {
+            PlatinenDatabaseHelper db = PlatinenDatabaseHelper.getInstance(activity);
+            String p = db.getConfigValue("password_exit_normal");
+            String pd = db.getConfigValue("password_exit_and_delete");
+            pwdNormal = (p != null) ? p : "";
+            pwdDelete = (pd != null) ? pd : "";
+        } catch (Exception e) {
+            android.util.Log.w("Turmtechnik", "Passwörter für Beenden-Dialog nicht geladen", e);
+            return;
+        }
+        final String pwd15 = "5644";
+        AlertDialog.Builder alert = new AlertDialog.Builder(activity);
+        alert.setMessage("Passwort zum beenden eingeben:");
+        final EditText input = new EditText(activity);
+        alert.setView(input);
+        alert.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int whichButton) {
+                String value = (input.getText() != null) ? input.getText().toString() : "";
+                String trimmed = value.trim();
+                String action = null;
+                if (pwd15.equals(trimmed)) action = "15min";
+                else if (pwdNormal.equals(value)) action = "beenden";
+                else if (pwdDelete.equals(value)) action = "delete_beenden";
+                if (action != null) {
+                    Intent i = new Intent(activity, TurmtechnikActivity.class);
+                    i.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+                    i.putExtra(EXTRA_EXIT_ACTION, action);
+                    activity.startActivity(i);
+                    activity.finish();
+                }
+            }
+        });
+        alert.setNegativeButton("Cancel", null);
+        AlertDialog d = alert.create();
+        applyDialogAboveKeyboard(d);
+        d.show();
     }
 
     private void deleteBeschriftungTasten() {

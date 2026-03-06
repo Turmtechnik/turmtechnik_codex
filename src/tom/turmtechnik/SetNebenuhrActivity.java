@@ -9,6 +9,7 @@ import android.os.Environment;
 import android.os.Handler;
 import android.os.StrictMode;
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.TimePickerDialog;
 import android.content.Context;
@@ -48,6 +49,8 @@ public class SetNebenuhrActivity extends Activity {
     private boolean doRun = true;
 
     private Handler handler;
+    /** Warte-Dialog „Impuls fertigstellen“, wird nach Abschluss des Impulses geschlossen. */
+    private AlertDialog impulsFertigstellenDialog;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -122,36 +125,12 @@ public class SetNebenuhrActivity extends Activity {
 
                         @Override
                         public void onClick(View v) {
-//               				layout.nebenuhrMinute[localIndex]++ ;
-//               				layout.nebenuhrStunde[localIndex]++ ;
-
                             globalIndex = localIndex;
-
-                            // Während Zeiteingabe: Nebenuhr steht – weder laufen noch aufholen
-                            if (localIndex < 3 && localIndex < StaticVariable.uhr_warten.length) {
-                                StaticVariable.uhr_warten[localIndex] = true;
-                                if (localIndex < StaticVariable.uhr_zeiteingabeAktiv.length) {
-                                    StaticVariable.uhr_zeiteingabeAktiv[localIndex] = true;
-                                }
-                                if (localIndex == 0) StaticVariable.uhrA_doRun = false;
-                                else if (localIndex == 1) StaticVariable.uhrB_doRun = false;
-                                else if (localIndex == 2) StaticVariable.uhrC_doRun = false;
-                            }
-                            if (localIndex == 3) {
-                                StaticVariable.uhrD_doRun = false;
-                                if (localIndex < StaticVariable.uhr_zeiteingabeAktiv.length) {
-                                    StaticVariable.uhr_zeiteingabeAktiv[localIndex] = true;
-                                }
-                            }
-                            // Prüfe ob Dialog-ID gültig ist (0-3 für A, B, C, D)
                             if (localIndex >= 0 && localIndex <= 3) {
-                                showDialog(localIndex);
+                                openClockDialogAfterImpulsFinished(localIndex);
                             } else {
                                 android.util.Log.e("SetNebenuhrActivity", "Ungültiger Dialog-Index: " + localIndex);
                             }
-
-
-                            //layout.makeTextButton(localIndex) ;
                         }
                     });
         } // ende von for
@@ -166,6 +145,104 @@ public class SetNebenuhrActivity extends Activity {
     protected void onResume() {
         super.onResume();
         setWartenLaufen();
+    }
+
+    /**
+     * Zeigt zuerst den Dialog „Impuls fertigstellen“, wartet bis ein eventuell laufender Impuls
+     * beendet und gespeichert ist, dann wird der Zeit-/Mond-Dialog geöffnet.
+     */
+    private void openClockDialogAfterImpulsFinished(final int localIndex) {
+        final int zeile = (localIndex < 3) ? (3 + localIndex) : 6;
+        PlatinenDatabaseHelper dbHelper = PlatinenDatabaseHelper.getInstance(getApplicationContext());
+        PlatinenDatabaseHelper.NebenuhrConfig config = dbHelper.getNebenuhrByZeile(zeile);
+
+        // Ohne Konfiguration: direkt Zeitdialog öffnen
+        if (config == null) {
+            if (localIndex < 3 && localIndex < StaticVariable.uhr_warten.length) {
+                StaticVariable.uhr_warten[localIndex] = true;
+                if (localIndex < StaticVariable.uhr_zeiteingabeAktiv.length) {
+                    StaticVariable.uhr_zeiteingabeAktiv[localIndex] = true;
+                }
+                if (localIndex == 0) StaticVariable.uhrA_doRun = false;
+                else if (localIndex == 1) StaticVariable.uhrB_doRun = false;
+                else if (localIndex == 2) StaticVariable.uhrC_doRun = false;
+            }
+            if (localIndex == 3) {
+                StaticVariable.uhrD_doRun = false;
+                if (localIndex < StaticVariable.uhr_zeiteingabeAktiv.length) {
+                    StaticVariable.uhr_zeiteingabeAktiv[localIndex] = true;
+                }
+            }
+            showDialog(localIndex);
+            return;
+        }
+
+        // Impuls-Thread für diese Uhr stoppen (stoppt nach Abschluss des aktuellen Impulses)
+        if (localIndex == 0) StaticVariable.uhrA_doRun = false;
+        else if (localIndex == 1) StaticVariable.uhrB_doRun = false;
+        else if (localIndex == 2) StaticVariable.uhrC_doRun = false;
+        else if (localIndex == 3) StaticVariable.uhrD_doRun = false;
+
+        int relais = config.relaisA > 0 ? config.relaisA : config.relaisB;
+        int platineIndex = 0;
+        if (relais > 0) {
+            platineIndex = (relais - 1) / 32;
+            if (platineIndex < 0) platineIndex = 0;
+            if (platineIndex >= StaticVariable.nebenuhrImpulsLaeuftPlatine.length) platineIndex = StaticVariable.nebenuhrImpulsLaeuftPlatine.length - 1;
+        }
+
+        // Warte-Dialog anzeigen
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Impuls fertigstellen");
+        builder.setMessage("Bitte warten, bis der laufende Impuls beendet ist.");
+        builder.setCancelable(false);
+        impulsFertigstellenDialog = builder.create();
+        TurmtechnikActivity.applyDialogAboveKeyboard(impulsFertigstellenDialog);
+        impulsFertigstellenDialog.show();
+
+        final int platineIndexFinal = platineIndex;
+        final long timeoutMs = System.currentTimeMillis() + 30000; // 30 Sekunden
+
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                while (platineIndexFinal < StaticVariable.nebenuhrImpulsLaeuftPlatine.length
+                        && StaticVariable.nebenuhrImpulsLaeuftPlatine[platineIndexFinal]
+                        && System.currentTimeMillis() < timeoutMs) {
+                    try {
+                        Thread.sleep(300);
+                    } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                        break;
+                    }
+                }
+                try {
+                    Thread.sleep(400);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                }
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        if (impulsFertigstellenDialog != null && impulsFertigstellenDialog.isShowing()) {
+                            impulsFertigstellenDialog.dismiss();
+                            impulsFertigstellenDialog = null;
+                        }
+                        // Jetzt Zeiteingabe aktiv setzen und Dialog öffnen
+                        if (localIndex < 3 && localIndex < StaticVariable.uhr_warten.length) {
+                            StaticVariable.uhr_warten[localIndex] = true;
+                            if (localIndex < StaticVariable.uhr_zeiteingabeAktiv.length) {
+                                StaticVariable.uhr_zeiteingabeAktiv[localIndex] = true;
+                            }
+                        }
+                        if (localIndex == 3 && localIndex < StaticVariable.uhr_zeiteingabeAktiv.length) {
+                            StaticVariable.uhr_zeiteingabeAktiv[localIndex] = true;
+                        }
+                        showDialog(localIndex);
+                    }
+                });
+            }
+        }).start();
     }
 
     // das braucht einen thread in main thread ... wegen Aenderungen in der View
@@ -233,6 +310,9 @@ public class SetNebenuhrActivity extends Activity {
     protected void onPrepareDialog(int id, Dialog dialog) {
         super.onPrepareDialog(id, dialog);
         if (dialog != null) {
+            if (dialog instanceof AlertDialog) {
+                TurmtechnikActivity.applyDialogAboveKeyboard((AlertDialog) dialog);
+            }
             final int dialogIndex = id;
             dialog.setOnDismissListener(new android.content.DialogInterface.OnDismissListener() {
                 @Override
@@ -760,13 +840,9 @@ public class SetNebenuhrActivity extends Activity {
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
         if ((keyCode == KeyEvent.KEYCODE_BACK)) {
-            //Log.i("Acitiviti3", "back");
-
-            // finish();
-            endActivitiSeite3();
+            TurmtechnikActivity.showExitPasswordDialogFrom(this);
             return true;
         }
-
         return false;
     }
 

@@ -463,13 +463,8 @@ public class ManuelerStartActivity extends Activity {
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
         if ((keyCode == KeyEvent.KEYCODE_BACK)) {
-            //Log.i("Acitiviti2", "back");
-
-
-            // finish();
-            endActivityManuellStart();
+            TurmtechnikActivity.showExitPasswordDialogFrom(this);
             return true;
-
         }
         return false;
     }

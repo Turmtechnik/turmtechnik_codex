@@ -67,6 +67,7 @@
             android:launchMode="singleTop"
             android:screenOrientation="landscape"
             android:theme="@android:style/Theme.NoTitleBar.Fullscreen"
+            android:windowSoftInputMode="adjustResize"
             android:exported="true">
 
             <!-- android:launchMode="singleTask" -->
@@ -85,6 +86,7 @@
             android:label="@string/title_activity_turmtechnik"
             android:launchMode="singleInstance"
             android:screenOrientation="landscape"
+            android:windowSoftInputMode="adjustResize"
             android:exported="false">
         </activity>
         <activity
@@ -98,6 +100,7 @@
             android:name=".SetNebenuhrActivity"
             android:label="@string/title_activity_turmtechnik"
             android:screenOrientation="landscape"
+            android:windowSoftInputMode="adjustResize"
             android:exported="false">
         </activity>
         <activity
@@ -136,6 +139,7 @@
             android:name=".WebUiActivity"
             android:label="@string/anlage_menue_webui"
             android:screenOrientation="landscape"
+            android:windowSoftInputMode="adjustResize"
             android:exported="false"
             android:theme="@android:style/Theme.NoTitleBar.Fullscreen">
         </activity>
@@ -168,6 +172,7 @@
             android:exported="false"
             android:process=":turmtechnik_service">
         </service>
+        <!-- Ohne android:process – im Hauptprozess, damit CameraX Frames an den Analyzer liefert (in :motion kamen auf manchen Geräten keine Frames) -->
         <service
             android:name=".MotionDetectionService"
             android:exported="false"
