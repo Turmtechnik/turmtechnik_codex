@@ -369,6 +369,7 @@ public class LogTurmtechnik2 {
     /**
      * Schreibt ins Nebenuhr-Relais-Log einen Neustart-Eintrag (immer, unabhängig von logOnOff).
      * Format: HH:mm:ss.SSS  Neustart  App gestartet
+     * Zusätzlich: Hinweis, dass bis zum nächsten Impuls eine Minute fehlen kann (im Log nach „Minute verloren“ suchen).
      */
     public static void appendNebenuhrRelaisLogNeustart() {
         deleteNebenuhrLogFilesOlderThanOneMonth();
@@ -376,6 +377,34 @@ public class LogTurmtechnik2 {
         SimpleDateFormat dfDatei = new SimpleDateFormat("dd-MM-yy");
         String tagesDatum = dfDatei.format(cal.getTime());
         String line = nebenuhrLogZeitIpPrefix() + "Neustart  App gestartet\r\n";
+        String line2 = nebenuhrLogZeitIpPrefix() + "Hinweis: Bis zum nächsten Impuls kann eine Minute fehlen (Neustart)\r\n";
+        String fileName = Environment.getExternalStorageDirectory().toString() + "/Turmtechnik/LogNebenuhrRelais-" + tagesDatum + ".txt";
+        File logFile = new File(fileName);
+        try {
+            File parent = logFile.getParentFile();
+            if (parent != null && !parent.exists()) parent.mkdirs();
+            if (!logFile.exists()) logFile.createNewFile();
+            BufferedWriter buf = new BufferedWriter(new FileWriter(logFile, true));
+            buf.append(line);
+            buf.append(line2);
+            buf.close();
+        } catch (IOException e) {
+            Log.e("LogTurmtechnik2", "LogNebenuhrRelais schreiben: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Schreibt ins Nebenuhr-Log eine explizite Zeile „Minute verloren“ (Soll-Zeit + Grund).
+     * So ist im Logfile klar ersichtlich, wo Impulse/Minuten verloren gehen (z. B. Suche nach „Minute verloren“).
+     * Nur für A/B/C (Nebenuhr Minuten); Soll in 12h-Minuten (0–719).
+     */
+    public static void appendNebenuhrRelaisLogMinuteVerloren(String uhrName, int soll12h, String grund) {
+        if (!"A".equals(uhrName) && !"B".equals(uhrName) && !"C".equals(uhrName)) return;
+        String sollStr = formatNebenuhrIstSoll(uhrName, Math.max(0, Math.min(719, soll12h)));
+        String line = nebenuhrLogZeitIpPrefix() + "UHR " + uhrName + "  Minute verloren: Soll " + sollStr + " (" + grund + ")\r\n";
+        Calendar cal = Calendar.getInstance();
+        SimpleDateFormat dfDatei = new SimpleDateFormat("dd-MM-yy");
+        String tagesDatum = dfDatei.format(cal.getTime());
         String fileName = Environment.getExternalStorageDirectory().toString() + "/Turmtechnik/LogNebenuhrRelais-" + tagesDatum + ".txt";
         File logFile = new File(fileName);
         try {
@@ -386,7 +415,7 @@ public class LogTurmtechnik2 {
             buf.append(line);
             buf.close();
         } catch (IOException e) {
-            Log.e("LogTurmtechnik2", "LogNebenuhrRelais schreiben: " + e.getMessage());
+            Log.e("LogTurmtechnik2", "LogNebenuhrRelais Minute verloren: " + e.getMessage());
         }
     }
 
@@ -413,9 +442,11 @@ public class LogTurmtechnik2 {
 
     /**
      * Carambola-Fehler während Impuls – Impuls wird nicht gezählt. Format mit Impuls Fehler: Ja
+     * Zusätzlich: „Minute verloren“ für Suche im Logfile.
      */
     public static void appendNebenuhrRelaisLogImpulsFehler(String uhrName, int ist, int soll, boolean lastRelaisA) {
         appendNebenuhrRelaisLogZeile(uhrName, ist, soll, lastRelaisA, true);
+        appendNebenuhrRelaisLogMinuteVerloren(uhrName, soll, "Impuls-Fehler/Timeout");
     }
 
     /** Letzter Log-Zeitpunkt „Keine Verbindung“ pro Uhr (A=0, B=1, C=2, D=3), um das Log nicht zu fluten. */
@@ -437,6 +468,7 @@ public class LogTurmtechnik2 {
         int idx = "A".equals(uhrName) ? 0 : "B".equals(uhrName) ? 1 : "C".equals(uhrName) ? 2 : "D".equals(uhrName) ? 3 : -1;
         if (idx < 0) return;
         appendNebenuhrRelaisLogZeile(uhrName, ist, soll, lastRelaisA, true);
+        appendNebenuhrRelaisLogMinuteVerloren(uhrName, soll, "Keine Verbindung");
         long now = System.currentTimeMillis();
         if (now - lastKeineVerbindungLogMs[idx] < KEINE_VERBINDUNG_LOG_INTERVAL_MS) return;
         lastKeineVerbindungLogMs[idx] = now;

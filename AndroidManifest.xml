@@ -50,6 +50,9 @@
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
     <uses-permission android:name="android.permission.CAMERA"/>
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_CAMERA" android:minSdkVersion="34"/>
+    <!-- Ab Android 10/14: Activity aus Hintergrund starten (z. B. nach 15-Min-Alarm) – Full-Screen-Intent erlaubt Anzeige -->
+    <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT"/>
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" android:minSdkVersion="33"/>
 
     <application
         android:icon="@drawable/ic_launcher"
@@ -171,9 +174,10 @@
             android:name=".StartTurmtechnikService"
             android:exported="false">
         </service>
-        <!-- Ohne android:process – im Hauptprozess, damit CameraX Frames an den Analyzer liefert (in :motion kamen auf manchen Geräten keine Frames) -->
+        <!-- Bewegungserkennung/Kamera ausgebaut – Service deaktiviert (machte nur Probleme) -->
         <service
             android:name=".MotionDetectionService"
+            android:enabled="false"
             android:exported="false"
             android:foregroundServiceType="camera"
             tools:targetApi="34">

@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.BatteryManager;
+import android.os.Build;
 import android.util.Log;
 
 public class AlarmReceiver extends BroadcastReceiver
@@ -19,6 +20,17 @@ public class AlarmReceiver extends BroadcastReceiver
 
     @Override
     public void onReceive(Context context, Intent intent) {
+        // Service starten (aus Hintergrund nur mit startForegroundService erlaubt – Service ruft startForeground() in onCreate)
+        try {
+            Intent svc = new Intent(context, StartTurmtechnikService.class);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                context.startForegroundService(svc);
+            } else {
+                context.startService(svc);
+            }
+        } catch (Exception e) {
+            android.util.Log.w(sourceFileName, "Service starten: " + (e != null ? e.getMessage() : ""));
+        }
 
         Boolean autostartFromDb = null;
         try {
@@ -58,7 +70,7 @@ public class AlarmReceiver extends BroadcastReceiver
         // Passwort 5644: 15 Min Hintergrund – in dieser Zeit Activity nicht starten
         long backgroundUntil = TurmtechnikActivity.getBackgroundAllowedUntilMillis(context);
         if (backgroundUntil > 0 && System.currentTimeMillis() < backgroundUntil) {
-            android.util.Log.d(sourceFileName, "Noch in 15-Min-Hintergrundphase (5644), Alarm startet Activity nicht");
+            android.util.Log.d(sourceFileName, "Noch in Hintergrundphase (5644), Alarm startet Activity nicht");
             StartTurmtechnikService.setTimeTurmtechnik(60);
             return;
         }
@@ -82,14 +94,9 @@ public class AlarmReceiver extends BroadcastReceiver
                 return;
             }
             workContext = context;
-            {
-                StartTurmtechnikService.touchHeartbeat();
-                StartTurmtechnikService.setTimeTurmtechnik(90);  // nicht 2 s (verhinderte Doppelstart 1–2 s nach App-Start)
-
-                Intent intent1 = new Intent(context, TurmtechnikActivity.class);
-                intent1.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_REORDER_TO_FRONT | Intent.FLAG_ACTIVITY_SINGLE_TOP);
-                context.startActivity(intent1);
-            }
+            // Kein touchHeartbeat() hier – wir zeigen nur Notification/Full-Screen-Intent. Wenn die Activity nicht öffnet,
+            // soll der Service nach 90 s erneut versuchen (Absturz-Wiederherstellung), bis die App wirklich läuft.
+            StartTurmtechnikService.launchTurmtechnikActivityFromBackground(context);
         }
     }
 

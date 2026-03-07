@@ -204,14 +204,23 @@ public class NebenUhrC_thread extends Thread {
                 }
             }
             //Log.i("Relais" , "Nr.:" + relaisNumber);
-            long impulseStartTimeMs = android.os.SystemClock.elapsedRealtime();
-            int platineIndex = (relaisNumber - 1) / 32;
-            if (platineIndex >= 0 && platineIndex < StaticVariable.nebenuhrImpulsLaeuftPlatine.length) {
-                StaticVariable.nebenuhrImpulsLaeuftPlatine[platineIndex] = true;
-            }
-            Serial_IoThread.relaisNew[relaisNumber - 1] = true;                // relais einschalten
             String relaisLetterC = (relaisNumber == nebenuhrConfig.relaisA) ? "A" : "B";
-            LogTurmtechnik2.appendNebenuhrRelaisLogRelaisEinAus("C", relaisLetterC, true);
+            int platineIndex = (relaisNumber - 1) / 32;
+            boolean ersteRunde = true;
+            for (;;) {
+                if (!ersteRunde) {
+                    sleepTime(2000);
+                    if (relaisNumber > 0 && relaisNumber <= Serial_IoThread.relaisOld.length) {
+                        Serial_IoThread.relaisOld[relaisNumber - 1] = false;
+                    }
+                }
+                ersteRunde = false;
+                long impulseStartTimeMs = android.os.SystemClock.elapsedRealtime();
+                if (platineIndex >= 0 && platineIndex < StaticVariable.nebenuhrImpulsLaeuftPlatine.length) {
+                    StaticVariable.nebenuhrImpulsLaeuftPlatine[platineIndex] = true;
+                }
+                Serial_IoThread.relaisNew[relaisNumber - 1] = true;                // relais einschalten
+                LogTurmtechnik2.appendNebenuhrRelaisLogRelaisEinAus("C", relaisLetterC, true);
             // ZUSÄTZLICHE SICHERHEITSPRÜFUNG: Nach dem Einschalten prüfen
             if (nebenuhrConfig.relaisA > 0 && nebenuhrConfig.relaisA <= Serial_IoThread.relaisNew.length &&
                 nebenuhrConfig.relaisB > 0 && nebenuhrConfig.relaisB <= Serial_IoThread.relaisNew.length) {
@@ -257,28 +266,18 @@ public class NebenUhrC_thread extends Thread {
                 StaticVariable.nebenuhrImpulsLaeuftPlatine[platineIndex] = false;
             }
             if (Serial_IoThread.hadCarambolaErrorSince(platineIndex, impulseStartTimeMs)) {
-                android.util.Log.e("NebenUhrC_thread", "Carambola-Fehler während Nebenuhr-Impuls (Platine " + (platineIndex + 1) + ") – Impuls wird nicht gezählt, wird wiederholt.");
                 if (relaisNumber > 0 && relaisNumber <= Serial_IoThread.relaisOld.length) {
                     Serial_IoThread.relaisOld[relaisNumber - 1] = false;
                 }
-                try {
-                    PlatinenDatabaseHelper dbHelper = PlatinenDatabaseHelper.getInstance(TurmtechnikActivity.turmtechnikContext);
-                    PlatinenDatabaseHelper.NebenuhrConfig c = dbHelper.getNebenuhrByZeile(5);
-                    if (c != null) {
-                        c.angezeigteZeit = StaticVariable.uhrC_angezeigteZeit;
-                        c.lastRelaisA = StaticVariable.uhrC_lastRelaisA;
-                        c.impulsAusstehend = false;
-                        dbHelper.saveNebenuhr(c);
-                    }
-                } catch (Exception e) {
-                    android.util.Log.e("NebenUhrC_thread", "Fehler beim Zurücksetzen der DB nach Carambola-Fehler", e);
+                android.util.Log.w("NebenUhrC_thread", "Carambola-Fehler – wiederhole Impuls in 2 s, bis er durch ist.");
+                if (platineIndex >= 0 && platineIndex < StaticVariable.nebenuhrImpulsLaeuftPlatine.length) {
+                    StaticVariable.nebenuhrImpulsLaeuftPlatine[platineIndex] = false;
                 }
-                LogTurmtechnik2.appendNebenuhrRelaisLogImpulsFehler("C", StaticVariable.uhrC_angezeigteZeit, StaticVariable.uhrC_calendarZeit, StaticVariable.uhrC_lastRelaisA);
-                return;
+                continue;
             }
             if (Serial_IoThread.getSerialIoStatus2() && StaticVariable.uhrC_angezeigteZeit != StaticVariable.uhrC_calendarZeit) {
                 incrementAngezeigteZeit_C();
-                StaticVariable.uhrC_lastRelaisA = nextLastRelaisA;  // Relais-Wechsel nur nach fertigem Impuls!
+                StaticVariable.uhrC_lastRelaisA = nextLastRelaisA;
                 try {
                     PlatinenDatabaseHelper dbHelper = PlatinenDatabaseHelper.getInstance(TurmtechnikActivity.turmtechnikContext);
                     PlatinenDatabaseHelper.NebenuhrConfig c = dbHelper.getNebenuhrByZeile(5);
@@ -295,12 +294,18 @@ public class NebenUhrC_thread extends Thread {
                         StaticVariable.uhrC_calendarZeit,
                         StaticVariable.uhrC_angezeigteZeit,
                         StaticVariable.uhrC_lastRelaisA);
-            } else if (!Serial_IoThread.getSerialIoStatus2()) {
-                int soll = Math.max(StaticVariable.uhrC_calendarZeit, getCurrentCalendarMinuten12());
-                LogTurmtechnik2.appendNebenuhrRelaisLogKeineVerbindung("C", StaticVariable.uhrC_angezeigteZeit, soll, StaticVariable.uhrC_lastRelaisA);
+                if (platineIndex >= 0 && platineIndex < StaticVariable.nebenuhrImpulsLaeuftPlatine.length) {
+                    StaticVariable.nebenuhrImpulsLaeuftPlatine[platineIndex] = false;
+                }
+                return;
+            }
+            if (!Serial_IoThread.getSerialIoStatus2()) {
+                android.util.Log.w("NebenUhrC_thread", "Keine Verbindung – wiederhole Impuls in 2 s, bis er durch ist.");
+                continue;
             }
             if (platineIndex >= 0 && platineIndex < StaticVariable.nebenuhrImpulsLaeuftPlatine.length) {
                 StaticVariable.nebenuhrImpulsLaeuftPlatine[platineIndex] = false;
+            }
             }
         }
     }

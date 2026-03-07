@@ -7,6 +7,7 @@ import android.app.ActivityManager;
 import android.app.ActivityManager.MemoryInfo;
 import android.app.ActivityManager.RunningAppProcessInfo;
 import android.app.AlertDialog;
+import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.bluetooth.BluetoothAdapter;
 import android.content.ComponentName;
@@ -301,23 +302,12 @@ public class TurmtechnikActivity extends Activity {
     }
 
 
-    /** Startet oder stoppt den MotionDetectionService je nach anlage_bewegungserkennung_ein. Fragt bei Bedarf CAMERA-Berechtigung an. */
+    /** Bewegungserkennung/Kamera ausgebaut – Service wird nicht mehr gestartet (machte nur Probleme). */
     private void startOrStopMotionDetectionService() {
-        if (Build.VERSION.SDK_INT < 21) return;
         try {
-            PlatinenDatabaseHelper db = PlatinenDatabaseHelper.getInstance(this);
-            String ein = db.getConfigValue("anlage_bewegungserkennung_ein");
-            if ("ein".equalsIgnoreCase(ein != null ? ein.trim() : "")) {
-                if (Build.VERSION.SDK_INT >= 23 && checkSelfPermission(Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
-                    requestPermissions(new String[]{Manifest.permission.CAMERA}, REQUEST_CAMERA_MOTION);
-                    return;
-                }
-                startService(new Intent(this, MotionDetectionService.class));
-            } else {
-                stopService(new Intent(this, MotionDetectionService.class));
-            }
+            stopService(new Intent(this, MotionDetectionService.class));
         } catch (Exception e) {
-            Log.w("TurmtechnikActivity", "MotionDetectionService start/stop: " + e.getMessage());
+            Log.w("TurmtechnikActivity", "MotionDetectionService stop: " + e.getMessage());
         }
     }
 
@@ -954,6 +944,7 @@ public class TurmtechnikActivity extends Activity {
     /** Passwort 5644 = Beenden mit 15 Minuten Hintergrund (App darf 15 Min im Hintergrund bleiben, danach wieder in den Vordergrund). */
     private static final String PASSWORD_EXIT_15MIN_BACKGROUND = "5644";
     private static final String PREF_BACKGROUND_ALLOWED_UNTIL_MILLIS = "background_allowed_until_millis";
+    /** Passwort 5644: Minuten im Hintergrund erlaubt. */
     private static final int BACKGROUND_ALLOWED_MINUTES = 15;
 
     /** „App beenden für Einstellungen“: Bis zu diesem Zeitpunkt (ms) startet die App nicht wieder (Service/Alarm/Boot); bei erneutem Start (z. B. HOME) → Einstellungen öffnen. */
@@ -2603,6 +2594,11 @@ public class TurmtechnikActivity extends Activity {
         super.onResume();
         applyExitActionFromIntent(getIntent());
         isInForeground = true;
+        // „Turmtechnik starten“-Notification aufheben, wenn die App wieder im Vordergrund ist (Full-Screen-Intent oder Tipp)
+        try {
+            NotificationManager nm = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+            if (nm != null) nm.cancel(StartTurmtechnikService.NOTIFICATION_ID_OPEN_APP);
+        } catch (Exception ignored) { }
         // Web-Server wieder starten, falls Activity z. B. nach Bildschirmschoner neu erstellt wurde (onDestroy hatte ihn gestoppt)
         startConfigWebServer();
         loadAnlageLogAndRebootFromDb(this);
@@ -2623,6 +2619,12 @@ public class TurmtechnikActivity extends Activity {
                 resetScreensaverTimer();
             }
         }
+        // Nach Bildschirm aus/an (Hardware-Taste): Overlay ausblenden und Hauptlayout in den Vordergrund,
+        // damit nicht erst schwarzer Bildschirm und später Schoner angezeigt werden.
+        if (screensaverOverlay != null && screensaverOverlay.getVisibility() == View.VISIBLE) {
+            screensaverOverlay.setVisibility(View.GONE);
+        }
+        bringMainContentToFront(); // Zeichenreihenfolge nach Screen-on wiederherstellen
         startOrStopMotionDetectionService();
         registerDismissScreensaverReceiver();
         //new LogTurmtechnik("onResume" , 0, 0, 0, 0) ;
@@ -3176,10 +3178,13 @@ public class TurmtechnikActivity extends Activity {
         });
     }
 
+    /** RequestCode für den Einmal-Alarm „App wieder anbieten nach Exit für Einstellungen“ (anders als 0 = 15-Min-Alarm). */
+    private static final int PENDING_INTENT_REQUEST_WAKE_AFTER_EXIT = 123;
+
     /**
      * App beenden für Einstellungen: Für die nächsten {@code minutes} Minuten startet die App nicht automatisch;
      * bei erneutem Start (z. B. HOME-Taste) wird direkt die System-Einstellungen geöffnet.
-     * Service und 15-Min-Alarm laufen weiter; nach Ablauf von {@code until} startet der Alarm die Activity wieder.
+     * Service und 15-Min-Alarm laufen weiter. Ein Einmal-Alarm direkt nach Ablauf startet die App wieder (Full-Screen-Intent/Notification).
      */
     public static void requestAppExitForSettings(final int minutes) {
         final TurmtechnikActivity act = turmtechnikActivityInstance;
@@ -3190,6 +3195,26 @@ public class TurmtechnikActivity extends Activity {
                 android.content.Context ctx = act.getApplicationContext();
                 long until = System.currentTimeMillis() + Math.max(1, minutes) * 60 * 1000L;
                 setExitForSettingsUntilMillis(ctx, until);
+                // Einmal-Alarm: direkt nach Ablauf der Phase Activity wieder anbieten (sonst erst nächster 15-Min-Alarm oder 90 s Service)
+                try {
+                    AlarmManager am = (AlarmManager) ctx.getSystemService(Context.ALARM_SERVICE);
+                    if (am != null) {
+                        Intent alarmIntent = new Intent(ctx, AlarmReceiver.class);
+                        int flags = PendingIntent.FLAG_UPDATE_CURRENT;
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                            flags |= PendingIntent.FLAG_IMMUTABLE;
+                        }
+                        PendingIntent pi = PendingIntent.getBroadcast(ctx, PENDING_INTENT_REQUEST_WAKE_AFTER_EXIT, alarmIntent, flags);
+                        long triggerAt = until + 2000L; // 2 s nach Ende der Phase
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                            am.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerAt, pi);
+                        } else {
+                            am.setExact(AlarmManager.RTC_WAKEUP, triggerAt, pi);
+                        }
+                    }
+                } catch (Exception e) {
+                    android.util.Log.w("TurmtechnikActivity", "Einmal-Alarm nach Exit für Einstellungen: " + (e != null ? e.getMessage() : ""));
+                }
                 act.finishAffinity();
             }
         });
@@ -4572,10 +4597,8 @@ public class TurmtechnikActivity extends Activity {
             StaticVariable.myBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
             Log.i("TurmtechnikActivity", "BLUETOOTH_CONNECT erteilt – Bluetooth-Adapter initialisiert.");
         }
-        if (requestCode == REQUEST_CAMERA_MOTION && grantResults != null && grantResults.length > 0
-                && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-            startService(new Intent(this, MotionDetectionService.class));
-        }
+        // Bewegungserkennung/Kamera ausgebaut – kein Service-Start mehr
+        // if (requestCode == REQUEST_CAMERA_MOTION && ...) { startService(...); }
     }
 
     @Override

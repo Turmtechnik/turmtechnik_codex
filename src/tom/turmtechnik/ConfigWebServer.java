@@ -1516,17 +1516,7 @@ public class ConfigWebServer {
             dbHelper.setConfigValue("anlage_bewegungserkennung_nur_bei_bildschirm_aus", bewegungserkennungNurBeiBildschirmAus ? "ein" : "aus");
             dbHelper.setPlatinenDemoModus(platinenDemoModus);
             StaticVariable.platinenDemoModus = platinenDemoModus;
-            if (android.os.Build.VERSION.SDK_INT >= 21) {
-                try {
-                    if (bewegungserkennungEin) {
-                        context.startService(new android.content.Intent(context, MotionDetectionService.class));
-                    } else {
-                        context.stopService(new android.content.Intent(context, MotionDetectionService.class));
-                    }
-                } catch (Exception e) {
-                    Log.w(TAG, "MotionDetectionService nach Config-Speicherung: " + (e != null ? e.getMessage() : ""));
-                }
-            }
+            // Bewegungserkennung/Kamera ausgebaut – MotionDetectionService wird nicht mehr gestartet/gestoppt
             Map<String, Object> result = new HashMap<>();
             result.put("success", true);
             result.put("message", "Anlagendaten gespeichert.");
@@ -3280,7 +3270,7 @@ public class ConfigWebServer {
     private static final long TAILSCALE_CONNECT_THROTTLE_MS = 5 * 60 * 1000L;
     private static volatile long lastTailscaleConnectAttemptMs = 0L;
 
-    /** GET /api/device-ip – WLAN-IP und optional Tailscale-IP des Geräts für Anzeige im Layout-Header (z. B. unter Wochentag). */
+    /** GET /api/device-ip – WLAN-IP, optional Tailscale-IP und App-Version (Firmware) für Layout-Header. */
     private SimpleHttpServer.HttpResponse handleGetDeviceIp() {
         String ip = getLocalIpForScan();
         if (ip == null) ip = "";
@@ -3293,16 +3283,16 @@ public class ConfigWebServer {
                 sendTailscaleConnectBroadcast();
             }
         }
-        String rustdeskDirect = "";
-        if (tailscale != null && !tailscale.isEmpty()) {
-            rustdeskDirect = tailscale + ":21118";
-        } else if (ip != null && !ip.isEmpty()) {
-            rustdeskDirect = ip + ":21118";
-        }
+        String version = "";
+        try {
+            android.content.pm.PackageInfo pi = context.getPackageManager().getPackageInfo(context.getPackageName(), 0);
+            if (pi != null && pi.versionName != null) version = pi.versionName;
+        } catch (Exception ignored) { }
+        if (version.isEmpty()) version = "?";
         String ipEsc = ip.replace("\\", "\\\\").replace("\"", "\\\"");
         String tsEsc = tailscale.replace("\\", "\\\\").replace("\"", "\\\"");
-        String rdEsc = rustdeskDirect.replace("\\", "\\\\").replace("\"", "\\\"");
-        return new SimpleHttpServer.HttpResponse(200, "application/json", "{\"ip\":\"" + ipEsc + "\",\"tailscale\":\"" + tsEsc + "\",\"rustdesk_direct\":\"" + rdEsc + "\"}");
+        String versionEsc = version.replace("\\", "\\\\").replace("\"", "\\\"");
+        return new SimpleHttpServer.HttpResponse(200, "application/json", "{\"ip\":\"" + ipEsc + "\",\"tailscale\":\"" + tsEsc + "\",\"version\":\"" + versionEsc + "\"}");
     }
 
     /**
@@ -4211,9 +4201,7 @@ public class ConfigWebServer {
                 "        .app-wochentag { font-size: clamp(1.1rem, 2.8vh, 1.5rem); font-weight: 600; color: var(--tt-text); }\n" +
                 "        .app-header-ip { font-size: clamp(0.7rem, 1.8vh, 0.85rem); color: var(--tt-muted); font-family: ui-monospace, monospace; }\n" +
                 "        .app-header-tailscale { font-size: clamp(0.65rem, 1.5vh, 0.75rem); color: var(--tt-muted); opacity: 0.9; font-family: ui-monospace, monospace; }\n" +
-                "        .app-header-rustdesk { font-size: clamp(0.65rem, 1.5vh, 0.75rem); color: var(--tt-muted); font-family: ui-monospace, monospace; display: flex; align-items: center; gap: 0.35rem; flex-wrap: wrap; }\n" +
-                "        .app-header-rustdesk-copy { font-size: 0.6rem; padding: 0.15rem 0.3rem; background: var(--tt-surface); border: 1px solid var(--tt-border); border-radius: 4px; color: var(--tt-muted); cursor: pointer; }\n" +
-                "        .app-header-rustdesk-copy:hover { color: var(--tt-accent); border-color: var(--tt-accent); }\n" +
+                "        .app-header-firmware { font-size: clamp(0.65rem, 1.5vh, 0.75rem); color: var(--tt-muted); font-family: ui-monospace, monospace; }\n" +
                 "        .app-nav-link { font-size: 0.75rem; color: var(--tt-muted); text-decoration: none; margin-right: 0.5rem; }\n" +
                 "        .app-nav-link:hover { color: var(--tt-accent); }\n" +
                 "        .app-page-main { flex: 1; display: flex; flex-direction: column; min-height: 0; padding: 3.5rem 1rem 0.5rem 1rem; }\n" +
@@ -4311,7 +4299,7 @@ public class ConfigWebServer {
                 "            <div class=\"app-wochentag\" id=\"wochentag\">--</div>\n" +
                 "            <div class=\"app-header-ip\" id=\"appHeaderIp\"></div>\n" +
                 "            <div class=\"app-header-tailscale\" id=\"appHeaderTailscale\" style=\"display:none;\"></div>\n" +
-                "            <div class=\"app-header-rustdesk\" id=\"appHeaderRustdesk\" style=\"display:none;\"><span id=\"appHeaderRustdeskAddr\"></span><button type=\"button\" class=\"app-header-rustdesk-copy\" id=\"appHeaderRustdeskCopy\" title=\"Adresse kopieren\">Kopieren</button><a href=\"turmt://rustdesk\" class=\"app-header-rustdesk-copy\" id=\"appHeaderRustdeskStart\" title=\"RustDesk-App starten\" style=\"display:none;\">RustDesk</a></div>\n" +
+                "            <div class=\"app-header-firmware\" id=\"appHeaderFirmware\"></div>\n" +
                 "        </div>\n" +
                 "    </header>\n" +
                 "    <main class=\"app-page-main\">\n" +
@@ -4329,7 +4317,7 @@ public class ConfigWebServer {
                 "        function infoTextAktualisieren(){ fetch('/api/info-text').then(function(r){ return r.json(); }).then(function(d){ var el=document.getElementById('appInfoText'); if(el&&d.text!==undefined) el.textContent=d.text||''; var dauerEl=document.getElementById('appDauer'); if(dauerEl) dauerEl.textContent=(d.currentMelodieZeileDauer!=null)?String(d.currentMelodieZeileDauer).trim()||'\u2013':'\u2013'; var relaisEl=document.getElementById('appRelaisAnzeige'); if(relaisEl){ var n=Math.max(0,parseInt(d.anzahlGlocken,10)||16); n=Math.min(16,n); var relais=Array.isArray(d.currentMelodieZeileRelais)?d.currentMelodieZeileRelais:[]; var vorschwing=Array.isArray(d.currentMelodieZeileVorschwing)?d.currentMelodieZeileVorschwing:[]; var cols=''; for(var c=0;c<n;c++) cols+=(c?' ':'')+'1.5em'; relaisEl.style.gridTemplateColumns=cols; relaisEl.style.gridTemplateRows='0.95em 0.95em 0.95em'; relaisEl.innerHTML=''; for(var i=0;i<n;i++){ var cell=document.createElement('div'); cell.className='relais-cell'; var dot=document.createElement('span'); dot.className='relais-dot '+(vorschwing[i]==1?'ein':'aus'); cell.appendChild(dot); relaisEl.appendChild(cell); } for(var j=0;j<n;j++){ var cell2=document.createElement('div'); cell2.className='relais-cell'; var lbl=document.createElement('span'); lbl.className='relais-label'; lbl.textContent='G'+(j+1); cell2.appendChild(lbl); relaisEl.appendChild(cell2); } for(var k=0;k<n;k++){ var cell3=document.createElement('div'); cell3.className='relais-cell'; var dot3=document.createElement('span'); dot3.className='relais-dot '+(relais[k]==1?'ein':'aus'); cell3.appendChild(dot3); relaisEl.appendChild(cell3); } } }).catch(function(){}); }\n" +
                 "        function drawMoonAppHeader(canvasId, impulse){ var c=document.getElementById(canvasId); if(!c||!c.getContext) return; impulse=Math.max(0,Math.min(59,parseInt(impulse,10)||0)); var w=c.width,h=c.height,cx=w/2,cy=h/2,r=Math.min(w,h)/2-3; var ctx=c.getContext('2d'); var phase=(impulse<=30)?impulse/30:1-(impulse-30)/30; if(phase<0) phase=0; ctx.fillStyle='#222222'; ctx.beginPath(); ctx.arc(cx,cy,r,0,Math.PI*2); ctx.fill(); ctx.fillStyle='#FFF1C1'; for(var i=-r;i<=r;i++){ var y=Math.sqrt(r*r-i*i); if(isNaN(y)) continue; var xL=cx-y,xR=cx+y; if(impulse<=30){ var xEdge=xR-(xR-xL)*phase; ctx.fillRect(xEdge,cy+i,xR-xEdge,1); } else { var xEdge=xL+(xR-xL)*phase; ctx.fillRect(xL,cy+i,xEdge-xL,1); } } ctx.strokeStyle='#555555'; ctx.lineWidth=2; ctx.beginPath(); ctx.arc(cx,cy,r,0,Math.PI*2); ctx.stroke(); }\n" +
                 "        function loadMoonPhase(){ fetch('/api/nebenuhren').then(function(r){ return r.json(); }).then(function(d){ var list=d.nebenuhren||[]; var useAktuell=true; for(var i=0;i<list.length;i++){ if(list[i].zeile===6&&list[i].aktiv){ var ph=list[i].mondphaseIst; drawMoonAppHeader('appHeaderMoon',ph!=null?ph:0); useAktuell=false; break; } } if(useAktuell){ fetch('/api/mondphase-aktuell').then(function(r2){ return r2.json(); }).then(function(d2){ var ph=d2.mondphase!=null?d2.mondphase:0; drawMoonAppHeader('appHeaderMoon',ph); }).catch(function(){ drawMoonAppHeader('appHeaderMoon',0); }); } }).catch(function(){ fetch('/api/mondphase-aktuell').then(function(r){ return r.json(); }).then(function(d){ drawMoonAppHeader('appHeaderMoon',d.mondphase!=null?d.mondphase:0); }).catch(function(){ drawMoonAppHeader('appHeaderMoon',0); }); }); }\n" +
-                "        function loadDeviceIp(){ fetch('/api/device-ip').then(function(r){ return r.json(); }).then(function(d){ var el=document.getElementById('appHeaderIp'); if(el) el.textContent=d.ip||''; var tsEl=document.getElementById('appHeaderTailscale'); if(tsEl){ var ts=d.tailscale||''; if(ts){ tsEl.textContent='Tailscale: '+ts; tsEl.style.display='block'; } else { tsEl.textContent=''; tsEl.style.display='none'; } } var rdEl=document.getElementById('appHeaderRustdesk'); var rdAddr=document.getElementById('appHeaderRustdeskAddr'); var rd=d.rustdesk_direct||''; if(rdEl&&rdAddr){ if(rd){ rdAddr.textContent='RustDesk: '+rd; rdEl.style.display='flex'; var copyBtn=document.getElementById('appHeaderRustdeskCopy'); if(copyBtn){ copyBtn.onclick=function(){ var t=rd; if(navigator.clipboard&&navigator.clipboard.writeText){ navigator.clipboard.writeText(t).then(function(){ }).catch(function(){}); } } } var startLink=document.getElementById('appHeaderRustdeskStart'); if(startLink) startLink.style.display='inline-block'; } else { rdAddr.textContent=''; rdEl.style.display='none'; var startLink=document.getElementById('appHeaderRustdeskStart'); if(startLink) startLink.style.display='none'; } } }).catch(function(){}); }\n" +
+                "        function loadDeviceIp(){ fetch('/api/device-ip').then(function(r){ return r.json(); }).then(function(d){ var el=document.getElementById('appHeaderIp'); if(el) el.textContent=d.ip||''; var tsEl=document.getElementById('appHeaderTailscale'); if(tsEl){ var ts=d.tailscale||''; if(ts){ tsEl.textContent='Tailscale: '+ts; tsEl.style.display='block'; } else { tsEl.textContent=''; tsEl.style.display='none'; } } var fwEl=document.getElementById('appHeaderFirmware'); if(fwEl) fwEl.textContent=(d.version?'Firmware '+d.version:''); }).catch(function(){}); }\n" +
                 "        function openConfigGate(){ document.getElementById('configGatePw').value=''; document.getElementById('configGateErr').style.display='none'; document.getElementById('configGateModal').classList.add('show'); document.getElementById('configGatePw').focus(); }\n" +
                 "        function closeConfigGate(){ document.getElementById('configGateModal').classList.remove('show'); }\n" +
                 "        function checkConfigGate(){ var pw=document.getElementById('configGatePw').value; var err=document.getElementById('configGateErr'); if(pw==='5644'){ try{ localStorage.setItem('config-system-auth','1'); }catch(e){} closeConfigGate(); window.location.href='/'; } else { err.style.display='block'; } }\n" +

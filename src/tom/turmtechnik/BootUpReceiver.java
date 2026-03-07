@@ -72,21 +72,12 @@ public class BootUpReceiver extends BroadcastReceiver {
 
         context.startService(new Intent(appContext, StartTurmtechnikService.class));
 
-        if (Build.VERSION.SDK_INT >= 21) {
-            try {
-                String ein = PlatinenDatabaseHelper.getInstance(appContext).getConfigValue("anlage_bewegungserkennung_ein");
-                if ("ein".equalsIgnoreCase(ein != null ? ein.trim() : "")) {
-                    appContext.startService(new Intent(appContext, MotionDetectionService.class));
-                }
-            } catch (Exception e) {
-                Log.w(sourceFileName, "MotionDetectionService nach Boot: " + (e != null ? e.getMessage() : ""));
-            }
-        }
+        // Bewegungserkennung/Kamera ausgebaut – MotionDetectionService wird nicht mehr gestartet
 
         // Passwort 5644: 15 Min Hintergrund – in dieser Zeit nach Boot Activity nicht starten
         long backgroundUntil = TurmtechnikActivity.getBackgroundAllowedUntilMillis(context);
         if (backgroundUntil > 0 && System.currentTimeMillis() < backgroundUntil) {
-            Log.d(sourceFileName, "Noch in 15-Min-Hintergrundphase (5644), starte nach Boot keine Activity");
+            Log.d(sourceFileName, "Noch in Hintergrundphase (5644), starte nach Boot keine Activity");
             return;
         }
 

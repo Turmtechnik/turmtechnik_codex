@@ -15,7 +15,9 @@ import android.content.SharedPreferences;
 import android.os.BatteryManager;
 import android.os.Build;
 import android.os.Environment;
+import android.os.Handler;
 import android.os.IBinder;
+import android.os.Looper;
 import android.os.PowerManager;
 import android.util.Log;
 
@@ -36,7 +38,10 @@ public class StartTurmtechnikService extends Service {
     private static volatile long lastHeartbeatMs = 0L;
 
     private static final int NOTIFICATION_ID = 9001;
+    /** Notification-ID für „App starten“ / Full-Screen-Intent. Öffentlich, damit TurmtechnikActivity sie beim Öffnen aufheben kann. */
+    public static final int NOTIFICATION_ID_OPEN_APP = 9002;
     private static final String CHANNEL_ID = "turmtechnik_service";
+    private static final String CHANNEL_ID_OPEN = "turmtechnik_open";
 
     private PowerManager pm;
     private PowerManager.WakeLock wl = null;
@@ -96,16 +101,25 @@ public class StartTurmtechnikService extends Service {
         // Foreground-Service, damit Android den Service nicht wegen "app idle" beendet
         startForegroundIfSupported();
 
-        RestartTurmtechnik restartTurmtechnik = new RestartTurmtechnik();
-        restartTurmtechnik.start();
+        // Nach Prozess-Neustart (z. B. nach Absturz mit WebUiActivity) kurz warten, damit Prozess/Chromium sich stabilisieren (vermeidet SIGSEGV in JDWP-Thread)
+        new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                if (!doRun) return;
+                RestartTurmtechnik restartTurmtechnik = new RestartTurmtechnik();
+                restartTurmtechnik.start();
+            }
+        }, 3000);
 
         // neu 19.11.2014 -- Starte turmtechnik unbedingt interval
-
         AlarmManager alarmManager;
         PendingIntent pendingIntent1;
-
         Intent alarmIntent = new Intent(StartTurmtechnikService.this, AlarmReceiver.class);
-        pendingIntent1 = PendingIntent.getBroadcast(StartTurmtechnikService.this, 0, alarmIntent, 0);
+        int piFlags = PendingIntent.FLAG_UPDATE_CURRENT;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            piFlags |= PendingIntent.FLAG_IMMUTABLE;
+        }
+        pendingIntent1 = PendingIntent.getBroadcast(StartTurmtechnikService.this, 0, alarmIntent, piFlags);
         alarmManager = (AlarmManager) this.getSystemService(Context.ALARM_SERVICE);
 
         //Calendar calendar = Calendar.getInstance();
@@ -115,7 +129,7 @@ public class StartTurmtechnikService extends Service {
         //calendar.set(Calendar.SECOND, 0) ;
 
         //alarmManager.setRepeating(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), 24*60*60*1000, pendingIntent1);
-        // alle 15 Minuten auf jeden fall starten
+        // alle 15 Minuten starten
         alarmManager.setInexactRepeating(AlarmManager.RTC_WAKEUP, System.currentTimeMillis(),
                 15 * 60 * 1000,
                 // 5000, // 5 sek fuer test
@@ -151,7 +165,7 @@ public class StartTurmtechnikService extends Service {
         // Passwort 5644: App darf 15 Min im Hintergrund bleiben – in dieser Zeit nicht in den Vordergrund holen
         long backgroundUntil = TurmtechnikActivity.getBackgroundAllowedUntilMillis(this);
         if (backgroundUntil > 0 && System.currentTimeMillis() < backgroundUntil) {
-            Log.d(sourceFileName, "Noch in 15-Min-Hintergrundphase (5644), starte Activity nicht");
+            Log.d(sourceFileName, "Noch in Hintergrundphase (5644), starte Activity nicht");
             setTimeTurmtechnik(60);
             return;
         }
@@ -188,7 +202,7 @@ public class StartTurmtechnikService extends Service {
             setTimeTurmtechnik(RESTART_AFTER_CRASH_SEC);
             return;
         }
-        // Nur starten, wenn wirklich 90 s kein Heartbeat: verhindert Neustart-Loop
+        // Nur starten, wenn wirklich 90 s kein Heartbeat: verhindert Neustart-Loop (Absturz-Erkennung)
         long ago = System.currentTimeMillis() - lastHeartbeatMs;
         if (ago < MIN_NO_HEARTBEAT_MS) {
             Log.d(sourceFileName, "Heartbeat vor " + (ago/1000) + " s (< 90 s), Start übersprungen");
@@ -196,6 +210,7 @@ public class StartTurmtechnikService extends Service {
             return;
         }
 
+        Log.w(sourceFileName, "Kein Heartbeat seit " + (ago/1000) + " s – starte Activity neu (Absturz-Wiederherstellung)");
         SharedPreferences prefs = getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
         boolean lastWasScreensaver = prefs.getBoolean(PREF_LAST_STARTED_SCREENSAVER, false);
         int crashCount = prefs.getInt(PREF_CLOCKSAVER_CRASH_COUNT, 0);
@@ -206,16 +221,120 @@ public class StartTurmtechnikService extends Service {
 
         if (crashCount >= CLOCKSAVER_CRASH_THRESHOLD) {
             Log.i(getPackageName(), "Clocksaver crasht zu oft (" + CLOCKSAVER_CRASH_THRESHOLD + " Crashes) - DEAKTIVIERT!");
-            intent = new Intent(this, TurmtechnikActivity.class);
-            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_REORDER_TO_FRONT | Intent.FLAG_ACTIVITY_SINGLE_TOP);
-            startActivity(intent);
+            launchTurmtechnikActivityFromBackground(this);
             return;
         }
 
-        // Haupt-Activity in den Vordergrund holen (nicht nur WebUiActivity/Schoner), damit Layout und Relais-Steuerung laufen
-        intent = new Intent(this, TurmtechnikActivity.class);
-        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_REORDER_TO_FRONT | Intent.FLAG_ACTIVITY_SINGLE_TOP);
-        startActivity(intent);
+        // Haupt-Activity in den Vordergrund holen – per Full-Screen-Intent, damit Android den Start aus dem Hintergrund erlaubt („Background activity start“)
+        launchTurmtechnikActivityFromBackground(this);
+    }
+
+    /**
+     * Startet TurmtechnikActivity aus dem Hintergrund (nach Alarm / Absturz-Wiederherstellung).
+     * Per Full-Screen-Intent-Notification, damit Android den Start erlaubt („Background activity start“).
+     * Ohne Full-Screen-Intent würde startActivity() blockiert. Beim Tippen auf die Notification öffnet sich die App ebenfalls.
+     */
+    public static void launchTurmtechnikActivityFromBackground(Context context) {
+        if (context == null) return;
+        Intent intent = new Intent(context, TurmtechnikActivity.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_REORDER_TO_FRONT | Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED);
+        if (Build.VERSION.SDK_INT >= 27) {
+            intent.addFlags(0x00080000 | 0x00200000); // SHOW_WHEN_LOCKED | TURN_SCREEN_ON
+        }
+        int flags = PendingIntent.FLAG_UPDATE_CURRENT;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            flags |= PendingIntent.FLAG_IMMUTABLE;
+        }
+        PendingIntent openPi = PendingIntent.getActivity(context, 2, intent, flags);
+        NotificationManager nm = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+        if (nm == null) return;
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                NotificationChannel ch = new NotificationChannel(CHANNEL_ID_OPEN,
+                        context.getString(R.string.app_name) + " – Start",
+                        NotificationManager.IMPORTANCE_HIGH);
+                ch.setDescription("Tippen oder Full-Screen-Intent öffnet die Turmtechnik-App");
+                nm.createNotificationChannel(ch);
+                Notification.Builder builder = new Notification.Builder(context, CHANNEL_ID_OPEN)
+                        .setContentTitle(" ")
+                        .setContentText(" ")
+                        .setSmallIcon(android.R.drawable.ic_menu_recent_history)
+                        .setContentIntent(openPi)
+                        .setAutoCancel(true)
+                        .setCategory(Notification.CATEGORY_ALARM);
+                // Full-Screen-Intent: System startet die Activity (erlaubt aus Hintergrund). Ab Android 14 nur, wenn Berechtigung erteilt.
+                boolean useFsi = true;
+                if (Build.VERSION.SDK_INT >= 34) {
+                    try {
+                        useFsi = nm.canUseFullScreenIntent();
+                    } catch (Throwable ignored) { }
+                }
+                if (useFsi) {
+                    builder.setFullScreenIntent(openPi, true);
+                }
+                nm.notify(NOTIFICATION_ID_OPEN_APP, builder.build());
+                // Fenster nach kurzer Zeit entfernen (Full-Screen-Intent ist beim Posten bereits ausgelöst)
+                final Context appContext = context.getApplicationContext();
+                new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        NotificationManager n = (NotificationManager) appContext.getSystemService(Context.NOTIFICATION_SERVICE);
+                        if (n != null) n.cancel(NOTIFICATION_ID_OPEN_APP);
+                    }
+                }, 800);
+            } else {
+                context.startActivity(intent);
+                showOpenAppNotificationLegacy(context, intent, flags);
+            }
+        } catch (Exception e) {
+            Log.w(sourceFileName, "Full-Screen-Intent/Start: " + (e != null ? e.getMessage() : ""));
+            try {
+                context.startActivity(intent);
+            } catch (Exception e2) {
+                Log.w(sourceFileName, "startActivity Fallback: " + (e2 != null ? e2.getMessage() : ""));
+            }
+            showOpenAppNotification(context, intent, flags);
+        }
+    }
+
+    /** Zeigt Notification „Tippen zum Öffnen“ (Fallback ohne Full-Screen-Intent). */
+    private static void showOpenAppNotification(Context context, Intent activityIntent, int pendingFlags) {
+        try {
+            PendingIntent openPi = PendingIntent.getActivity(context, 2, activityIntent, pendingFlags);
+            NotificationManager nm = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+            if (nm == null) return;
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                NotificationChannel ch = new NotificationChannel(CHANNEL_ID_OPEN,
+                        context.getString(R.string.app_name) + " – Start",
+                        NotificationManager.IMPORTANCE_HIGH);
+                ch.setDescription("Tippen öffnet die Turmtechnik-App");
+                nm.createNotificationChannel(ch);
+                Notification n = new Notification.Builder(context, CHANNEL_ID_OPEN)
+                        .setContentTitle(" ")
+                        .setContentText(" ")
+                        .setSmallIcon(android.R.drawable.ic_menu_recent_history)
+                        .setContentIntent(openPi)
+                        .setAutoCancel(true)
+                        .build();
+                nm.notify(NOTIFICATION_ID_OPEN_APP, n);
+                // Fenster nach kurzer Zeit entfernen
+                final Context appContext = context.getApplicationContext();
+                new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        NotificationManager nx = (NotificationManager) appContext.getSystemService(Context.NOTIFICATION_SERVICE);
+                        if (nx != null) nx.cancel(NOTIFICATION_ID_OPEN_APP);
+                    }
+                }, 800);
+            }
+        } catch (Exception e) {
+            Log.w(sourceFileName, "Open-App-Notification: " + (e != null ? e.getMessage() : ""));
+        }
+    }
+
+    /** Notification ohne Full-Screen für API < 26. */
+    private static void showOpenAppNotificationLegacy(Context context, Intent activityIntent, int pendingFlags) {
+        showOpenAppNotification(context, activityIntent, pendingFlags);
     }
 
     private class RestartTurmtechnik extends Thread {
@@ -348,8 +467,6 @@ public class StartTurmtechnikService extends Service {
 
     @SuppressWarnings("deprecation")
     private Notification buildServiceNotification() {
-        String title = getString(R.string.app_name);
-        String text = "Kirchturmtechnik – Service aktiv";
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             NotificationChannel channel = new NotificationChannel(
                     CHANNEL_ID,
@@ -359,15 +476,15 @@ public class StartTurmtechnikService extends Service {
             NotificationManager nm = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
             if (nm != null) nm.createNotificationChannel(channel);
             return new Notification.Builder(this, CHANNEL_ID)
-                    .setContentTitle(title)
-                    .setContentText(text)
+                    .setContentTitle(" ")
+                    .setContentText(" ")
                     .setSmallIcon(android.R.drawable.ic_menu_recent_history)
                     .setOngoing(true)
                     .build();
         } else {
             return new Notification.Builder(this)
-                    .setContentTitle(title)
-                    .setContentText(text)
+                    .setContentTitle(" ")
+                    .setContentText(" ")
                     .setSmallIcon(android.R.drawable.ic_menu_recent_history)
                     .setOngoing(true)
                     .build();
