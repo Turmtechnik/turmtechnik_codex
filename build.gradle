@@ -84,13 +84,12 @@ android
                 // Enabling multidex support.
                 multiDexEnabled true
                 
-                // Automatische Versionserhöhung basierend auf Build-Timestamp
-                // versionCode wird automatisch bei jedem Build erhöht (Sekunden seit 2020-01-01)
-                def buildTime = (int) ((System.currentTimeMillis() / 1000) - 1577836800) // 2020-01-01 00:00:00 UTC
-                versionCode buildTime
-                // Version inkl. Datum und Uhrzeit (ST:min) für bessere Nachverfolgbarkeit
-                def buildDate = new Date().format('dd.MM.yy HH:mm')
-                versionName "40.0 " + buildDate
+                // Versionsschema: Datum + Uhrzeit (Std:Min) für versionName,
+                // versionCode bleibt ein eindeutiger Android-kompatibler Zahlenwert.
+                def buildTime = new Date()
+                def buildVersionCode = Integer.parseInt(buildTime.format('yyDDDHHmm'))
+                versionCode buildVersionCode
+                versionName buildTime.format('dd.MM.yy HH:mm')
             }
 
 
