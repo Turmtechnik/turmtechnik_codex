@@ -33,7 +33,6 @@ public class SetNebenuhrLayout {
 
     public int[] nebenuhrStunde = new int[4]; // { 0,0,0,0 } ; A, B, C, D
     public int[] nebenuhrMinute = new int[4]; // { 0,0,0,0 } ; A, B, C, D
-    public Boolean[] flag_24 = new Boolean[4]; // Altbestand, aktuell immer false
 
     private FrameLayout framelayout;
     private DigitalClock digitalClock;
@@ -91,10 +90,9 @@ public class SetNebenuhrLayout {
         nebenuhrMinute[1] = StaticVariable.uhrB_angezeigteZeit % 60;
         nebenuhrMinute[2] = StaticVariable.uhrC_angezeigteZeit % 60;
         
-        // Monduhr D: Mondphase (0-59) - keine Stunden/Minuten, sondern Mondphase
-        // Für Anzeige: Mondphase als "Phase X" anzeigen
-        nebenuhrStunde[3] = StaticVariable.uhrD_mondphaseIst; // Mondphase als "Stunde" speichern (für Anzeige)
-        nebenuhrMinute[3] = 0; // Nicht verwendet für Monduhr
+        // Monduhr D: aktueller Impulswert des konfigurierten Mondzyklus
+        nebenuhrStunde[3] = StaticVariable.uhrD_mondphaseIst; // Für die Anzeige im D-Button wiederverwendet
+        nebenuhrMinute[3] = 0; // Für Monduhr D nicht verwendet
     }
 
     private void initHomeButton() {
@@ -345,8 +343,6 @@ public class SetNebenuhrLayout {
             for (PlatinenDatabaseHelper.NebenuhrConfig config : nebenuhren) {
                 if (nebenUhrCount < uhrName.length && nebenUhrCount < 4) {
                     // Immer 12-Stunden-Modus für A, B, C
-                    // Monduhr D hat keinen 12/24-Modus
-                        flag_24[nebenUhrCount] = false; // Auch für Monduhr D false (nicht verwendet)
                     uhrName[nebenUhrCount] = (config.uhrNameDisplay != null) ? config.uhrNameDisplay : config.uhrName;
                     nebenUhrCount++;
                 }

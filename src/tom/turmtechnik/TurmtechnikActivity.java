@@ -3827,12 +3827,6 @@ public class TurmtechnikActivity extends Activity {
         return nebenuhrStatus;
     }
 
-    /** Aktuelle Echtzeit in Minuten (24h, 0–1439). */
-    private static int getCurrentCalendarMinuten24() {
-        Calendar cal = Calendar.getInstance();
-        return cal.get(Calendar.HOUR_OF_DAY) * 60 + cal.get(Calendar.MINUTE);
-    }
-
     /** Aktuelle Echtzeit in Minuten (12h, 0–719). */
     private static int getCurrentCalendarMinuten12() {
         Calendar cal = Calendar.getInstance();
@@ -7256,61 +7250,42 @@ public class TurmtechnikActivity extends Activity {
             }
         }
 
-        // 28.11.16  Sprachdatei.xls eingebaut
+        // Sprachtexte jetzt aus der DB laden; Sprachdatei.xls bleibt nur noch Importquelle
         if (file_ok == true)
         {
-            file_ok = false;
-            String sprachdateiPathAndFileName = (TurmtechnikActivity.sdCardPath + "/Turmtechnik/Grafiken/Sprachdatei.xls");
-            checkfile = new File(sprachdateiPathAndFileName);
-            if (checkfile.exists())
+            try
             {
-                Log.e("check", "Sprachdatei.xls vorhanden");
-                file_ok = true;
+                PlatinenDatabaseHelper dbHelper = PlatinenDatabaseHelper.getInstance(TurmtechnikActivity.turmtechnikContext);
+                ArrayList<String> texte = new ArrayList<>(dbHelper.getAlleUebersetzungen());
+                String sprachdateiPathAndFileName = (TurmtechnikActivity.sdCardPath + "/Turmtechnik/Grafiken/Sprachdatei.xls");
+                checkfile = new File(sprachdateiPathAndFileName);
 
-                ExcelRead excelread = new ExcelRead();
-                Log.e("load", "Sprachdatei=" + sprachdateiPathAndFileName);
-                try
+                if (texte.isEmpty() && checkfile.exists())
                 {
-                    excelread.openXls(sprachdateiPathAndFileName);
-
-                    StaticVariable.uebersetzteTexte = new ArrayList<>();
-
-                    int zeilenAnzahl = excelread.getCellZeilen();
-
-                    // Schleife: i geht von 0 bis zeilenAnzahl-1, aber wir lesen Zeile (i+2)
-                    // Daher muss (i+2) < zeilenAnzahl sein, also i < zeilenAnzahl-2
-                    for (int i = 0; i < zeilenAnzahl - 2 && (i + 2) < zeilenAnzahl; i++)
-                    {
-                        String loadTempString = excelread.getCellString(1, (i + 2));
-                        Log.e("loadTexte", "=" + loadTempString);
-                        StaticVariable.uebersetzteTexte.add(loadTempString);
+                    int imported = dbHelper.importSprachdateiFromExcel(sprachdateiPathAndFileName);
+                    if (imported > 0) {
+                        texte = new ArrayList<>(dbHelper.getAlleUebersetzungen());
+                        Log.i(sourceFileName, "Sprachdatei.xls einmalig in DB importiert: " + imported + " Texte");
                     }
-
-                } catch (BiffException e1)
-                {
-                    // TODO Auto-generated catch block
-                    e1.printStackTrace();
-                    Log.e("Biff", "error");
-                    new LogExcelError(0, 0, sprachdateiPathAndFileName, -1, sourceFileName, 5130);
-
-                } catch (IOException e1)
-                {
-                    // TODO Auto-generated catch block
-                    e1.printStackTrace();
-                    Log.e("IO", "error");
-                } catch (Exception e)
-                {
-                    e.printStackTrace();
                 }
 
-
+                if (!texte.isEmpty())
+                {
+                    StaticVariable.uebersetzteTexte = texte;
+                    UIState.uebersetzteTexte = new ArrayList<>(texte);
+                }
+                else
+                {
+                    StaticVariable.uebersetzteTexte = null;
+                    UIState.uebersetzteTexte = null;
+                    Log.w(sourceFileName, "Keine Sprachtexte in DB vorhanden - verwende Fallbacks");
+                }
             }
-            else
+            catch (Exception e)
             {
-                file_ok = false;
-                Log.e("check", "Sprachdatei nicht vorhanden");
-                printInfo("\n\n\"" + sprachdateiPathAndFileName
-                        + "\" \n\n   nicht vorhanden \n\n");
+                StaticVariable.uebersetzteTexte = null;
+                UIState.uebersetzteTexte = null;
+                Log.e(sourceFileName, "Fehler beim Laden der Sprachtexte aus DB", e);
             }
         }
 

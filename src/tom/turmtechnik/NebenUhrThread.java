@@ -25,7 +25,6 @@ public class NebenUhrThread extends Thread {
     private PlatinenDatabaseHelper.NebenuhrConfig nebenuhrD_config;
 
     private int minutenSave;
-    private int stunden_24_save;
     private int stunden_12_save;
 
     public void run() {
@@ -33,7 +32,6 @@ public class NebenUhrThread extends Thread {
 
         calendar = Calendar.getInstance();
         minutenSave = calendar.get(Calendar.MINUTE);
-        stunden_24_save = calendar.get(Calendar.HOUR_OF_DAY);
         stunden_12_save = calendar.get(Calendar.HOUR);
 
         // Lade Konfigurationen aus Datenbank
@@ -264,12 +262,7 @@ public class NebenUhrThread extends Thread {
         }
     }
 
-    /** 24h (0–1439) für Nebenuhren A, B, C. */
-    private int getCalendarMinuten24() {
-        return (stunden_24_save * 60) + minutenSave;
-    }
-
-    /** 12h (0–719) für Monduhr D. */
+    /** 12h-Minuten (0–719) für Nebenuhren A, B, C. */
     private int getCalendarMinuten() {
         return (stunden_12_save * 60) + minutenSave;
     }
@@ -363,19 +356,17 @@ public class NebenUhrThread extends Thread {
         return differenz;
     }
 
-    /** 12h: max 719, 24h: max 1439. Erkennt automatisch anhand der Werte. */
+    /** 12h: max 719. */
     private int uhrMinutenWarten(int angezeigteZeit, int momentaneZeit) // gibt minuten zurueck
     {
         int differenz = 0;
-        final int max12 = 719;
-        final int max24 = 1439;
-        int maxMin = (momentaneZeit > max12 || angezeigteZeit > max12) ? max24 : max12;
+        final int maxMin = 719;
 
         if (angezeigteZeit > maxMin) {
-            angezeigteZeit = angezeigteZeit - (maxMin == max12 ? 720 : 1440); // nachmittag auf vormittag / 24h wrap
+            angezeigteZeit = angezeigteZeit - 720;
         }
         if (momentaneZeit > maxMin) {
-            momentaneZeit = momentaneZeit - (maxMin == max12 ? 720 : 1440);
+            momentaneZeit = momentaneZeit - 720;
         }
 
         Log.e("warte/uhrMinutenWarten", "angezeigt=" + angezeigteZeit + " momentan=" + momentaneZeit + " max=" + maxMin);
@@ -392,19 +383,17 @@ public class NebenUhrThread extends Thread {
         return differenz;
     }
 
-    /** 12h: max 719, 24h: max 1439. Erkennt automatisch anhand der Werte. */
+    /** 12h: max 719. */
     private int uhrTakte(int angezeigteZeit, int momentaneZeit) // gibt minuten zurueck
     {
         int differenz = 0;
-        final int max12 = 719;
-        final int max24 = 1439;
-        int maxMin = (momentaneZeit > max12 || angezeigteZeit > max12) ? max24 : max12;
+        final int maxMin = 719;
 
         if (momentaneZeit > maxMin) {
-            momentaneZeit = momentaneZeit - (maxMin == max12 ? 720 : 1440);
+            momentaneZeit = momentaneZeit - 720;
         }
         if (angezeigteZeit > maxMin) {
-            angezeigteZeit = angezeigteZeit - (maxMin == max12 ? 720 : 1440);
+            angezeigteZeit = angezeigteZeit - 720;
         }
 
         while (angezeigteZeit != momentaneZeit) {

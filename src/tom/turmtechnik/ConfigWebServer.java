@@ -566,6 +566,10 @@ public class ConfigWebServer {
         if (uri.equals(API_PREFIX + "/import/system-excel") && "POST".equals(method)) {
             return handleImportSystemExcel();
         }
+        // /api/import/sprachdatei-excel - Sprachdatei.xls in DB importieren
+        if (uri.equals(API_PREFIX + "/import/sprachdatei-excel") && "POST".equals(method)) {
+            return handleImportSprachdateiExcel();
+        }
         // /api/import/tagtypen-programme - Tagtypen und Programme aus Programmtage/*.xls importieren
         if (uri.equals(API_PREFIX + "/import/tagtypen-programme") && "POST".equals(method)) {
             return handleImportTagtypenProgrammeFromExcel();
@@ -1078,6 +1082,27 @@ public class ConfigWebServer {
             return new SimpleHttpServer.HttpResponse(200, "application/json", json);
         } catch (Exception e) {
             Log.e(TAG, "Fehler beim Import System.xls", e);
+            String errorJson = "{\"success\":false,\"error\":\"" + e.getMessage() + "\"}";
+            return new SimpleHttpServer.HttpResponse(500, "application/json", errorJson);
+        }
+    }
+
+    private SimpleHttpServer.HttpResponse handleImportSprachdateiExcel() {
+        try {
+            PlatinenDatabaseHelper dbHelper = PlatinenDatabaseHelper.getInstance(context);
+            String excelPath = TurmtechnikActivity.sdCardPath + "/Turmtechnik/Grafiken/Sprachdatei.xls";
+            int count = dbHelper.importSprachdateiFromExcel(excelPath);
+            if (count <= 0) {
+                String errorJson = "{\"success\":false,\"error\":\"Sprachdatei.xls konnte nicht importiert werden\"}";
+                return new SimpleHttpServer.HttpResponse(400, "application/json", errorJson);
+            }
+            ArrayList<String> texte = new ArrayList<>(dbHelper.getAlleUebersetzungen());
+            StaticVariable.uebersetzteTexte = texte.isEmpty() ? null : texte;
+            UIState.uebersetzteTexte = texte.isEmpty() ? null : new ArrayList<>(texte);
+            String json = "{\"success\":true,\"message\":\"Sprachdatei.xls importiert (" + count + " Texte)\"}";
+            return new SimpleHttpServer.HttpResponse(200, "application/json", json);
+        } catch (Exception e) {
+            Log.e(TAG, "Fehler beim Import Sprachdatei.xls", e);
             String errorJson = "{\"success\":false,\"error\":\"" + e.getMessage() + "\"}";
             return new SimpleHttpServer.HttpResponse(500, "application/json", errorJson);
         }
@@ -3326,7 +3351,7 @@ public class ConfigWebServer {
         return null;
     }
 
-    /** GET /api/mondphase-aktuell – aktuelle astronomische Mondphase (0–59) für Bildschirmschoner, gleiche Formel wie NebenUhrD_thread. */
+    /** GET /api/mondphase-aktuell – aktuelle astronomische Mondphase als Impulswert im konfigurierten Mondzyklus. */
     private static final long MOND_REFERENZ_NEUMOND_MS = 1735603200000L;
     private static final double MOND_SYNODISCHER_MONAT_TAGE = 29.530588;
     private SimpleHttpServer.HttpResponse handleGetMondphaseAktuell() {
@@ -5369,6 +5394,11 @@ public class ConfigWebServer {
                 "            <button type=\"button\" class=\"btn btn-warning\" id=\"btnImportSystem\">Aus System.xls importieren</button>\n" +
                 "        </div>\n" +
                 "        <div class=\"imp-card\">\n" +
+                "            <h3>Sprachdatei</h3>\n" +
+                "            <p>Sprachdatei.xls aus Turmtechnik/Grafiken in die Datenbank übernehmen. Im Normalbetrieb werden Übersetzungen danach nur noch aus der DB geladen.</p>\n" +
+                "            <button type=\"button\" class=\"btn btn-warning\" id=\"btnImportSprachdatei\">Sprachdatei.xls importieren</button>\n" +
+                "        </div>\n" +
+                "        <div class=\"imp-card\">\n" +
                 "            <h3>Tagtypen &amp; Programmtage</h3>\n" +
                 "            <p>Alle .xls-Dateien aus dem Ordner Turmtechnik/Programmtage (Normalprogramm, Feiertage usw.) in die Datenbank übernehmen.</p>\n" +
                 "            <button type=\"button\" class=\"btn btn-warning\" id=\"btnImportTagtypen\">Tagtypen und Programme importieren</button>\n" +
@@ -5422,6 +5452,7 @@ public class ConfigWebServer {
                 "                .finally(function(){ if (btn) btn.disabled = false; });\n" +
                 "        }\n" +
                 "        document.getElementById('btnImportSystem').onclick = function(){ apiPost('/api/import/system-excel', 'btnImportSystem'); };\n" +
+                "        document.getElementById('btnImportSprachdatei').onclick = function(){ apiPost('/api/import/sprachdatei-excel', 'btnImportSprachdatei'); };\n" +
                 "        document.getElementById('btnImportTagtypen').onclick = function(){ apiPost('/api/import/tagtypen-programme', 'btnImportTagtypen'); };\n" +
                 "        document.getElementById('btnImportVorschwingen').onclick = function(){ apiPost('/api/vorschwingen/migrate', 'btnImportVorschwingen'); };\n" +
                 "        document.getElementById('btnImportBeschriftungDevice').onclick = function(){ apiPost('/api/beschriftung-tasten/import-from-device', 'btnImportBeschriftungDevice'); };\n" +
@@ -5871,7 +5902,7 @@ public class ConfigWebServer {
                         "                        ${(nebenuhr.modus === 'MOND' || nebenuhr.zeile === 6) ? `\n" +
                         "                        <div class=\"row\">\n" +
                         "                            <div class=\"col-md-6 mb-3\">\n" +
-                        "                                <label class=\"form-label\">Mondphase Ist:</label>\n" +
+                        "                                <label class=\"form-label\">Aktueller Impulswert:</label>\n" +
                         "                                <input type=\"number\" class=\"form-control\" id=\"mondphaseIst_${index}\" value=\"${nebenuhr.mondphaseIst || 0}\" min=\"0\" max=\"${Math.max(0, (nebenuhr.mondImpulseProPhase || 60) - 1)}\" step=\"1\" readonly>\n" +
                         "                                <small class=\"form-text text-muted\">Wird automatisch aktualisiert</small>\n" +
                         "                            </div>\n" +
@@ -5917,7 +5948,7 @@ public class ConfigWebServer {
                 "            nebenuhr.modus = (modusEl ? modusEl.value : document.getElementById(`modus_${index}`).value) || '12';\n" +
                 "            nebenuhr.aktiv = document.getElementById(`aktiv_${index}`).checked;\n" +
                 "            \n" +
-                "            // Für Monduhr D: Mondphase Ist\n" +
+                "            // Für Monduhr D: aktueller Impulswert und Zykluslänge\n" +
                 "            if ((nebenuhr.modus === 'MOND' || nebenuhr.zeile === 6) && document.getElementById(`mondphaseIst_${index}`)) {\n" +
                 "                nebenuhr.mondphaseIst = parseInt(document.getElementById(`mondphaseIst_${index}`).value) || 0;\n" +
                 "                nebenuhr.mondImpulseProPhase = parseInt(document.getElementById(`mondImpulseProPhase_${index}`).value) || 60;\n" +
@@ -5993,7 +6024,7 @@ public class ConfigWebServer {
                 "                nebenuhr.modus = (modusElI ? modusElI.value : document.getElementById(`modus_${i}`).value) || '12';\n" +
                 "                nebenuhr.aktiv = document.getElementById(`aktiv_${i}`).checked;\n" +
                 "                \n" +
-                "                // Für Monduhr D: Mondphase Ist\n" +
+                "                // Für Monduhr D: aktueller Impulswert und Zykluslänge\n" +
                 "                if ((nebenuhr.modus === 'MOND' || nebenuhr.zeile === 6) && document.getElementById(`mondphaseIst_${i}`)) {\n" +
                 "                    nebenuhr.mondphaseIst = parseInt(document.getElementById(`mondphaseIst_${i}`).value) || 0;\n" +
                 "                    nebenuhr.mondImpulseProPhase = parseInt(document.getElementById(`mondImpulseProPhase_${i}`).value) || 60;\n" +
@@ -6167,7 +6198,8 @@ public class ConfigWebServer {
                 "            if (currentModalZeile.isMond) {\n" +
                 "                const phase = n.mondphaseIst != null ? n.mondphaseIst : 0;\n" +
                 "                titleEl.textContent = 'Monduhr Phase einstellen';\n" +
-                "                bodyEl.innerHTML = '<p>Phase (0–59):</p><canvas id=\"modal_moon\" width=\"240\" height=\"240\" style=\"display:block;margin:0 auto 1rem;border-radius:50%;background:#1a1a1a;\"></canvas><p id=\"modal_phase_label\">Impuls: ' + phase + '</p><input type=\"range\" class=\"form-range\" id=\"modal_phase\" min=\"0\" max=\"59\" value=\"' + phase + '\">';\n" +
+                "                const maxImpulse = Math.max(0, (n.mondImpulseProPhase || 60) - 1);\n" +
+                "                bodyEl.innerHTML = '<p>Impulswert (0–' + maxImpulse + '):</p><canvas id=\"modal_moon\" width=\"240\" height=\"240\" style=\"display:block;margin:0 auto 1rem;border-radius:50%;background:#1a1a1a;\"></canvas><p id=\"modal_phase_label\">Impuls: ' + phase + '</p><input type=\"range\" class=\"form-range\" id=\"modal_phase\" min=\"0\" max=\"' + maxImpulse + '\" value=\"' + phase + '\">';\n" +
                 "                modal.show();\n" +
                 "                setTimeout(function(){ drawMoon('modal_moon', phase); }, 100);\n" +
                 "                document.getElementById('modal_phase').oninput = function(){ var v = this.value; document.getElementById('modal_phase_label').textContent = 'Impuls: ' + v; drawMoon('modal_moon', parseInt(v,10)); };\n" +
@@ -9735,7 +9767,8 @@ public class ConfigWebServer {
 
     /**
      * POST /api/nebenuhr-stellen/confirm – Nebenuhr-Zeit setzen und Uhr wieder laufen lassen.
-     * Body A/B/C: { "zeile": 3|4|5, "stunde": 14, "minute": 30 } (24h). Body D: { "zeile": 6, "mondphase": 0..59 }.
+     * Body A/B/C: { "zeile": 3|4|5, "stunde": 0..23, "minute": 0..59 } wird intern auf 12h gespeichert.
+     * Body D: { "zeile": 6, "mondphase": 0..N }.
      */
     private SimpleHttpServer.HttpResponse handleNebenuhrStellenConfirm(SimpleHttpServer.HttpRequest request) {
         try {
@@ -10207,7 +10240,7 @@ public class ConfigWebServer {
                                      (aktivObj.toString().equals("true") || aktivObj.toString().equals("1"));
                 }
                 
-                // Angezeigte Zeit (Minuten seit Mitternacht, 0–1439) – für Layout/Anzeige
+                // Angezeigte Zeit (12h-Minuten, 0–719) – für Layout/Anzeige
                 Object angezeigteZeitObj = nebenuhrMap.get("angezeigteZeit");
                 if (angezeigteZeitObj != null) {
                     try {
@@ -10216,7 +10249,7 @@ public class ConfigWebServer {
                     } catch (Exception ignored) { }
                 }
                 
-                // Mondphase Ist (nur für Monduhr D, nur wenn gesendet)
+                // Aktueller Impulswert (nur für Monduhr D, nur wenn gesendet)
                 Object mondphaseIstObj = nebenuhrMap.get("mondphaseIst");
                 if (mondphaseIstObj != null && ("MOND".equals(nebenuhr.modus) || zeile == 6)) {
                     int mondImpulseProPhase = dbHelper.getMondImpulseProPhase();

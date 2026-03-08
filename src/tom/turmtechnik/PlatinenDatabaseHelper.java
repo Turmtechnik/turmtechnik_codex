@@ -71,7 +71,7 @@ public class PlatinenDatabaseHelper extends SQLiteOpenHelper {
         "uhr_name_display TEXT, " +                      // Anzeige-Name
         "modus TEXT DEFAULT '12', " +                    // "12" oder "MOND"
         "angezeigte_zeit INTEGER DEFAULT 0, " +          // Aktuelle angezeigte Zeit (12h-Minuten, 0-719)
-        "mondphase_ist INTEGER DEFAULT 0, " +            // Aktuelle Mondphase (0-59) für Monduhr D
+        "mondphase_ist INTEGER DEFAULT 0, " +            // Aktueller Impulswert im Mondzyklus für Monduhr D
         "last_relais_a INTEGER DEFAULT 0, " +            // Letztes verwendetes Relais (1=A, 0=B) für Wechselschaltung
         "aktiv INTEGER DEFAULT 1, " +                    // Aktiv-Status (1=aktiv, 0=inaktiv)
         "impuls_ausstehend INTEGER DEFAULT 0, " +         // 1 = Wert vor Impuls gespeichert, Impuls noch nicht durch → beim Laden 1 zurück
@@ -1628,6 +1628,103 @@ public class PlatinenDatabaseHelper extends SQLiteOpenHelper {
         }
     }
 
+    private static final String KEY_UEBERSETZUNG_PREFIX = "uebersetzung_";
+    private static final String KEY_UEBERSETZUNG_COUNT = "uebersetzung_count";
+
+    private static String getUebersetzungKey(int index) {
+        return String.format(java.util.Locale.US, "%s%05d", KEY_UEBERSETZUNG_PREFIX, index);
+    }
+
+    public List<String> getAlleUebersetzungen() {
+        List<String> texte = new ArrayList<>();
+        SQLiteDatabase db = getReadableDatabase();
+        Cursor cursor = db.query(TABLE_IO_CONFIG,
+            new String[]{"key", "value"},
+            "key LIKE ?",
+            new String[]{KEY_UEBERSETZUNG_PREFIX + "%"},
+            null, null,
+            "key ASC");
+        try {
+            while (cursor.moveToNext()) {
+                texte.add(cursor.isNull(1) ? "" : cursor.getString(1));
+            }
+        } finally {
+            cursor.close();
+        }
+        return texte;
+    }
+
+    public void saveUebersetzungen(List<String> texte) {
+        SQLiteDatabase db = getWritableDatabase();
+        db.beginTransaction();
+        try {
+            db.delete(TABLE_IO_CONFIG, "key LIKE ? OR key = ?", new String[]{KEY_UEBERSETZUNG_PREFIX + "%", KEY_UEBERSETZUNG_COUNT});
+
+            if (texte != null) {
+                String timestamp = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss", java.util.Locale.US).format(new java.util.Date());
+                for (int i = 0; i < texte.size(); i++) {
+                    android.content.ContentValues values = new android.content.ContentValues();
+                    values.put("key", getUebersetzungKey(i));
+                    values.put("value", texte.get(i) != null ? texte.get(i) : "");
+                    values.put("updated_at", timestamp);
+                    db.insert(TABLE_IO_CONFIG, null, values);
+                }
+                android.content.ContentValues countValues = new android.content.ContentValues();
+                countValues.put("key", KEY_UEBERSETZUNG_COUNT);
+                countValues.put("value", String.valueOf(texte.size()));
+                countValues.put("updated_at", timestamp);
+                db.insert(TABLE_IO_CONFIG, null, countValues);
+            }
+
+            db.setTransactionSuccessful();
+            Log.d(TAG, "Übersetzungen gespeichert: " + (texte != null ? texte.size() : 0));
+        } finally {
+            db.endTransaction();
+        }
+    }
+
+    public int importSprachdateiFromExcel(String excelPath) {
+        if (excelPath == null || excelPath.trim().isEmpty()) return 0;
+        ExcelRead excelread = new ExcelRead();
+        try {
+            excelread.openXls(excelPath.trim());
+        } catch (Exception e) {
+            Log.e(TAG, "Sprachdatei Excel öffnen fehlgeschlagen: " + excelPath, e);
+            return 0;
+        }
+
+        try {
+            int zeilenAnzahl = excelread.getCellZeilen();
+            List<String> texte = new ArrayList<>();
+            for (int i = 0; i < zeilenAnzahl - 2 && (i + 2) < zeilenAnzahl; i++) {
+                String text = excelread.getCellString(1, i + 2);
+                texte.add(text != null ? text : "");
+            }
+            if (texte.isEmpty()) {
+                Log.w(TAG, "Sprachdatei Excel ohne importierbare Texte: " + excelPath);
+                return 0;
+            }
+            saveUebersetzungen(texte);
+            Log.d(TAG, "Sprachdatei aus Excel importiert: " + texte.size() + " Texte");
+            return texte.size();
+        } catch (jxl.read.biff.BiffException e) {
+            Log.e(TAG, "BiffException beim Importieren der Sprachdatei: " + excelPath, e);
+            return 0;
+        } catch (java.io.IOException e) {
+            Log.e(TAG, "IOException beim Importieren der Sprachdatei: " + excelPath, e);
+            return 0;
+        } catch (Exception e) {
+            Log.e(TAG, "Fehler beim Importieren der Sprachdatei: " + excelPath, e);
+            return 0;
+        } finally {
+            try {
+                excelread.closeWorkbook();
+            } catch (Exception e) {
+                Log.w(TAG, "Sprachdatei closeWorkbook", e);
+            }
+        }
+    }
+
     public static final String KEY_MOND_IMPULSE_PRO_PHASE = "mond_impulse_pro_phase";
     public static final int DEFAULT_MOND_IMPULSE_PRO_PHASE = 60;
 
@@ -2407,7 +2504,7 @@ public class PlatinenDatabaseHelper extends SQLiteOpenHelper {
         public String uhrNameDisplay;   // Anzeige-Name
         public String modus;            // "12" oder "MOND"
         public int angezeigteZeit;      // Aktuelle angezeigte Zeit (12h-Minuten, 0-719)
-        public int mondphaseIst;        // Aktuelle Mondphase (0-59) für Monduhr D
+        public int mondphaseIst;        // Aktueller Impulswert im Mondzyklus für Monduhr D
         public boolean lastRelaisA;     // Letztes verwendetes Relais (true=A, false=B) für Wechselschaltung
         public boolean aktiv;           // Aktiv-Status (true=aktiv, false=inaktiv)
         /** true = angezeigteZeit wurde vor Impuls gespeichert, Impuls ist noch nicht durch (Absturzfall). Beim Laden dann angezeigteZeit − 1 verwenden. */

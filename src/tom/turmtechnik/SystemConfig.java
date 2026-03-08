@@ -43,12 +43,6 @@ public class SystemConfig {
 
     // Übersetzungs-Hilfsmethode (von StaticVariable übernommen)
     public static String getUebersetzung(int index) {
-        String retString;
-        if (index >= UIState.uebersetzteTexte.size()) {
-            retString = " x " + index + " ? ";
-        } else {
-            retString = UIState.uebersetzteTexte.get(index);
-        }
-        return retString;
+        return StaticVariable.getUebersetzung(index);
     }
 }

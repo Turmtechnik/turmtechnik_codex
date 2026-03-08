@@ -447,24 +447,24 @@ public class Seite1Layout {
         printMondAnzeige();
     }
 
-    /** Referenz-Neumond (1.1.2025 00:00 UTC) und synodischer Monat – für aktuelle Mondphase wenn keine Monduhr aktiv. */
+    /** Referenz-Neumond und synodischer Monat für die berechnete Mondphase ohne aktive Monduhr. */
     private static final long MOND_REFERENZ_NEUMOND_MS = 1735603200000L;
     private static final double MOND_SYNODISCHER_MONAT_TAGE = 29.530588;
-    private static final int MOND_IMPULSE_PRO_PHASE = 60;
 
-    /** Liefert die aktuelle astronomische Mondphase (0–59), gleiche Formel wie API mondphase-aktuell. */
+    /** Liefert die aktuelle astronomische Mondphase als Impulswert im konfigurierten Mondzyklus. */
     private static int getCurrentMoonPhase() {
         try {
+            int impulseProPhase = PlatinenDatabaseHelper.getInstance(staticContext).getMondImpulseProPhase();
             long nowMs = Calendar.getInstance().getTimeInMillis();
             long diffMs = nowMs - MOND_REFERENZ_NEUMOND_MS;
             double tageSeitNeumond = diffMs / (1000.0 * 60.0 * 60.0 * 24.0);
             while (tageSeitNeumond < 0) tageSeitNeumond += MOND_SYNODISCHER_MONAT_TAGE;
             tageSeitNeumond = tageSeitNeumond % MOND_SYNODISCHER_MONAT_TAGE;
-            double mondphase = (tageSeitNeumond / MOND_SYNODISCHER_MONAT_TAGE) * MOND_IMPULSE_PRO_PHASE;
-            mondphase = mondphase % MOND_IMPULSE_PRO_PHASE;
-            if (mondphase < 0) mondphase += MOND_IMPULSE_PRO_PHASE;
+            double mondphase = (tageSeitNeumond / MOND_SYNODISCHER_MONAT_TAGE) * impulseProPhase;
+            mondphase = mondphase % impulseProPhase;
+            if (mondphase < 0) mondphase += impulseProPhase;
             int phase = (int) Math.round(mondphase);
-            if (phase >= MOND_IMPULSE_PRO_PHASE) phase = 0;
+            if (phase >= impulseProPhase) phase = 0;
             return phase;
         } catch (Exception e) {
             return 0;
@@ -510,8 +510,8 @@ public class Seite1Layout {
     }
     
     /**
-     * Zeichnet die Mondphase auf einem Canvas/Bitmap basierend auf Impulsen (0-59)
-     * Gleiche Logik wie im Schieberegler-Dialog für konsistente Darstellung
+     * Zeichnet die Mondphase auf einem Canvas/Bitmap basierend auf dem konfigurierten Impulsbereich.
+     * Gleiche Logik wie im Schieberegler-Dialog für konsistente Darstellung.
      */
     private static void drawMoonOnCanvas(int impulse) {
         if (mondAnzeige == null) {
@@ -519,9 +519,8 @@ public class Seite1Layout {
         }
         
         try {
-            // Normalisiere Impuls auf 0-59 Bereich
-            impulse = impulse % 60;
-            if (impulse < 0) impulse += 60;
+            int impulseProPhase = PlatinenDatabaseHelper.getInstance(staticContext).getMondImpulseProPhase();
+            impulse = PlatinenDatabaseHelper.normalizeMondphase(impulse, impulseProPhase);
             
             int width = mondAnzeige.getWidth();
             int height = mondAnzeige.getHeight();
@@ -547,17 +546,8 @@ public class Seite1Layout {
             canvas.drawCircle(cx, cy, r, darkPaint);
             
             // 2. Berechnung der Phase
-            // Impulse 0-59: 0 = Neumond, 30 = Vollmond, 59 = fast Neumond
             // Phase von 0 (Neumond, alles dunkel) bis 1 (Vollmond, alles hell)
-            double phase;
-            if (impulse <= 30) {
-                // Zunehmend: 0-30 -> 0 bis 1 (Neumond bis Vollmond)
-                phase = impulse / 30.0;
-            } else {
-                // Abnehmend: 30-59 -> 1 bis 0 (Vollmond bis Neumond)
-                phase = 1.0 - ((impulse - 30) / 30.0);
-                if (phase < 0) phase = 0;
-            }
+            double phase = getMondPhaseRatio(impulse, impulseProPhase);
             
             // 3. Zeichnen der beleuchteten Fläche (gleiche Logik wie im Schieberegler-Dialog)
             android.graphics.Paint lightPaint = new android.graphics.Paint();
@@ -575,7 +565,7 @@ public class Seite1Layout {
                 int xLeft = cx - (int)y;
                 int xRight = cx + (int)y;
                 
-                if (impulse <= 30) {
+                if (impulse <= (impulseProPhase / 2.0)) {
                     // Zunehmend: Von rechts nach links hell werden
                     // Phase 0 = Neumond (alles dunkel), Phase 1 = Vollmond (alles hell)
                     int xLightEdge = xRight - (int)((xRight - xLeft) * phase);
@@ -606,6 +596,19 @@ public class Seite1Layout {
     /**
      * Alte Methode für Kompatibilität - ruft printMondAnzeige() auf
      */
+    private static double getMondPhaseRatio(int impulse, int impulseProPhase) {
+        int normalizedImpulseCount = PlatinenDatabaseHelper.normalizeMondImpulseProPhase(impulseProPhase);
+        double halbzyklus = normalizedImpulseCount / 2.0;
+        if (halbzyklus <= 0.0) {
+            return 0.0;
+        }
+        if (impulse <= halbzyklus) {
+            return impulse / halbzyklus;
+        }
+        double phase = 1.0 - ((impulse - halbzyklus) / halbzyklus);
+        return phase < 0.0 ? 0.0 : phase;
+    }
+
     public static void updateMondAnzeige() {
         printMondAnzeige();
     }

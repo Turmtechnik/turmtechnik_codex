@@ -215,11 +215,11 @@ public class StaticVariable
     public static int uhrC_angezeigteZeit = 0;
     public static boolean uhrC_doRun;
     public static boolean uhrC_lastRelaisA = false; // true = letztes Relais war A, false = letztes Relais war B
-    // Monduhr D (12h-Modus: calendarZeit/angezeigteZeit 0–719; Monduhr-Modus: mondphaseSoll/mondphaseIst)
-    public static int uhrD_calendarZeit = 0;      // System-Zeit in Minuten (0–719) – nur für Modus "12"
-    public static int uhrD_angezeigteZeit = 0;   // Angezeigte Zeit in Minuten (0–719) – nur für Modus "12"
-    public static int uhrD_mondphaseSoll = 0;    // Soll-Mondphase (0-59)
-    public static int uhrD_mondphaseIst = 0;      // Ist-Mondphase (0-59)
+    // Monduhr D: historische 12h-Felder bleiben für Altpfade erhalten; aktiv genutzt wird der Mond-Impulswert
+    public static int uhrD_calendarZeit = 0;      // Altwert in 12h-Minuten (0–719), aktuell für Monduhr D nicht relevant
+    public static int uhrD_angezeigteZeit = 0;   // Altwert in 12h-Minuten (0–719), aktuell für Monduhr D nicht relevant
+    public static int uhrD_mondphaseSoll = 0;    // Soll-Impulswert im konfigurierten Mondzyklus
+    public static int uhrD_mondphaseIst = 0;      // Ist-Impulswert im konfigurierten Mondzyklus
     public static boolean uhrD_doRun;            // Flag für Thread auslaufen lassen
     public static boolean uhrD_lastRelaisA = false; // true = letztes Relais war A, false = letztes Relais war B
     public static long uhrD_letzteBerechnungMs = 0; // Zeitpunkt der letzten Mondphase-Berechnung

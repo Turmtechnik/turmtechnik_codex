@@ -278,25 +278,22 @@ public class SetNebenuhrActivity extends Activity {
                 //Log.i("global" , "index=" + 0) ;
                 int hour_0 = layout.nebenuhrStunde[0];
                 int minute_0 = layout.nebenuhrMinute[0];
-                boolean local_flag_24_0 = layout.flag_24[0]; //[globalIndex] ; // false = 12 stunden modus
                 // set time picker as current time
-                return new TimePickerDialog(this, timePickerListener, hour_0, minute_0, local_flag_24_0);
+                return new TimePickerDialog(this, timePickerListener, hour_0, minute_0, false);
 
             case 1:
                 //Log.i("global" , "index=" + 1) ;
                 int hour_1 = layout.nebenuhrStunde[1];
                 int minute_1 = layout.nebenuhrMinute[1];
-                boolean local_flag_24_1 = layout.flag_24[1]; //[globalIndex] ; // false = 12 stunden modus
                 // set time picker as current time
-                return new TimePickerDialog(this, timePickerListener, hour_1, minute_1, local_flag_24_1);
+                return new TimePickerDialog(this, timePickerListener, hour_1, minute_1, false);
 
             case 2:
                 //Log.i("global" , "index=" + 2) ;
                 int hour_2 = layout.nebenuhrStunde[2];
                 int minute_2 = layout.nebenuhrMinute[2];
-                boolean local_flag_24_2 = layout.flag_24[2]; //[globalIndex] ; // false = 12 stunden modus
                 // set time picker as current time
-                return new TimePickerDialog(this, timePickerListener, hour_2, minute_2, local_flag_24_2);
+                return new TimePickerDialog(this, timePickerListener, hour_2, minute_2, false);
 
             case 3:
                 // Monduhr D: Zeige Mondphase-Dialog mit SeekBar und Mondanzeige
@@ -331,13 +328,16 @@ public class SetNebenuhrActivity extends Activity {
     }
 
     /**
-     * Erstellt einen Dialog für die Eingabe der Mondphase mit SeekBar (0-59 Impulse) und Mondanzeige.
+     * Erstellt einen Dialog für die Eingabe des aktuellen Monduhr-Impulswerts mit SeekBar und Mondanzeige.
      * Mondgröße wird begrenzt, damit auf kleinen Bildschirmen (z. B. Android 5) der Schieberegler sichtbar bleibt.
      */
     private Dialog createMondtageDialog(int index) {
-        // Aktuelle Mondphase (0-59 Impulse)
+        // Aktueller Impulswert innerhalb des konfigurierten Mondzyklus
+        PlatinenDatabaseHelper dbHelper = PlatinenDatabaseHelper.getInstance(TurmtechnikActivity.turmtechnikContext);
+        final int impulseProPhase = dbHelper.getMondImpulseProPhase();
+        final int maxMondphase = Math.max(0, impulseProPhase - 1);
         int mondphase = StaticVariable.uhrD_mondphaseIst;
-        if (mondphase > 59) mondphase = 59;
+        if (mondphase > maxMondphase) mondphase = maxMondphase;
         if (mondphase < 0) mondphase = 0;
         
         // Mondgröße in % der Bildschirmhöhe – bei allen Auflösungen gleiche Aufteilung
@@ -375,9 +375,9 @@ public class SetNebenuhrActivity extends Activity {
         valueText.setGravity(android.view.Gravity.CENTER);
         dialogLayout.addView(valueText);
         
-        // SeekBar für Impulse (0-59)
+        // SeekBar für den konfigurierten Impulsbereich
         final android.widget.SeekBar seekBar = new android.widget.SeekBar(this);
-        seekBar.setMax(59);
+        seekBar.setMax(maxMondphase);
         seekBar.setProgress(mondphase);
         seekBar.setPadding(0, 0, 0, 20);
         
@@ -417,13 +417,12 @@ public class SetNebenuhrActivity extends Activity {
             @Override
             public void onClick(android.content.DialogInterface dialog, int which) {
                 int selectedImpulse = seekBar.getProgress();
-                if (selectedImpulse > 59) selectedImpulse = 59;
+                if (selectedImpulse > maxMondphase) selectedImpulse = maxMondphase;
                 if (selectedImpulse < 0) selectedImpulse = 0;
                 
                 StaticVariable.uhrD_mondphaseIst = selectedImpulse;
                 
                 // Speichere in Datenbank
-                PlatinenDatabaseHelper dbHelper = PlatinenDatabaseHelper.getInstance(TurmtechnikActivity.turmtechnikContext);
                 PlatinenDatabaseHelper.NebenuhrConfig config = dbHelper.getNebenuhrByZeile(6);
                 if (config != null) {
                     config.mondphaseIst = selectedImpulse;
@@ -443,7 +442,7 @@ public class SetNebenuhrActivity extends Activity {
     }
     
     /**
-     * Zeichnet die Mondphase auf einem ImageView basierend auf Impulsen (0-59).
+     * Zeichnet die Mondphase auf einem ImageView basierend auf dem konfigurierten Impulsbereich.
      * @param sizePx Größe des Mondes in Pixel (für kleine Bildschirme begrenzt, damit SeekBar sichtbar bleibt)
      */
     private void drawMoonOnImageView(android.widget.ImageView imageView, int impulse, int sizePx) {
@@ -452,9 +451,8 @@ public class SetNebenuhrActivity extends Activity {
         }
         if (sizePx <= 0) sizePx = 150;
         try {
-            // Normalisiere Impuls auf 0-59 Bereich
-            impulse = impulse % 60;
-            if (impulse < 0) impulse += 60;
+            int impulseProPhase = PlatinenDatabaseHelper.getInstance(TurmtechnikActivity.turmtechnikContext).getMondImpulseProPhase();
+            impulse = PlatinenDatabaseHelper.normalizeMondphase(impulse, impulseProPhase);
             
             int width = sizePx;
             int height = sizePx;
@@ -474,17 +472,8 @@ public class SetNebenuhrActivity extends Activity {
             canvas.drawCircle(cx, cy, r, darkPaint);
             
             // 2. Berechnung der Phase
-            // Impulse 0-59: 0 = Neumond, 30 = Vollmond, 59 = fast Neumond
             // Phase von 0 (Neumond, alles dunkel) bis 1 (Vollmond, alles hell)
-            double phase;
-            if (impulse <= 30) {
-                // Zunehmend: 0-30 -> 0 bis 1 (Neumond bis Vollmond)
-                phase = impulse / 30.0;
-            } else {
-                // Abnehmend: 30-59 -> 1 bis 0 (Vollmond bis Neumond)
-                phase = 1.0 - ((impulse - 30) / 30.0);
-                if (phase < 0) phase = 0;
-            }
+            double phase = getMondPhaseRatio(impulse, impulseProPhase);
             
             // 3. Zeichnen der beleuchteten Fläche
             android.graphics.Paint lightPaint = new android.graphics.Paint();
@@ -502,7 +491,7 @@ public class SetNebenuhrActivity extends Activity {
                 int xLeft = cx - (int)y;
                 int xRight = cx + (int)y;
                 
-                if (impulse <= 30) {
+                if (impulse <= (impulseProPhase / 2.0)) {
                     // Zunehmend: Von rechts nach links hell werden
                     // Phase 0 = Neumond (alles dunkel), Phase 1 = Vollmond (alles hell)
                     int xLightEdge = xRight - (int)((xRight - xLeft) * phase);
@@ -533,14 +522,14 @@ public class SetNebenuhrActivity extends Activity {
     /**
      * Erzeugt ein Drawable mit der Mondphase für die Taste D im Nebenuhr-Layout.
      * @param context Context für Resources
-     * @param phase Mondphase 0–59 (Impulse)
+     * @param phase Aktueller Impulswert im konfigurierten Mondzyklus
      * @param sizePx Größe in Pixel
      * @return Drawable oder null bei Fehler
      */
     public static android.graphics.drawable.Drawable createMoonPhaseDrawable(android.content.Context context, int phase, int sizePx) {
         if (sizePx <= 0) sizePx = 72;
-        phase = phase % 60;
-        if (phase < 0) phase += 60;
+        int impulseProPhase = PlatinenDatabaseHelper.getInstance(TurmtechnikActivity.turmtechnikContext).getMondImpulseProPhase();
+        phase = PlatinenDatabaseHelper.normalizeMondphase(phase, impulseProPhase);
         try {
             int width = sizePx;
             int height = sizePx;
@@ -553,13 +542,7 @@ public class SetNebenuhrActivity extends Activity {
             darkPaint.setColor(0xFF222222);
             darkPaint.setAntiAlias(true);
             canvas.drawCircle(cx, cy, r, darkPaint);
-            double phaseVal;
-            if (phase <= 30) {
-                phaseVal = phase / 30.0;
-            } else {
-                phaseVal = 1.0 - ((phase - 30) / 30.0);
-                if (phaseVal < 0) phaseVal = 0;
-            }
+            double phaseVal = getMondPhaseRatio(phase, impulseProPhase);
             android.graphics.Paint lightPaint = new android.graphics.Paint();
             lightPaint.setColor(0xFFFFF1C1);
             lightPaint.setAntiAlias(true);
@@ -568,7 +551,7 @@ public class SetNebenuhrActivity extends Activity {
                 if (Double.isNaN(y)) continue;
                 int xLeft = cx - (int) y;
                 int xRight = cx + (int) y;
-                if (phase <= 30) {
+                if (phase <= (impulseProPhase / 2.0)) {
                     int xLightEdge = xRight - (int) ((xRight - xLeft) * phaseVal);
                     canvas.drawRect(xLightEdge, cy + i, xRight, cy + i + 1, lightPaint);
                 } else {
@@ -587,6 +570,19 @@ public class SetNebenuhrActivity extends Activity {
             android.util.Log.e("SetNebenuhrActivity", "createMoonPhaseDrawable: " + e.getMessage(), e);
             return null;
         }
+    }
+
+    private static double getMondPhaseRatio(int impulse, int impulseProPhase) {
+        int normalizedImpulseCount = PlatinenDatabaseHelper.normalizeMondImpulseProPhase(impulseProPhase);
+        double halbzyklus = normalizedImpulseCount / 2.0;
+        if (halbzyklus <= 0.0) {
+            return 0.0;
+        }
+        if (impulse <= halbzyklus) {
+            return impulse / halbzyklus;
+        }
+        double phase = 1.0 - ((impulse - halbzyklus) / halbzyklus);
+        return phase < 0.0 ? 0.0 : phase;
     }
 
     private TimePickerDialog.OnTimeSetListener timePickerListener = new TimePickerDialog.OnTimeSetListener() {
