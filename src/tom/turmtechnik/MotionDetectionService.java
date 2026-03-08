@@ -40,6 +40,11 @@ public class MotionDetectionService extends LifecycleService {
     private static final String CHANNEL_ID = "turmtechnik_motion";
     /** Mindestabstand (ms) zwischen zwei Aufweck-Aktionen. */
     private static final long DEBOUNCE_MS = 30_000L;
+    private static final int WAKE_ACTIVITY_FLAGS =
+            Intent.FLAG_ACTIVITY_NEW_TASK
+                    | Intent.FLAG_ACTIVITY_REORDER_TO_FRONT
+                    | Intent.FLAG_ACTIVITY_SINGLE_TOP
+                    | Intent.FLAG_ACTIVITY_CLEAR_TOP;
 
     private Handler mainHandler;
     private volatile boolean stopped = false;
@@ -442,11 +447,8 @@ public class MotionDetectionService extends LifecycleService {
         }
         // Activity nur starten/holen, wenn App nicht schon im Vordergrund – sonst würde bei jeder Bewegung erneut onResume/Initialisierung laufen
         if (!TurmtechnikActivity.isInForeground) {
-            Intent intent = new Intent(this, TurmtechnikActivity.class);
-            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_REORDER_TO_FRONT | Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_CLEAR_TOP);
-            if (Build.VERSION.SDK_INT >= 27) {
-                intent.addFlags(0x00200000); // FLAG_ACTIVITY_TURN_SCREEN_ON (API 27), Wert für älteres compileSdk
-            }
+            Intent intent = createWakeActivityIntent();
+            // TURN_SCREEN_ON nicht per Intent-Flag (ab Android 14 nur erlaubte Flags), Activity/Manifest übernimmt ggf.
             intent.putExtra("woke_by_motion", true);
             try {
                 startActivity(intent);
@@ -459,5 +461,10 @@ public class MotionDetectionService extends LifecycleService {
                 wl.release();
             } catch (Exception ignored) {}
         }
+    }
+    private Intent createWakeActivityIntent() {
+        Intent intent = new Intent(this, TurmtechnikActivity.class);
+        intent.addFlags(WAKE_ACTIVITY_FLAGS);
+        return intent;
     }
 }

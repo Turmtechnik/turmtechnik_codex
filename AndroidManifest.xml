@@ -71,7 +71,9 @@
             android:screenOrientation="landscape"
             android:theme="@android:style/Theme.NoTitleBar.Fullscreen"
             android:windowSoftInputMode="adjustResize"
-            android:exported="true">
+            android:exported="true"
+            android:showWhenLocked="true"
+            android:turnScreenOn="true">
 
             <!-- android:launchMode="singleTask" -->
 
@@ -201,12 +203,22 @@
             <intent-filter>
                 <action android:name="android.intent.action.SCREEN_OFF"/>
                 <action android:name="android.intent.action.SCREEN_ON"/>
+                <action android:name="android.intent.action.USER_PRESENT"/>
             </intent-filter>
         </receiver>
         <receiver
             android:name=".AlarmReceiver"
             android:enabled="true"
             android:exported="false">
+        </receiver>
+
+        <receiver
+            android:name=".PackageReplacedReceiver"
+            android:enabled="true"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+            </intent-filter>
         </receiver>
 
         <!-- FileProvider für APK-Install (content:// URI ab Android 7) -->

@@ -33,7 +33,7 @@ public class SetNebenuhrLayout {
 
     public int[] nebenuhrStunde = new int[4]; // { 0,0,0,0 } ; A, B, C, D
     public int[] nebenuhrMinute = new int[4]; // { 0,0,0,0 } ; A, B, C, D
-    public Boolean[] flag_24 = new Boolean[4]; // A, B, C, D
+    public Boolean[] flag_24 = new Boolean[4]; // Altbestand, aktuell immer false
 
     private FrameLayout framelayout;
     private DigitalClock digitalClock;
@@ -346,11 +346,7 @@ public class SetNebenuhrLayout {
                 if (nebenUhrCount < uhrName.length && nebenUhrCount < 4) {
                     // Immer 12-Stunden-Modus für A, B, C
                     // Monduhr D hat keinen 12/24-Modus
-                    if (!"MOND".equals(config.modus)) {
-                        flag_24[nebenUhrCount] = false;
-                    } else {
                         flag_24[nebenUhrCount] = false; // Auch für Monduhr D false (nicht verwendet)
-                    }
                     uhrName[nebenUhrCount] = (config.uhrNameDisplay != null) ? config.uhrNameDisplay : config.uhrName;
                     nebenUhrCount++;
                 }

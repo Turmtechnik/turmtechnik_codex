@@ -19,7 +19,6 @@ public class NebenUhrD_thread extends Thread {
     private final String sourceFileName = "NebenUhrD_thread";
     
     private static final double SYNODISCHER_MONAT_TAGE = 29.530588; // Tage für einen synodischen Monat
-    private static final int IMPULSE_PRO_MONDPHASE = 60;
     // Referenz-Neumond: 30. Dezember 2025 00:00 UTC (korrigiert)
     private static final long REFERENZ_NEUMOND_MS = 1735603200000L; // 30. Dez 2025 00:00 UTC
     
@@ -73,7 +72,8 @@ public class NebenUhrD_thread extends Thread {
                 // Berechne Zeit bis zum nächsten Impuls
                 // 60 Impulse = 29.530588 Tage = 1 synodischer Monat
                 // 1 Impuls = 29.530588 / 60 = 0.492 Tage ≈ 11.8 Stunden
-                double stundenProImpuls = (SYNODISCHER_MONAT_TAGE * 24.0) / 60.0; // ≈ 11.8 Stunden
+                int impulseProMondphase = getImpulseProMondphase();
+                double stundenProImpuls = (SYNODISCHER_MONAT_TAGE * 24.0) / impulseProMondphase;
                 
                 Log.d("MonduhrD", "Mondphase synchronisiert: Soll=" + StaticVariable.uhrD_mondphaseSoll + 
                       " Ist=" + StaticVariable.uhrD_mondphaseIst + 
@@ -88,7 +88,7 @@ public class NebenUhrD_thread extends Thread {
             // Berechne zyklische Differenz (kürzester Weg)
             int differenzMondphase = StaticVariable.uhrD_mondphaseSoll - StaticVariable.uhrD_mondphaseIst;
             if (differenzMondphase < 0) {
-                differenzMondphase += 60; // Zyklisch: z.B. Soll=5, Ist=55 -> Differenz=10 (vorwärts)
+                differenzMondphase += getImpulseProMondphase();
             }
             
             Log.d("MonduhrD", "Mondphase Differenz: Soll=" + StaticVariable.uhrD_mondphaseSoll + 
@@ -171,13 +171,14 @@ public class NebenUhrD_thread extends Thread {
         // Berechne Mondphase (0-59)
         // Formel: (Tage seit Neumond / 29.530588) * 60 Impulse
         // 0 = Neumond, 30 = Vollmond, 60 = Neumond (wird zu 0)
-        double mondphase = (tageSeitNeumond / SYNODISCHER_MONAT_TAGE) * IMPULSE_PRO_MONDPHASE;
-        mondphase = mondphase % IMPULSE_PRO_MONDPHASE; // Modulo 60 → nach 60 Impulsen zurück zu 0
-        if (mondphase < 0) mondphase += IMPULSE_PRO_MONDPHASE; // Normalisiere auf 0-59
+        int impulseProMondphase = getImpulseProMondphase();
+        double mondphase = (tageSeitNeumond / SYNODISCHER_MONAT_TAGE) * impulseProMondphase;
+        mondphase = mondphase % impulseProMondphase;
+        if (mondphase < 0) mondphase += impulseProMondphase;
         
         StaticVariable.uhrD_mondphaseSoll = (int) Math.round(mondphase);
         // Sicherheitscheck: Wenn >= 60, dann auf 0 zurücksetzen (Neumond)
-        if (StaticVariable.uhrD_mondphaseSoll >= IMPULSE_PRO_MONDPHASE) {
+        if (StaticVariable.uhrD_mondphaseSoll >= impulseProMondphase) {
             StaticVariable.uhrD_mondphaseSoll = 0; // Neumond erreicht
         }
         
@@ -390,11 +391,16 @@ public class NebenUhrD_thread extends Thread {
     private void incrementMondphaseIst() {
         StaticVariable.uhrD_mondphaseIst++;
         // Nach 60 Impulsen = 29.530588 Tage → Neumond erreicht → Reset auf 0
-        if (StaticVariable.uhrD_mondphaseIst >= IMPULSE_PRO_MONDPHASE) {
+        if (StaticVariable.uhrD_mondphaseIst >= getImpulseProMondphase()) {
             StaticVariable.uhrD_mondphaseIst = 0; // Zurück zu Neumond
         }
         Log.d("MonduhrD", "Mondphase Ist: " + StaticVariable.uhrD_mondphaseIst + 
               " (Soll: " + StaticVariable.uhrD_mondphaseSoll + ")");
+    }
+
+    private int getImpulseProMondphase() {
+        PlatinenDatabaseHelper dbHelper = PlatinenDatabaseHelper.getInstance(TurmtechnikActivity.turmtechnikContext);
+        return dbHelper.getMondImpulseProPhase();
     }
 
     private void sleepTime(long time) {

@@ -69,8 +69,8 @@ public class PlatinenDatabaseHelper extends SQLiteOpenHelper {
         "impuls_dauer_1 INTEGER DEFAULT 100, " +        // Impulsdauer 1 (Millisekunden)
         "impuls_dauer_2 INTEGER DEFAULT 50, " +         // Impulsdauer 2 / Pause (Millisekunden)
         "uhr_name_display TEXT, " +                      // Anzeige-Name
-        "modus TEXT DEFAULT '12', " +                    // "12", "24" oder "MOND"
-        "angezeigte_zeit INTEGER DEFAULT 0, " +          // Aktuelle angezeigte Zeit (Minuten seit Mitternacht, 0-1439)
+        "modus TEXT DEFAULT '12', " +                    // "12" oder "MOND"
+        "angezeigte_zeit INTEGER DEFAULT 0, " +          // Aktuelle angezeigte Zeit (12h-Minuten, 0-719)
         "mondphase_ist INTEGER DEFAULT 0, " +            // Aktuelle Mondphase (0-59) für Monduhr D
         "last_relais_a INTEGER DEFAULT 0, " +            // Letztes verwendetes Relais (1=A, 0=B) für Wechselschaltung
         "aktiv INTEGER DEFAULT 1, " +                    // Aktiv-Status (1=aktiv, 0=inaktiv)
@@ -1628,6 +1628,38 @@ public class PlatinenDatabaseHelper extends SQLiteOpenHelper {
         }
     }
 
+    public static final String KEY_MOND_IMPULSE_PRO_PHASE = "mond_impulse_pro_phase";
+    public static final int DEFAULT_MOND_IMPULSE_PRO_PHASE = 60;
+
+    public int getMondImpulseProPhase() {
+        String value = getConfigValue(KEY_MOND_IMPULSE_PRO_PHASE);
+        if (value != null && !value.trim().isEmpty()) {
+            try {
+                return normalizeMondImpulseProPhase(Integer.parseInt(value.trim()));
+            } catch (NumberFormatException e) {
+                Log.w(TAG, "Ungültiger Wert für mond_impulse_pro_phase: " + value, e);
+            }
+        }
+        return DEFAULT_MOND_IMPULSE_PRO_PHASE;
+    }
+
+    public void setMondImpulseProPhase(int impulseProPhase) {
+        setConfigValue(KEY_MOND_IMPULSE_PRO_PHASE, String.valueOf(normalizeMondImpulseProPhase(impulseProPhase)));
+    }
+
+    public static int normalizeMondImpulseProPhase(int impulseProPhase) {
+        if (impulseProPhase < 4) return 4;
+        if (impulseProPhase > 360) return 360;
+        return impulseProPhase;
+    }
+
+    public static int normalizeMondphase(int mondphase, int impulseProPhase) {
+        int maxImpulse = normalizeMondImpulseProPhase(impulseProPhase);
+        int normalized = mondphase % maxImpulse;
+        if (normalized < 0) normalized += maxImpulse;
+        return normalized;
+    }
+
     /** Max. Anzahl Benutzerprogramm-Slots (wie ConfigWebServer / TurmtechnikActivity). */
     private static final int BENUTZERPROGRAMME_MAX = 20;
 
@@ -1843,8 +1875,8 @@ public class PlatinenDatabaseHelper extends SQLiteOpenHelper {
                 nebenuhr.impulsDauer1 = cursor.getInt(5);
                 nebenuhr.impulsDauer2 = cursor.getInt(6);
                 nebenuhr.uhrNameDisplay = cursor.isNull(7) ? null : cursor.getString(7);
-                nebenuhr.modus = cursor.isNull(8) ? "12" : cursor.getString(8);
-                nebenuhr.angezeigteZeit = cursor.getInt(9);
+                nebenuhr.modus = normalizeNebenuhrModus(cursor.isNull(8) ? "12" : cursor.getString(8), nebenuhr.zeile);
+                nebenuhr.angezeigteZeit = normalizeNebenuhrAngezeigteZeit(cursor.getInt(9), nebenuhr.zeile);
                 nebenuhr.mondphaseIst = cursor.getInt(10);
                 nebenuhr.lastRelaisA = cursor.getInt(11) == 1;
                 nebenuhr.aktiv = cursor.getInt(12) == 1;
@@ -1922,8 +1954,8 @@ public class PlatinenDatabaseHelper extends SQLiteOpenHelper {
                 nebenuhr.impulsDauer1 = cursor.getInt(5);
                 nebenuhr.impulsDauer2 = cursor.getInt(6);
                 nebenuhr.uhrNameDisplay = cursor.isNull(7) ? null : cursor.getString(7);
-                nebenuhr.modus = cursor.isNull(8) ? "12" : cursor.getString(8);
-                nebenuhr.angezeigteZeit = cursor.getInt(9);
+                nebenuhr.modus = normalizeNebenuhrModus(cursor.isNull(8) ? "12" : cursor.getString(8), zeile);
+                nebenuhr.angezeigteZeit = normalizeNebenuhrAngezeigteZeit(cursor.getInt(9), zeile);
                 nebenuhr.mondphaseIst = cursor.getInt(10);
                 nebenuhr.lastRelaisA = cursor.getInt(11) == 1;
                 nebenuhr.aktiv = cursor.getInt(12) == 1;
@@ -1966,6 +1998,8 @@ public class PlatinenDatabaseHelper extends SQLiteOpenHelper {
      */
     public void saveNebenuhr(NebenuhrConfig nebenuhr) {
         SQLiteDatabase db = getWritableDatabase();
+        nebenuhr.modus = normalizeNebenuhrModus(nebenuhr.modus, nebenuhr.zeile);
+        nebenuhr.angezeigteZeit = normalizeNebenuhrAngezeigteZeit(nebenuhr.angezeigteZeit, nebenuhr.zeile);
         
         // Prüfe ob Nebenuhr bereits existiert
         Cursor cursor = db.query(TABLE_NEBENUHR_CONFIG,
@@ -1996,7 +2030,7 @@ public class PlatinenDatabaseHelper extends SQLiteOpenHelper {
             if (currentCursor.moveToFirst()) {
                 // Wenn Zustandswerte nicht explizit gesetzt wurden (0/false), behalte DB-Werte
                 // Nur wenn Werte explizit gesetzt wurden (nicht 0 oder nicht false), verwende neue Werte
-                int dbAngezeigteZeit = currentCursor.getInt(0);
+                int dbAngezeigteZeit = normalizeNebenuhrAngezeigteZeit(currentCursor.getInt(0), nebenuhr.zeile);
                 int dbMondphaseIst = currentCursor.getInt(1);
                 int dbLastRelaisA = currentCursor.getInt(2);
                 
@@ -2371,13 +2405,28 @@ public class PlatinenDatabaseHelper extends SQLiteOpenHelper {
         public int impulsDauer1;         // Impulsdauer 1 (Millisekunden)
         public int impulsDauer2;         // Impulsdauer 2 / Pause (Millisekunden)
         public String uhrNameDisplay;   // Anzeige-Name
-        public String modus;            // "12", "24" oder "MOND"
-        public int angezeigteZeit;      // Aktuelle angezeigte Zeit (Minuten seit Mitternacht, 0-1439)
+        public String modus;            // "12" oder "MOND"
+        public int angezeigteZeit;      // Aktuelle angezeigte Zeit (12h-Minuten, 0-719)
         public int mondphaseIst;        // Aktuelle Mondphase (0-59) für Monduhr D
         public boolean lastRelaisA;     // Letztes verwendetes Relais (true=A, false=B) für Wechselschaltung
         public boolean aktiv;           // Aktiv-Status (true=aktiv, false=inaktiv)
         /** true = angezeigteZeit wurde vor Impuls gespeichert, Impuls ist noch nicht durch (Absturzfall). Beim Laden dann angezeigteZeit − 1 verwenden. */
         public boolean impulsAusstehend;
+    }
+
+    private static String normalizeNebenuhrModus(String modus, int zeile) {
+        return zeile == 6 ? "MOND" : "12";
+    }
+
+    private static int normalizeNebenuhrAngezeigteZeit(int angezeigteZeit, int zeile) {
+        if (zeile == 6) {
+            return 0;
+        }
+        int normalized = angezeigteZeit % 720;
+        if (normalized < 0) {
+            normalized += 720;
+        }
+        return normalized;
     }
     
     /**

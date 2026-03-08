@@ -78,23 +78,17 @@ public class EditorActivity extends Activity
         Log.e("EditorActivity", "onCreate: pathAndFilenameEditorIndex = " + currentEditRow);
 
         if (StaticVariable.pathAndFilenameEditor == null || StaticVariable.pathAndFilenameEditor.isEmpty()) {
-            if (TurmtechnikActivity.normalprogrammFileString != null && !TurmtechnikActivity.normalprogrammFileString.isEmpty()) {
-                StaticVariable.pathAndFilenameEditor = TurmtechnikActivity.normalprogrammFileString;
-            } else {
-                Toast.makeText(this, "Fehler: Programmdatei nicht gefunden", Toast.LENGTH_LONG).show();
-                finish();
-                return;
-            }
+            StaticVariable.pathAndFilenameEditor = "DB:Normalprogramm";
         }
 
         // Datenbank-Modus: "DB:TagtypName"
-        if (StaticVariable.pathAndFilenameEditor.startsWith("DB:")) {
-            String tagtypName = StaticVariable.pathAndFilenameEditor.substring(3).trim();
+        if (shouldUseDatabaseEditor()) {
+            String tagtypName = resolveEditorTagtypName(StaticVariable.pathAndFilenameEditor);
             if (tagtypName.isEmpty()) tagtypName = "Normalprogramm";
             try {
                 java.util.List<Programm> programmeList = PlatinenDatabaseHelper.getInstance(getApplicationContext()).getProgrammeByTagtyp(tagtypName);
                 if (programmeList == null || programmeList.isEmpty()) {
-                    Toast.makeText(this, "Keine Programme für " + tagtypName + " in der Datenbank.", Toast.LENGTH_LONG).show();
+                    Toast.makeText(this, "Keine Programme für " + tagtypName + " in der Datenbank. Bitte erst Excel importieren.", Toast.LENGTH_LONG).show();
                     finish();
                     return;
                 }
@@ -617,6 +611,29 @@ public class EditorActivity extends Activity
 
 
     } // ende von onCreate
+
+    private boolean shouldUseDatabaseEditor() {
+        return true;
+    }
+
+    private String resolveEditorTagtypName(String editorPath) {
+        if (editorPath == null || editorPath.trim().isEmpty()) {
+            return "Normalprogramm";
+        }
+        String value = editorPath.trim();
+        if (value.startsWith("DB:")) {
+            value = value.substring(3).trim();
+        } else {
+            int lastSlash = Math.max(value.lastIndexOf('/'), value.lastIndexOf('\\'));
+            if (lastSlash >= 0 && lastSlash + 1 < value.length()) {
+                value = value.substring(lastSlash + 1);
+            }
+            if (value.toLowerCase().endsWith(".xls")) {
+                value = value.substring(0, value.length() - 4);
+            }
+        }
+        return value.isEmpty() ? "Normalprogramm" : value;
+    }
 
     private int kopiereMomentaneZeile()
     {

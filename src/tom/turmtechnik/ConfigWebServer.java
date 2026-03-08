@@ -57,7 +57,7 @@ public class ConfigWebServer {
         this.gson = new GsonBuilder().setPrettyPrinting().create();
         this.context = context;
         // Standard: Normalprogramm-Repository
-        this.programmRepository = RepositoryFactory.getProgrammRepository("normal");
+        this.programmRepository = RepositoryFactory.getProgrammRepository(context, "normal");
         
         // Request-Handler setzen
         this.httpServer.setRequestHandler(this::handleRequest);
@@ -269,43 +269,14 @@ public class ConfigWebServer {
                 return new SimpleHttpServer.HttpResponse(400, "application/json", errorJson);
             }
             
-            // Bestimme Programmtyp basierend auf Tagtyp-Datei
-            String programmTyp = null;
-            java.util.Vector<String> fileNamesVariabel = RepositoryFactory.getTagtypFileNames("festtag_variabel");
-            for (String filePath : fileNamesVariabel) {
-                String fileName = filePath.substring(filePath.lastIndexOf("/") + 1);
-                if (fileName.equals(tagtypName)) {
-                    programmTyp = "festtag_variabel";
-                    break;
-                }
-            }
-            
-            if (programmTyp == null) {
-                java.util.Vector<String> fileNamesFest = RepositoryFactory.getTagtypFileNames("festtag_fest");
-                for (String filePath : fileNamesFest) {
-                    String fileName = filePath.substring(filePath.lastIndexOf("/") + 1);
-                    if (fileName.equals(tagtypName)) {
-                        programmTyp = "festtag_fest";
-                        break;
-                    }
-                }
-            }
-            
-            // Programm-Editor: Tagtyp aus DB (z. B. Normalprogramm) akzeptieren
-            if (programmTyp == null) {
-                PlatinenDatabaseHelper dbHelper = PlatinenDatabaseHelper.getInstance(context);
-                PlatinenDatabaseHelper.Tagtyp tagtyp = dbHelper.getTagtypByName(tagtypName.trim());
-                if (tagtyp != null) {
-                    programmTyp = "normal";
-                }
-            }
+            String programmTyp = resolveProgrammTypForTagtyp(tagtypName);
             
             if (programmTyp == null) {
                 String errorJson = "{\"error\":\"Tagtyp nicht gefunden: " + tagtypName + "\"}";
                 return new SimpleHttpServer.HttpResponse(404, "application/json", errorJson);
             }
             
-            programmRepository = RepositoryFactory.getProgrammRepository(programmTyp);
+            programmRepository = RepositoryFactory.getProgrammRepository(context, programmTyp);
             
             // ID extrahieren (vor dem ?)
             String idPart = uri.substring((API_PREFIX + "/programme/").length());
@@ -3358,22 +3329,22 @@ public class ConfigWebServer {
     /** GET /api/mondphase-aktuell – aktuelle astronomische Mondphase (0–59) für Bildschirmschoner, gleiche Formel wie NebenUhrD_thread. */
     private static final long MOND_REFERENZ_NEUMOND_MS = 1735603200000L;
     private static final double MOND_SYNODISCHER_MONAT_TAGE = 29.530588;
-    private static final int MOND_IMPULSE_PRO_PHASE = 60;
-
     private SimpleHttpServer.HttpResponse handleGetMondphaseAktuell() {
         try {
+            PlatinenDatabaseHelper dbHelper = PlatinenDatabaseHelper.getInstance(context);
+            int impulseProPhase = dbHelper.getMondImpulseProPhase();
             java.util.Calendar cal = java.util.Calendar.getInstance();
             long nowMs = cal.getTimeInMillis();
             long diffMs = nowMs - MOND_REFERENZ_NEUMOND_MS;
             double tageSeitNeumond = diffMs / (1000.0 * 60.0 * 60.0 * 24.0);
             while (tageSeitNeumond < 0) tageSeitNeumond += MOND_SYNODISCHER_MONAT_TAGE;
             tageSeitNeumond = tageSeitNeumond % MOND_SYNODISCHER_MONAT_TAGE;
-            double mondphase = (tageSeitNeumond / MOND_SYNODISCHER_MONAT_TAGE) * MOND_IMPULSE_PRO_PHASE;
-            mondphase = mondphase % MOND_IMPULSE_PRO_PHASE;
-            if (mondphase < 0) mondphase += MOND_IMPULSE_PRO_PHASE;
+            double mondphase = (tageSeitNeumond / MOND_SYNODISCHER_MONAT_TAGE) * impulseProPhase;
+            mondphase = mondphase % impulseProPhase;
+            if (mondphase < 0) mondphase += impulseProPhase;
             int phase = (int) Math.round(mondphase);
-            if (phase >= MOND_IMPULSE_PRO_PHASE) phase = 0;
-            String json = "{\"mondphase\":" + phase + "}";
+            if (phase >= impulseProPhase) phase = 0;
+            String json = "{\"mondphase\":" + phase + ",\"mondImpulseProPhase\":" + impulseProPhase + "}";
             return new SimpleHttpServer.HttpResponse(200, "application/json", json);
         } catch (Exception e) {
             Log.e(TAG, "Fehler bei GET /api/mondphase-aktuell", e);
@@ -3717,6 +3688,21 @@ public class ConfigWebServer {
             }
         }
         return null;
+    }
+
+    private String resolveProgrammTypForTagtyp(String tagtypName) {
+        if (tagtypName == null || tagtypName.trim().isEmpty()) {
+            return null;
+        }
+        PlatinenDatabaseHelper dbHelper = PlatinenDatabaseHelper.getInstance(context);
+        PlatinenDatabaseHelper.Tagtyp tagtyp = dbHelper.getTagtypByName(tagtypName.trim());
+        if (tagtyp == null) {
+            return null;
+        }
+        if (tagtyp.programmTyp == null || tagtyp.programmTyp.trim().isEmpty()) {
+            return "normal";
+        }
+        return tagtyp.programmTyp.trim();
     }
     
     /**
@@ -4249,6 +4235,7 @@ public class ConfigWebServer {
                 "        .tt-modal .sofort-time::-webkit-calendar-picker-indicator { filter: invert(1); opacity: 1; cursor: pointer; }\n" +
                 "        .tt-modal .sofort-time::-webkit-datetime-edit { color: var(--tt-text); }\n" +
                 "        .tt-modal .btn-row { margin-top: 1rem; display: flex; gap: 0.5rem; flex-wrap: wrap; justify-content: center; }\n" +
+                "        .tt-modal .btn-row .btn { flex: 1; min-width: 5rem; }\n" +
                 "        .tt-modal .btn-secondary { background: #444; color: var(--tt-text); border: 1px solid var(--tt-border); }\n" +
                 "        .tt-modal .btn-outline-secondary { background: transparent; color: var(--tt-muted); border: 1px solid var(--tt-border); }\n" +
                 "        .tt-modal .btn-outline-secondary:hover { color: var(--tt-text); border-color: var(--tt-accent); }\n" +
@@ -5708,7 +5695,7 @@ public class ConfigWebServer {
     private String getRelaisZuordnungHTML() {
         StringBuilder sb = new StringBuilder();
         sb.append("<!DOCTYPE html>\n<html lang=\"de\">\n<head>\n<meta charset=\"UTF-8\">\n<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n<title>Relais-Zuordnung - Turmtechnik</title>\n");
-        sb.append("<link href=\"https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css\" rel=\"stylesheet\">\n<style>body{background:#1a1d21;color:#e4e6eb;min-height:100vh}.navbar{background:#111!important}.card{background:#242628;border:1px solid #3e4247}.card-header{background:#2d3035;color:#fff}.form-control,.form-select{background:#3a3d42;color:#e4e6eb}.table{color:#e4e6eb}</style>\n</head>\n<body>\n");
+        sb.append("<link href=\"https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css\" rel=\"stylesheet\">\n<style>body{background:#1a1d21;color:#e4e6eb;min-height:100vh}.navbar{background:#111!important}.card{background:#242628;border:1px solid #3e4247}.card-header{background:#2d3035;color:#fff}.form-control,.form-select{background:#3a3d42;color:#e4e6eb}.table{color:#e4e6eb}.modal-footer{display:flex;gap:0.5rem}.modal-footer .btn{flex:1;min-width:0}</style>\n</head>\n<body>\n");
         sb.append("<nav class=\"navbar navbar-expand-lg navbar-dark\"><div class=\"container-fluid\"><a class=\"navbar-brand\" href=\"/\">Turmtechnik</a><div class=\"navbar-nav\"><a class=\"nav-link\" href=\"/\">Start</a><a class=\"nav-link\" href=\"/platinen-config.html\">Platinen</a><a class=\"nav-link active\" href=\"/relais-zuordnung.html\">Relais-Zuordnung</a></div></div></nav>\n");
         sb.append("<div class=\"container mt-4\"><h1 class=\"mb-4\">Relais-Zuordnung</h1><p class=\"text-muted mb-4\">Kategorien und Software-Relais (z.B. 1000, 2000) mit Namen zu Hardware (Platine + Relais) zuordnen.</p>\n");
         sb.append("<div class=\"card mb-4\"><div class=\"card-header d-flex justify-content-between align-items-center\"><span>Kategorien</span><button class=\"btn btn-sm btn-primary\" onclick=\"openKategorieModal()\">Kategorie hinzufügen</button></div><div class=\"card-body\"><table class=\"table table-striped\"><thead><tr><th>Name</th><th>Sortierung</th><th>Aktionen</th></tr></thead><tbody id=\"kategorienTable\"></tbody></table></div></div>\n");
@@ -5884,9 +5871,14 @@ public class ConfigWebServer {
                         "                        ${(nebenuhr.modus === 'MOND' || nebenuhr.zeile === 6) ? `\n" +
                         "                        <div class=\"row\">\n" +
                         "                            <div class=\"col-md-6 mb-3\">\n" +
-                        "                                <label class=\"form-label\">Mondphase Ist (0-59):</label>\n" +
-                        "                                <input type=\"number\" class=\"form-control\" id=\"mondphaseIst_${index}\" value=\"${nebenuhr.mondphaseIst || 0}\" min=\"0\" max=\"59\" step=\"1\" readonly>\n" +
+                        "                                <label class=\"form-label\">Mondphase Ist:</label>\n" +
+                        "                                <input type=\"number\" class=\"form-control\" id=\"mondphaseIst_${index}\" value=\"${nebenuhr.mondphaseIst || 0}\" min=\"0\" max=\"${Math.max(0, (nebenuhr.mondImpulseProPhase || 60) - 1)}\" step=\"1\" readonly>\n" +
                         "                                <small class=\"form-text text-muted\">Wird automatisch aktualisiert</small>\n" +
+                        "                            </div>\n" +
+                        "                            <div class=\"col-md-6 mb-3\">\n" +
+                        "                                <label class=\"form-label\">Impulse pro Mondphase:</label>\n" +
+                        "                                <input type=\"number\" class=\"form-control\" id=\"mondImpulseProPhase_${index}\" value=\"${nebenuhr.mondImpulseProPhase || 60}\" min=\"4\" max=\"360\" step=\"1\">\n" +
+                        "                                <small class=\"form-text text-muted\">Wie viele Impulse ein kompletter Mondzyklus hat.</small>\n" +
                         "                            </div>\n" +
                         "                        </div>\n" +
                         "                        ` : ''}\n" +
@@ -5928,6 +5920,7 @@ public class ConfigWebServer {
                 "            // Für Monduhr D: Mondphase Ist\n" +
                 "            if ((nebenuhr.modus === 'MOND' || nebenuhr.zeile === 6) && document.getElementById(`mondphaseIst_${index}`)) {\n" +
                 "                nebenuhr.mondphaseIst = parseInt(document.getElementById(`mondphaseIst_${index}`).value) || 0;\n" +
+                "                nebenuhr.mondImpulseProPhase = parseInt(document.getElementById(`mondImpulseProPhase_${index}`).value) || 60;\n" +
                 "            }\n" +
                 "            \n" +
                 "            // Validierung\n" +
@@ -5947,6 +5940,10 @@ public class ConfigWebServer {
                 "            }\n" +
                 "            if (nebenuhr.relaisB < 0 || nebenuhr.relaisB > maxRelais) {\n" +
                 "                showMessage('Relais B muss zwischen 0 und ' + maxRelais + ' sein', 'danger');\n" +
+                "                return;\n" +
+                "            }\n" +
+                "            if ((nebenuhr.modus === 'MOND' || nebenuhr.zeile === 6) && (nebenuhr.mondImpulseProPhase < 4 || nebenuhr.mondImpulseProPhase > 360)) {\n" +
+                "                showMessage('Impulse pro Mondphase müssen zwischen 4 und 360 liegen', 'danger');\n" +
                 "                return;\n" +
                 "            }\n" +
                 "            \n" +
@@ -5999,6 +5996,7 @@ public class ConfigWebServer {
                 "                // Für Monduhr D: Mondphase Ist\n" +
                 "                if ((nebenuhr.modus === 'MOND' || nebenuhr.zeile === 6) && document.getElementById(`mondphaseIst_${i}`)) {\n" +
                 "                    nebenuhr.mondphaseIst = parseInt(document.getElementById(`mondphaseIst_${i}`).value) || 0;\n" +
+                "                    nebenuhr.mondImpulseProPhase = parseInt(document.getElementById(`mondImpulseProPhase_${i}`).value) || 60;\n" +
                 "                }\n" +
                 "            }\n" +
                 "            \n" +
@@ -6050,15 +6048,17 @@ public class ConfigWebServer {
                 "        body{background:var(--tt-bg);color:var(--tt-text);min-height:100vh;margin:0;}\n" +
                 "        .navbar{background:var(--tt-surface)!important;border-bottom:1px solid var(--tt-border);}\n" +
                 "        .nav-link{color:var(--tt-muted);}.nav-link.active{color:var(--tt-text);font-weight:600;}\n" +
-                "        .nebenuhr-grid{display:grid;grid-template-columns:1fr 1fr;gap:1.25rem;width:100%;max-width:480px;margin:2rem auto;}\n" +
-                "        .nebenuhr-taste{background:var(--tt-card);border:2px solid var(--tt-border);border-radius:12px;padding:1.5rem;min-height:140px;min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;transition:border-color .2s,box-shadow .2s;}\n" +
+                "        .nebenuhr-grid{display:grid;grid-template-columns:1fr 1fr;grid-auto-rows:1fr;gap:0.9rem;width:100%;max-width:480px;min-height:285px;margin:2rem auto;}\n" +
+                "        .nebenuhr-taste{background:var(--tt-card);border:2px solid var(--tt-border);border-radius:12px;padding:1rem;min-height:135px;height:100%;min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;transition:border-color .2s,box-shadow .2s;}\n" +
                 "        .nebenuhr-taste:hover{border-color:var(--tt-accent);box-shadow:0 0 0 2px var(--tt-accent);}\n" +
-                "        .nebenuhr-taste .taste-name{font-size:1rem;font-weight:600;color:var(--tt-muted);margin-bottom:0.5rem;}\n" +
-                "        .nebenuhr-taste .taste-zeit{font-size:2.5rem;font-weight:400;font-variant-numeric:tabular-nums;color:var(--tt-text);}\n" +
-                "        .nebenuhr-taste .taste-mond-wrap{position:relative;}\n" +
-                "        .nebenuhr-taste canvas{display:block;border-radius:50%;background:#1a1a1a;}\n" +
+                "        .nebenuhr-taste .taste-name{font-size:0.95rem;font-weight:600;color:var(--tt-muted);margin-bottom:0.35rem;}\n" +
+                "        .nebenuhr-taste .taste-zeit{font-size:2rem;font-weight:400;font-variant-numeric:tabular-nums;color:var(--tt-text);}\n" +
+                "        .nebenuhr-taste .taste-mond-wrap{position:relative;flex:1;display:flex;align-items:center;justify-content:center;min-height:0;}\n" +
+                "        .nebenuhr-taste canvas{display:block;border-radius:50%;background:#1a1a1a;max-width:100%;max-height:120px;width:auto;height:auto;}\n" +
                 "        .modal-content{background:var(--tt-card);border:1px solid var(--tt-border);color:var(--tt-text);}\n" +
                 "        .modal-header,.modal-footer{border-color:var(--tt-border);}\n" +
+                "        .modal-footer{display:flex;gap:0.5rem;}\n" +
+                "        .modal-footer .btn{flex:1;min-width:0;}\n" +
                 "        .form-control,.form-select{background:#242628;border-color:var(--tt-border);color:var(--tt-text);}\n" +
                 "        .form-range{accent-color:var(--tt-accent);}\n" +
                 "        .btn-primary{background:var(--tt-accent);border-color:var(--tt-accent);color:#000;}\n" +
@@ -7199,7 +7199,8 @@ public class ConfigWebServer {
                 "        .modal-content { background: #242628; border-color: #3e4247; color: #e4e6eb; }\n" +
                 "        .modal-header { background: #2d3035; border-color: #3e4247; color: #fff; }\n" +
                 "        .modal-body { background: #242628; color: #e4e6eb; }\n" +
-                "        .modal-footer { border-color: #3e4247; }\n" +
+                "        .modal-footer { border-color: #3e4247; display: flex; gap: 0.5rem; }\n" +
+                "        .modal-footer .btn { flex: 1; min-width: 0; }\n" +
                 "        .modal .btn-close { filter: invert(1); }\n" +
                 "    </style>\n" +
                 "</head>\n" +
@@ -8436,12 +8437,12 @@ public class ConfigWebServer {
             }
             
             // Alle Programme des Tagtyps lesen und löschen
-            ProgrammRepository repo = RepositoryFactory.getProgrammRepository(programmTyp);
-            List<Programm> programme = repo.getAllProgramme(null, tagtypName);
+            PlatinenDatabaseHelper dbHelper = PlatinenDatabaseHelper.getInstance(context);
+            List<Programm> programme = dbHelper.getProgrammeByTagtyp(tagtypName.trim());
             
             int deleted = 0;
             for (Programm programm : programme) {
-                if (repo.deleteProgramm(programm.getId())) {
+                if (dbHelper.deleteProgramm(tagtypName.trim(), programm.getId())) {
                     deleted++;
                 }
             }
@@ -9577,6 +9578,7 @@ public class ConfigWebServer {
     private SimpleHttpServer.HttpResponse handleGetNebenuhren() {
         try {
             PlatinenDatabaseHelper dbHelper = PlatinenDatabaseHelper.getInstance(context);
+            int mondImpulseProPhase = dbHelper.getMondImpulseProPhase();
             List<PlatinenDatabaseHelper.NebenuhrConfig> nebenuhren = dbHelper.getAllNebenuhren();
             Log.d(TAG, "handleGetNebenuhren: " + nebenuhren.size() + " Nebenuhren gefunden");
             
@@ -9601,6 +9603,9 @@ public class ConfigWebServer {
                 else if (nebenuhr.zeile == 6) liveMond = StaticVariable.uhrD_mondphaseIst;
                 nebenuhrMap.put("angezeigteZeit", liveAnzeige);
                 nebenuhrMap.put("mondphaseIst", liveMond);
+                if (nebenuhr.zeile == 6) {
+                    nebenuhrMap.put("mondImpulseProPhase", mondImpulseProPhase);
+                }
                 nebenuhrenList.add(nebenuhrMap);
             }
             
@@ -10162,6 +10167,21 @@ public class ConfigWebServer {
                         ? ((Double) impulsDauer2Obj).intValue() 
                         : ((Integer) impulsDauer2Obj);
                 }
+
+                if (zeile == 6) {
+                    Object mondImpulseObj = nebenuhrMap.get("mondImpulseProPhase");
+                    if (mondImpulseObj != null) {
+                        try {
+                            int mondImpulse = (mondImpulseObj instanceof Number)
+                                ? ((Number) mondImpulseObj).intValue()
+                                : Integer.parseInt(mondImpulseObj.toString());
+                            dbHelper.setMondImpulseProPhase(mondImpulse);
+                            Log.d(TAG, "Monduhr Impulse pro Phase gesetzt: " + mondImpulse);
+                        } catch (Exception e) {
+                            Log.e(TAG, "Fehler beim Konvertieren von mondImpulseProPhase: " + mondImpulseObj, e);
+                        }
+                    }
+                }
                 
                 // Modus
                 Object modusObj = nebenuhrMap.get("modus");
@@ -10192,16 +10212,18 @@ public class ConfigWebServer {
                 if (angezeigteZeitObj != null) {
                     try {
                         int val = (angezeigteZeitObj instanceof Number) ? ((Number) angezeigteZeitObj).intValue() : Integer.parseInt(angezeigteZeitObj.toString());
-                        if (val >= 0 && val <= 1439) nebenuhr.angezeigteZeit = val;
+                        if (val >= 0 && val <= 719) nebenuhr.angezeigteZeit = val;
                     } catch (Exception ignored) { }
                 }
                 
                 // Mondphase Ist (nur für Monduhr D, nur wenn gesendet)
                 Object mondphaseIstObj = nebenuhrMap.get("mondphaseIst");
                 if (mondphaseIstObj != null && ("MOND".equals(nebenuhr.modus) || zeile == 6)) {
-                    nebenuhr.mondphaseIst = (mondphaseIstObj instanceof Double) 
-                        ? ((Double) mondphaseIstObj).intValue() 
+                    int mondImpulseProPhase = dbHelper.getMondImpulseProPhase();
+                    int mondphaseIst = (mondphaseIstObj instanceof Double)
+                        ? ((Double) mondphaseIstObj).intValue()
                         : ((Integer) mondphaseIstObj);
+                    nebenuhr.mondphaseIst = PlatinenDatabaseHelper.normalizeMondphase(mondphaseIst, mondImpulseProPhase);
                 }
                 
                 // Uhr-Name (Display)
@@ -11816,7 +11838,8 @@ public class ConfigWebServer {
         sb.append("        #editModal .modal-content{background:var(--tt-card);border:1px solid var(--tt-border);color:var(--tt-text)}\n");
         sb.append("        #editModal .modal-header{border-color:var(--tt-border)}\n");
         sb.append("        #editModal .modal-title{font-size:1.2rem;font-weight:600;color:var(--tt-text)}\n");
-        sb.append("        #editModal .modal-footer{border-color:var(--tt-border)}\n");
+        sb.append("        #editModal .modal-footer{border-color:var(--tt-border);display:flex;gap:0.5rem}\n");
+        sb.append("        #editModal .modal-footer .btn{flex:1;min-width:0}\n");
         sb.append("        #editModal .form-label{font-size:.95rem;font-weight:500;margin-bottom:.25rem;color:var(--tt-text)}\n");
         sb.append("        #editModal .form-control,#editModal .form-select{font-size:1rem;background:var(--tt-surface);border-color:var(--tt-border);color:var(--tt-text)}\n");
         sb.append("        #editModal .modal-footer .btn-secondary{background:transparent;border-color:var(--tt-border);color:var(--tt-text)}\n");
@@ -11958,7 +11981,8 @@ public class ConfigWebServer {
                 "        #modalNeuesProgramm .modal-content { background: var(--tt-card); border: 1px solid var(--tt-border); color: var(--tt-text); }\n" +
                 "        #modalNeuesProgramm .modal-header { border-color: var(--tt-border); }\n" +
                 "        #modalNeuesProgramm .modal-title { color: var(--tt-text); font-weight: 600; }\n" +
-                "        #modalNeuesProgramm .modal-footer { border-color: var(--tt-border); }\n" +
+                "        #modalNeuesProgramm .modal-footer { border-color: var(--tt-border); display: flex; gap: 0.5rem; }\n" +
+                "        #modalNeuesProgramm .modal-footer .btn { flex: 1; min-width: 0; }\n" +
                 "        #modalNeuesProgramm .modal-body .form-label { color: var(--tt-text); }\n" +
                 "        #modalNeuesProgramm .form-control, #modalNeuesProgramm .form-select { background: #111; border-color: var(--tt-border); color: var(--tt-text); }\n" +
                 "        #modalNeuesProgramm .form-control:focus, #modalNeuesProgramm .form-select:focus { background: #151515; border-color: var(--tt-accent); color: var(--tt-text); }\n" +

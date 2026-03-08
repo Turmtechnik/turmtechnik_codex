@@ -227,13 +227,9 @@ public class ProgrammKontrolleActivity extends Activity {
                 if (filePathAndName != null && !filePathAndName.isEmpty()) {
                     StaticVariable.pathAndFilenameEditor = filePathAndName;
                     Log.e("ProgrammKontrolle", "pathAndFilenameEditor gesetzt auf: " + filePathAndName);
-                } else if (TurmtechnikActivity.normalprogrammFileString != null && !TurmtechnikActivity.normalprogrammFileString.isEmpty()) {
-                    StaticVariable.pathAndFilenameEditor = TurmtechnikActivity.normalprogrammFileString; // default
-                    Log.e("ProgrammKontrolle", "pathAndFilenameEditor gesetzt auf normalprogrammFileString: " + TurmtechnikActivity.normalprogrammFileString);
                 } else {
-                    Log.e("ProgrammKontrolle", "FEHLER: Weder filePathAndName noch normalprogrammFileString sind gesetzt!");
-                    Toast.makeText(ProgrammKontrolleActivity.this, "Fehler: Programmdatei nicht gefunden", Toast.LENGTH_LONG).show();
-                    return;
+                    StaticVariable.pathAndFilenameEditor = "DB:Normalprogramm";
+                    Log.e("ProgrammKontrolle", "pathAndFilenameEditor gesetzt auf DB:Normalprogramm");
                 }
 
                 // Setze pathAndFilenameEditorIndex

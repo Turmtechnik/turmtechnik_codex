@@ -3178,13 +3178,14 @@ public class TurmtechnikActivity extends Activity {
         });
     }
 
-    /** RequestCode für den Einmal-Alarm „App wieder anbieten nach Exit für Einstellungen“ (anders als 0 = 15-Min-Alarm). */
+    /** RequestCode für den Einmal-Alarm „App direkt wieder öffnen nach Exit für Einstellungen“ (anders als 0 = 15-Min-Alarm). */
     private static final int PENDING_INTENT_REQUEST_WAKE_AFTER_EXIT = 123;
 
     /**
      * App beenden für Einstellungen: Für die nächsten {@code minutes} Minuten startet die App nicht automatisch;
      * bei erneutem Start (z. B. HOME-Taste) wird direkt die System-Einstellungen geöffnet.
-     * Service und 15-Min-Alarm laufen weiter. Ein Einmal-Alarm direkt nach Ablauf startet die App wieder (Full-Screen-Intent/Notification).
+     * Service und 15-Min-Alarm laufen weiter. Ein Einmal-Alarm direkt nach Ablauf startet die Activity wieder über
+     * ein Activity-PendingIntent, damit Android den Rückweg nicht als verbotenen Background-Start blockiert.
      */
     public static void requestAppExitForSettings(final int minutes) {
         final TurmtechnikActivity act = turmtechnikActivityInstance;
@@ -3195,22 +3196,23 @@ public class TurmtechnikActivity extends Activity {
                 android.content.Context ctx = act.getApplicationContext();
                 long until = System.currentTimeMillis() + Math.max(1, minutes) * 60 * 1000L;
                 setExitForSettingsUntilMillis(ctx, until);
-                // Einmal-Alarm: direkt nach Ablauf der Phase Activity wieder anbieten (sonst erst nächster 15-Min-Alarm oder 90 s Service)
+                // Einmal-Alarm: direkt nach Ablauf der Phase die Activity wieder öffnen.
                 try {
                     AlarmManager am = (AlarmManager) ctx.getSystemService(Context.ALARM_SERVICE);
                     if (am != null) {
-                        Intent alarmIntent = new Intent(ctx, AlarmReceiver.class);
+                        Intent restartIntent = StartTurmtechnikService.createTurmtechnikLaunchIntent(ctx);
                         int flags = PendingIntent.FLAG_UPDATE_CURRENT;
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                             flags |= PendingIntent.FLAG_IMMUTABLE;
                         }
-                        PendingIntent pi = PendingIntent.getBroadcast(ctx, PENDING_INTENT_REQUEST_WAKE_AFTER_EXIT, alarmIntent, flags);
+                        PendingIntent pi = PendingIntent.getActivity(ctx, PENDING_INTENT_REQUEST_WAKE_AFTER_EXIT, restartIntent, flags);
                         long triggerAt = until + 2000L; // 2 s nach Ende der Phase
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                             am.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerAt, pi);
                         } else {
                             am.setExact(AlarmManager.RTC_WAKEUP, triggerAt, pi);
                         }
+                        android.util.Log.i("TurmtechnikActivity", "Exit für Einstellungen geplant bis " + until + ", direkter Activity-Restart um " + triggerAt);
                     }
                 } catch (Exception e) {
                     android.util.Log.w("TurmtechnikActivity", "Einmal-Alarm nach Exit für Einstellungen: " + (e != null ? e.getMessage() : ""));

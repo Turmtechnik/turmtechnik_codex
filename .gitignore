@@ -3,10 +3,13 @@
 /local.properties
 .idea/
 .vscode/
+.cursor/
 .DS_Store
 /build
 /captures
 *.hprof
+java_pid*.hprof
+Thumbs.db
 
 # Dekompilierte APK (Vorgaenger-Version)
 decompiled_vorgaenger/
