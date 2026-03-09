@@ -197,7 +197,8 @@ public class TurmtechnikActivity extends Activity {
     // private AvrNetIoThread avrnetiothread ;
     private static Serial_IoThread serial_iothread; // kann bluetooth oder carambola
 
-    private UhrThread uhr_thread;
+    private static final Object RUNTIME_LOCK = new Object();
+    private static UhrThread uhr_thread;
     private AusgangHeizungThreadNew2 ausgangHeizungThreadNew2 = null;
     // private GoogleDriveUpdateThread google_Drive_Update_Thread ;
     // wird alles im GoogleDriveThread gesteuert 3.8.13
@@ -973,10 +974,11 @@ public class TurmtechnikActivity extends Activity {
     }
 
     /**
-     * Zeigt den System-Launcher oder Einstellungen und beendet diese Activity, damit das Tablet normal genutzt werden kann
-     * (nach „App beenden“ oder Passwort 5644). Wird aufgerufen, wenn die App z. B. per HOME-Taste wieder in den Vordergrund geholt wird.
+     * Zeigt den System-Launcher oder Einstellungen, damit das Tablet normal genutzt werden kann.
+     * Optional wird die Activity beendet; für "Exit für Einstellungen" lassen wir den Task bewusst leben,
+     * damit der spätere Rückweg nicht als kompletter Kaltstart aus dem Hintergrund erfolgen muss.
      */
-    private void launchTabletNormalAndFinish() {
+    private void launchTabletNormal(boolean finishActivity) {
         try {
             Intent home = new Intent(Intent.ACTION_MAIN);
             home.addCategory(Intent.CATEGORY_HOME);
@@ -990,7 +992,10 @@ public class TurmtechnikActivity extends Activity {
                     launcher.setPackage(ri.activityInfo.packageName);
                     launcher.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
                     startActivity(launcher);
-                    finish();
+                    moveTaskToBack(true);
+                    if (finishActivity) {
+                        finish();
+                    }
                     return;
                 }
             }
@@ -998,7 +1003,18 @@ public class TurmtechnikActivity extends Activity {
             Log.w("TurmtechnikActivity", "Anderen Launcher starten: " + (e != null ? e.getMessage() : ""));
         }
         startActivity(new Intent(android.provider.Settings.ACTION_SETTINGS).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
-        finish();
+        moveTaskToBack(true);
+        if (finishActivity) {
+            finish();
+        }
+    }
+
+    private void launchTabletNormalAndFinish() {
+        launchTabletNormal(true);
+    }
+
+    private void launchTabletNormalKeepTaskAlive() {
+        launchTabletNormal(false);
     }
 
     /** Prüft, ob keine Tastenkonfiguration in der DB ist (Beschriftung Tasten leer). */
@@ -2258,27 +2274,21 @@ public class TurmtechnikActivity extends Activity {
      * Von der Web-UI (POST /api/control/stop) aufgerufen: wie native Stop-Taste – Sounds stoppen, Melodie-Thread beenden, alle Relais aus.
      */
     public static void allRelaisOffFromWeb(android.content.Context context) {
+        performStopFromWebCore();
         final TurmtechnikActivity act = turmtechnikActivityInstance != null ? turmtechnikActivityInstance : (context instanceof TurmtechnikActivity ? (TurmtechnikActivity) context : null);
-        if (act == null) {
-            if (serial_iothread != null) {
-                for (int ix = 0; ix < RELAIS_COUNT; ix++) {
-                    globalOn[ix] = false;
-                    serial_iothread.changeRelais(ix + 1, false);
+        if (act != null) {
+            act.runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    act.refreshUiAfterStopFromWeb();
                 }
-            }
-            return;
+            });
         }
-        act.runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                act.performStopFromWeb();
-            }
-        });
     }
 
-    /** Wie native Stop-Taste: alle Glockensounds stoppen, Melodie-Thread aus, Relais aus. Auf UI-Thread aufrufen. */
-    private void performStopFromWeb() {
-        stopAllGlockenSounds();
+    /** Wie native Stop-Taste: alle Glockensounds stoppen, Melodie-Thread aus, Relais aus. */
+    private static void performStopFromWebCore() {
+        stopAllGlockenSoundsStatic();
         MelodieThreadNew.doRunOff();
         StaticVariable.stopBetaetigt = true;
         StaticVariable.pathStoppedByUser = (StaticVariable.pathAndFileNameNextMelodie != null ? StaticVariable.pathAndFileNameNextMelodie : "");
@@ -2297,6 +2307,11 @@ public class TurmtechnikActivity extends Activity {
                 serial_iothread.changeRelais(ix + 1, false);
             }
         }
+    }
+
+    /** UI-Auffrischung nach Web-Stop; die eigentliche Stop-Logik läuft bereits im Core. */
+    private void refreshUiAfterStopFromWeb() {
+        // UI ist optional; der Stop muss auch ohne sichtbare Activity vollständig wirken.
     }
 
     /**
@@ -2593,7 +2608,9 @@ public class TurmtechnikActivity extends Activity {
     public void onResume() {
         super.onResume();
         applyExitActionFromIntent(getIntent());
+        WebUiActivity.closeIfOpen();
         isInForeground = true;
+        StartTurmtechnikService.reportVisibleActivity(this, getClass().getName());
         // „Turmtechnik starten“-Notification aufheben, wenn die App wieder im Vordergrund ist (Full-Screen-Intent oder Tipp)
         try {
             NotificationManager nm = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
@@ -2694,6 +2711,7 @@ public class TurmtechnikActivity extends Activity {
     protected void onPause() {
         super.onPause();
         isInForeground = false;
+        StartTurmtechnikService.reportHiddenActivity(getClass().getName());
         unregisterDismissScreensaverReceiver();
         screensaverHandler.removeCallbacks(startScreensaverRunnable);
         screensaverHandler.removeCallbacks(screenOffRunnable);
@@ -2734,6 +2752,7 @@ public class TurmtechnikActivity extends Activity {
     public void onDestroy() {
         super.onDestroy();
         isInForeground = false;
+        StartTurmtechnikService.reportHiddenActivity(getClass().getName());
         turmtechnikActivityInstance = null;
         heartbeatHandler.removeCallbacks(heartbeatRunnable);
         // Kein LogExcelError – onDestroy bei Beenden ist normal, würde sonst LogError.txt mit "Fehler" füllen
@@ -2748,8 +2767,10 @@ public class TurmtechnikActivity extends Activity {
                 beendenButServiceRun();
             }
         }
-        // Stoppe Web-Server (immer, damit nur eine Activity ihn nutzt)
-        stopConfigWebServer();
+        // Web-Server bei UI-Verlust nicht stoppen – die Runtime muss im Service weiterleben.
+        if (isFinishing()) {
+            stopConfigWebServer();
+        }
         //Intent intent = new Intent(TurmtechnikActivity.this, TurmtechnikActivity.class) ;
         //TurmtechnikActivity.this.startActivity(intent) ;
     }
@@ -3181,11 +3202,42 @@ public class TurmtechnikActivity extends Activity {
     /** RequestCode für den Einmal-Alarm „App direkt wieder öffnen nach Exit für Einstellungen“ (anders als 0 = 15-Min-Alarm). */
     private static final int PENDING_INTENT_REQUEST_WAKE_AFTER_EXIT = 123;
 
+    private static long scheduleAppExitForSettings(android.content.Context ctx, int minutes) {
+        if (ctx == null) return 0L;
+        long until = System.currentTimeMillis() + Math.max(1, minutes) * 60 * 1000L;
+        setExitForSettingsUntilMillis(ctx, until);
+        try {
+            AlarmManager am = (AlarmManager) ctx.getSystemService(Context.ALARM_SERVICE);
+            if (am != null) {
+                Intent restartIntent = StartTurmtechnikService.createTurmtechnikLaunchIntent(ctx);
+                int flags = PendingIntent.FLAG_UPDATE_CURRENT;
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                    flags |= PendingIntent.FLAG_IMMUTABLE;
+                }
+                PendingIntent pi = PendingIntent.getActivity(ctx, PENDING_INTENT_REQUEST_WAKE_AFTER_EXIT, restartIntent, flags);
+                long triggerAt = until + 2000L;
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                    am.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerAt, pi);
+                } else {
+                    am.setExact(AlarmManager.RTC_WAKEUP, triggerAt, pi);
+                }
+                android.util.Log.i("TurmtechnikActivity", "Exit für Einstellungen geplant bis " + until + ", direkter Activity-Restart um " + triggerAt);
+            }
+        } catch (Exception e) {
+            android.util.Log.w("TurmtechnikActivity", "Einmal-Alarm nach Exit für Einstellungen: " + (e != null ? e.getMessage() : ""));
+        }
+        return until;
+    }
+
+    public static boolean prepareAppExitForSettings(android.content.Context context, int minutes) {
+        android.content.Context ctx = context != null ? context.getApplicationContext() : null;
+        return scheduleAppExitForSettings(ctx, minutes) > 0L;
+    }
+
     /**
-     * App beenden für Einstellungen: Für die nächsten {@code minutes} Minuten startet die App nicht automatisch;
-     * bei erneutem Start (z. B. HOME-Taste) wird direkt die System-Einstellungen geöffnet.
-     * Service und 15-Min-Alarm laufen weiter. Ein Einmal-Alarm direkt nach Ablauf startet die Activity wieder über
-     * ein Activity-PendingIntent, damit Android den Rückweg nicht als verbotenen Background-Start blockiert.
+     * App beenden für Einstellungen: Für die nächsten {@code minutes} Minuten startet die App nicht automatisch.
+     * Anders als beim harten Beenden bleibt der Task im Hintergrund erhalten, damit der Rückweg robuster ist.
+     * Ein Einmal-Alarm direkt nach Ablauf holt die Activity wieder nach vorn.
      */
     public static void requestAppExitForSettings(final int minutes) {
         final TurmtechnikActivity act = turmtechnikActivityInstance;
@@ -3194,30 +3246,9 @@ public class TurmtechnikActivity extends Activity {
             @Override
             public void run() {
                 android.content.Context ctx = act.getApplicationContext();
-                long until = System.currentTimeMillis() + Math.max(1, minutes) * 60 * 1000L;
-                setExitForSettingsUntilMillis(ctx, until);
-                // Einmal-Alarm: direkt nach Ablauf der Phase die Activity wieder öffnen.
-                try {
-                    AlarmManager am = (AlarmManager) ctx.getSystemService(Context.ALARM_SERVICE);
-                    if (am != null) {
-                        Intent restartIntent = StartTurmtechnikService.createTurmtechnikLaunchIntent(ctx);
-                        int flags = PendingIntent.FLAG_UPDATE_CURRENT;
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                            flags |= PendingIntent.FLAG_IMMUTABLE;
-                        }
-                        PendingIntent pi = PendingIntent.getActivity(ctx, PENDING_INTENT_REQUEST_WAKE_AFTER_EXIT, restartIntent, flags);
-                        long triggerAt = until + 2000L; // 2 s nach Ende der Phase
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                            am.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerAt, pi);
-                        } else {
-                            am.setExact(AlarmManager.RTC_WAKEUP, triggerAt, pi);
-                        }
-                        android.util.Log.i("TurmtechnikActivity", "Exit für Einstellungen geplant bis " + until + ", direkter Activity-Restart um " + triggerAt);
-                    }
-                } catch (Exception e) {
-                    android.util.Log.w("TurmtechnikActivity", "Einmal-Alarm nach Exit für Einstellungen: " + (e != null ? e.getMessage() : ""));
-                }
-                act.finishAffinity();
+                scheduleAppExitForSettings(ctx, minutes);
+                android.util.Log.i("TurmtechnikActivity", "Exit für Einstellungen aktiv – verschiebe App in den Hintergrund statt hartem Finish");
+                act.launchTabletNormalKeepTaskAlive();
             }
         });
     }
@@ -3406,6 +3437,46 @@ public class TurmtechnikActivity extends Activity {
         } catch (Exception e) {
             Log.e("ConfigWebServer", "Fehler beim Starten des Web-Servers", e);
         }
+    }
+
+    public static void ensureCoreRuntimeStarted(android.content.Context appContext) {
+        if (appContext == null) return;
+        synchronized (RUNTIME_LOCK) {
+            android.content.Context contextToUse = appContext.getApplicationContext();
+            turmtechnikContext = contextToUse;
+            if (context == null) {
+                context = contextToUse;
+            }
+
+            ensureWebServerStarted(contextToUse);
+            loadPlatinenDemoModusFromDb();
+            loadPlatinenIpListFromDb();
+            loadBenutzerprogrammeFromDb(contextToUse);
+            StaticVariable.helpForStartBenutzermelodien = false;
+            StaticVariable.firstStartMelodie = false;
+            loadNebenuhrLastRelaisAndAnzeigeFromDbStatic(contextToUse);
+
+            if (serial_iothread == null || !serial_iothread.isAlive()) {
+                StaticVariable.serial_io_ThreadsRun = false;
+                int ipCount = (StaticVariable.ipList != null && StaticVariable.portList != null)
+                        ? Math.min(StaticVariable.ipList.size(), StaticVariable.portList.size()) : 0;
+                Log.w("Serial_IoThread", "Core-Runtime startet Relais-Thread: Platinen (IP/Port)=" + ipCount + ", DemoModus=" + StaticVariable.platinenDemoModus);
+                serial_iothread = new Serial_IoThread();
+                serial_iothread.start();
+            }
+
+            if (uhr_thread == null || !uhr_thread.isAlive()) {
+                uhr_thread = new UhrThread();
+                uhr_thread.start();
+                Log.i(sourceFileName, "Core-Runtime hat UhrThread gestartet");
+            }
+
+            TimeSyncThread.startInstance(contextToUse);
+        }
+    }
+
+    public static android.content.Context getRuntimeContext() {
+        return turmtechnikContext;
     }
 
     /**
@@ -3839,8 +3910,15 @@ public class TurmtechnikActivity extends Activity {
      * Wenn für eine Uhr kein DB-Eintrag existiert: Warnung ins Logfile + Log.w, sicherer Init (A/B/C: Ist=RTC; D: Phase=0).
      */
     private void loadNebenuhrLastRelaisAndAnzeigeFromDb() {
+        loadNebenuhrLastRelaisAndAnzeigeFromDbStatic(turmtechnikContext);
+    }
+
+    public static void loadNebenuhrLastRelaisAndAnzeigeFromDbStatic(android.content.Context appContext) {
         try {
-            PlatinenDatabaseHelper dbHelper = PlatinenDatabaseHelper.getInstance(turmtechnikContext);
+            android.content.Context contextToUse = appContext != null ? appContext.getApplicationContext() : turmtechnikContext;
+            if (contextToUse == null) return;
+            turmtechnikContext = contextToUse;
+            PlatinenDatabaseHelper dbHelper = PlatinenDatabaseHelper.getInstance(contextToUse);
             int min12 = getCurrentCalendarMinuten12();
             StaticVariable.uhrA_calendarZeit = min12;
             StaticVariable.uhrB_calendarZeit = min12;
@@ -3897,7 +3975,7 @@ public class TurmtechnikActivity extends Activity {
             }
             StaticVariable.nebenuhrWaitFirstFullMinute = true;
             capNebenuhrAnzeigeToSollAndSave();
-            NebenUhrThread.recomputeWartenLaufen(turmtechnikContext);
+            NebenUhrThread.recomputeWartenLaufen(contextToUse);
         } catch (Exception e) {
             Log.e("nebenuhrLoad", "last_relais_a/angezeigte_zeit aus DB: " + e.getMessage(), e);
         }
@@ -3907,7 +3985,7 @@ public class TurmtechnikActivity extends Activity {
      * Nebenuhr-Anzeige (Ist) wird beim Laden nicht mehr auf Soll gesetzt.
      * Ist darf nur durch einen erfolgreichen Impuls geändert werden – sonst nur Aufholen oder Warten.
      */
-    private void capNebenuhrAnzeigeToSollAndSave() {
+    private static void capNebenuhrAnzeigeToSollAndSave() {
         // Kein Ist = Soll beim Laden: Wert der Nebenuhren darf nur ein erfolgreicher Impuls verändern.
     }
 
@@ -7686,16 +7764,7 @@ public class TurmtechnikActivity extends Activity {
             //if (StaticVariable.bt_io_ok || StaticVariable.carambola_io_ok)
             //{
             // Serial_IoThread nur neu starten, wenn noch keiner läuft (z. B. echter App-Start). Nach Bildschirmschoner-Rückkehr Thread wiederverwenden, damit Melodie/Relais nicht aus gehen.
-            if (serial_iothread == null || !serial_iothread.isAlive()) {
-                StaticVariable.serial_io_ThreadsRun = false;
-                loadPlatinenDemoModusFromDb();
-                loadPlatinenIpListFromDb();
-                int ipCount = (StaticVariable.ipList != null && StaticVariable.portList != null)
-                        ? Math.min(StaticVariable.ipList.size(), StaticVariable.portList.size()) : 0;
-                Log.w("Serial_IoThread", "Start Relais-Thread: bt_io_ok=" + StaticVariable.bt_io_ok + ", Platinen (IP/Port)=" + ipCount + ", DemoModus=" + StaticVariable.platinenDemoModus);
-                serial_iothread = new Serial_IoThread();
-                serial_iothread.start();
-            }
+            ensureCoreRuntimeStarted(getApplicationContext());
             //}
 
 
@@ -7731,8 +7800,7 @@ public class TurmtechnikActivity extends Activity {
 
             // Bei Erstinstallation (keine Nebenuhr-Werte): UhrThread erst in onActivityResult nach SetNebenuhr-Eingabe starten
             if (!waitingForNebenuhrFirstTime) {
-                uhr_thread = new UhrThread();
-                uhr_thread.start();
+                ensureCoreRuntimeStarted(getApplicationContext());
             }
 
 
@@ -7856,6 +7924,24 @@ public class TurmtechnikActivity extends Activity {
             for (int ix = 0; ix < buttonsSize; ix++) {
                 final int buttonIndex = ix;
                 // Tag (Slot-Index 0..23) wird in initGlockenButton gesetzt – nicht überschreiben
+
+                layout.buttons.elementAt(ix).setOnTouchListener(new View.OnTouchListener() {
+                    @Override
+                    public boolean onTouch(View v, android.view.MotionEvent event) {
+                        switch (event.getActionMasked()) {
+                            case android.view.MotionEvent.ACTION_DOWN:
+                                v.setPressed(true);
+                                v.callOnClick();
+                                return true;
+                            case android.view.MotionEvent.ACTION_UP:
+                            case android.view.MotionEvent.ACTION_CANCEL:
+                                v.setPressed(false);
+                                return true;
+                            default:
+                                return false;
+                        }
+                    }
+                });
 
                 layout.buttons.elementAt(ix).setOnClickListener(
                         new OnClickListener() {
@@ -8029,7 +8115,7 @@ public class TurmtechnikActivity extends Activity {
                                     // stop
                                     // ?
                                     {
-                                        stopAllGlockenSounds();
+                                        stopAllGlockenSoundsStatic();
                                         MelodieThreadNew.doRunOff();
                                         StaticVariable.stopBetaetigt = true;
                                         StaticVariable.pathStoppedByUser = (StaticVariable.pathAndFileNameNextMelodie != null ? StaticVariable.pathAndFileNameNextMelodie : "");
@@ -8065,7 +8151,7 @@ public class TurmtechnikActivity extends Activity {
 
                                     if (relaisNumber[localIndex] == StaticConstants.AUTOMATIC || relaisNumber[localIndex] == 101) // Taste Automatik ein/aus (101 = alte Konfiguration)
                                     {
-                                        stopAllGlockenSounds();
+                                        stopAllGlockenSoundsStatic();
                                         changeAutomatic();
                                         StaticVariable.changeInternetVerknuepfteTasten++;
                                         //sendTastenStatusJson(fernwartungID[localIndex], automaticOn) ;
@@ -8211,7 +8297,7 @@ public class TurmtechnikActivity extends Activity {
         }
     }
 
-    private void stopAllGlockenSounds() {
+    private static void stopAllGlockenSoundsStatic() {
         if (StaticVariable.streamIDsList == null || StaticVariable.soundPool2 == null) return;
         for (int i = 0; i < StaticVariable.streamIDsList.size(); i++) {
             Log.e("sound", "streamIdList= " + StaticVariable.streamIDsList.get(i));

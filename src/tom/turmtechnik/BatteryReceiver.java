@@ -65,8 +65,7 @@ public class BatteryReceiver extends BroadcastReceiver {
                 }
             }
 
-            Intent startIntent = new Intent(appContext, TurmtechnikActivity.class);
-            startIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_REORDER_TO_FRONT | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+            Intent startIntent = StartTurmtechnikService.createTurmtechnikLaunchIntent(appContext);
             appContext.startActivity(startIntent);
             Log.i(sourceFileName, "Strom angesteckt – App gestartet (PM)");
         } catch (Exception e) {
@@ -75,8 +74,7 @@ public class BatteryReceiver extends BroadcastReceiver {
             StaticVariable.autostartDerApp = true;
             StartTurmtechnikService.touchHeartbeat();
             StartTurmtechnikService.setTimeTurmtechnik(90);
-            Intent startIntent = new Intent(appContext, TurmtechnikActivity.class);
-            startIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_REORDER_TO_FRONT | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+            Intent startIntent = StartTurmtechnikService.createTurmtechnikLaunchIntent(appContext);
             appContext.startActivity(startIntent);
         }
     }

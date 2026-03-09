@@ -27,6 +27,57 @@ public class NebenUhrThread extends Thread {
     private int minutenSave;
     private int stunden_12_save;
 
+    private static synchronized NebenUhrA_thread startNebenuhrAIfNeeded(String reason) {
+        boolean threadLaeuft = (nebenuhrA_threadRef != null && nebenuhrA_threadRef.isAlive()) || StaticVariable.uhrA_doRun;
+        if (threadLaeuft) {
+            if (nebenuhrA_threadRef != null) {
+                Log.d("NebenUhrThread", "Nebenuhr A läuft bereits, überspringe Start (" + reason + "), threadId=" + nebenuhrA_threadRef.getId());
+            } else {
+                Log.d("NebenUhrThread", "Nebenuhr A läuft bereits, überspringe Start (" + reason + "), ohne Thread-Referenz");
+            }
+            return nebenuhrA_threadRef;
+        }
+        StaticVariable.uhrA_doRun = true;
+        nebenuhrA_threadRef = new NebenUhrA_thread();
+        nebenuhrA_threadRef.start();
+        Log.d("NebenUhrThread", "Nebenuhr A gestartet (" + reason + "), threadId=" + nebenuhrA_threadRef.getId());
+        return nebenuhrA_threadRef;
+    }
+
+    private static synchronized NebenUhrB_thread startNebenuhrBIfNeeded(String reason) {
+        boolean threadLaeuft = (nebenuhrB_threadRef != null && nebenuhrB_threadRef.isAlive()) || StaticVariable.uhrB_doRun;
+        if (threadLaeuft) {
+            if (nebenuhrB_threadRef != null) {
+                Log.d("NebenUhrThread", "Nebenuhr B läuft bereits, überspringe Start (" + reason + "), threadId=" + nebenuhrB_threadRef.getId());
+            } else {
+                Log.d("NebenUhrThread", "Nebenuhr B läuft bereits, überspringe Start (" + reason + "), ohne Thread-Referenz");
+            }
+            return nebenuhrB_threadRef;
+        }
+        StaticVariable.uhrB_doRun = true;
+        nebenuhrB_threadRef = new NebenUhrB_thread();
+        nebenuhrB_threadRef.start();
+        Log.d("NebenUhrThread", "Nebenuhr B gestartet (" + reason + "), threadId=" + nebenuhrB_threadRef.getId());
+        return nebenuhrB_threadRef;
+    }
+
+    private static synchronized NebenUhrC_thread startNebenuhrCIfNeeded(String reason) {
+        boolean threadLaeuft = (nebenuhrC_threadRef != null && nebenuhrC_threadRef.isAlive()) || StaticVariable.uhrC_doRun;
+        if (threadLaeuft) {
+            if (nebenuhrC_threadRef != null) {
+                Log.d("NebenUhrThread", "Nebenuhr C läuft bereits, überspringe Start (" + reason + "), threadId=" + nebenuhrC_threadRef.getId());
+            } else {
+                Log.d("NebenUhrThread", "Nebenuhr C läuft bereits, überspringe Start (" + reason + "), ohne Thread-Referenz");
+            }
+            return nebenuhrC_threadRef;
+        }
+        StaticVariable.uhrC_doRun = true;
+        nebenuhrC_threadRef = new NebenUhrC_thread();
+        nebenuhrC_threadRef.start();
+        Log.d("NebenUhrThread", "Nebenuhr C gestartet (" + reason + "), threadId=" + nebenuhrC_threadRef.getId());
+        return nebenuhrC_threadRef;
+    }
+
     public void run() {
         // hier echtzeit uhr einbauen
 
@@ -147,10 +198,7 @@ public class NebenUhrThread extends Thread {
                 Log.e("warte/", "Uhr A calendar=" + StaticVariable.uhrA_calendarZeit + " angezeigt " + StaticVariable.uhrA_angezeigteZeit + (aAufholen ? " (Aufholen, RTC ignoriert)" : ""));
             }
             if (StaticVariable.uhrA_doRun == false && !StaticVariable.uhr_zeiteingabeAktiv[0]) {
-                StaticVariable.uhrA_doRun = true;
-                nebenuhrA_thread = new NebenUhrA_thread();
-                nebenuhrA_threadRef = nebenuhrA_thread;
-                nebenuhrA_thread.start();
+                nebenuhrA_thread = startNebenuhrAIfNeeded("Minutenlauf");
             }
         } else if (nebenuhrA_config != null && !nebenuhrA_config.aktiv) {
             StaticVariable.uhrA_doRun = false;
@@ -173,10 +221,7 @@ public class NebenUhrThread extends Thread {
                 }
             }
             if (StaticVariable.uhrB_doRun == false && !StaticVariable.uhr_zeiteingabeAktiv[1]) {
-                StaticVariable.uhrB_doRun = true;
-                nebenuhrB_thread = new NebenUhrB_thread();
-                nebenuhrB_threadRef = nebenuhrB_thread;
-                nebenuhrB_thread.start();
+                nebenuhrB_thread = startNebenuhrBIfNeeded("Minutenlauf");
             }
         } else if (nebenuhrB_config != null && !nebenuhrB_config.aktiv) {
             StaticVariable.uhrB_doRun = false;
@@ -199,10 +244,7 @@ public class NebenUhrThread extends Thread {
                 }
             }
             if (StaticVariable.uhrC_doRun == false && !StaticVariable.uhr_zeiteingabeAktiv[2]) {
-                StaticVariable.uhrC_doRun = true;
-                nebenuhrC_thread = new NebenUhrC_thread();
-                nebenuhrC_threadRef = nebenuhrC_thread;
-                nebenuhrC_thread.start();
+                nebenuhrC_thread = startNebenuhrCIfNeeded("Minutenlauf");
             }
         } else if (nebenuhrC_config != null && !nebenuhrC_config.aktiv) {
             StaticVariable.uhrC_doRun = false;
@@ -230,35 +272,14 @@ public class NebenUhrThread extends Thread {
         if (ctx == null || index < 0 || index > 2) return;
         PlatinenDatabaseHelper dbHelper = PlatinenDatabaseHelper.getInstance(ctx);
         if (index == 0) {
-            StaticVariable.uhrA_doRun = true;
-            if (nebenuhrA_threadRef == null || !nebenuhrA_threadRef.isAlive()) {
-                PlatinenDatabaseHelper.NebenuhrConfig config = dbHelper.getNebenuhrByZeile(3);
-                if (config != null && config.aktiv) {
-                    nebenuhrA_threadRef = new NebenUhrA_thread();
-                    nebenuhrA_threadRef.start();
-                    Log.d("NebenUhrThread", "Nebenuhr A nach Confirm neu gestartet");
-                }
-            }
+            PlatinenDatabaseHelper.NebenuhrConfig config = dbHelper.getNebenuhrByZeile(3);
+            if (config != null && config.aktiv) startNebenuhrAIfNeeded("Confirm/Web-UI");
         } else if (index == 1) {
-            StaticVariable.uhrB_doRun = true;
-            if (nebenuhrB_threadRef == null || !nebenuhrB_threadRef.isAlive()) {
-                PlatinenDatabaseHelper.NebenuhrConfig config = dbHelper.getNebenuhrByZeile(4);
-                if (config != null && config.aktiv) {
-                    nebenuhrB_threadRef = new NebenUhrB_thread();
-                    nebenuhrB_threadRef.start();
-                    Log.d("NebenUhrThread", "Nebenuhr B nach Confirm neu gestartet");
-                }
-            }
+            PlatinenDatabaseHelper.NebenuhrConfig config = dbHelper.getNebenuhrByZeile(4);
+            if (config != null && config.aktiv) startNebenuhrBIfNeeded("Confirm/Web-UI");
         } else if (index == 2) {
-            StaticVariable.uhrC_doRun = true;
-            if (nebenuhrC_threadRef == null || !nebenuhrC_threadRef.isAlive()) {
-                PlatinenDatabaseHelper.NebenuhrConfig config = dbHelper.getNebenuhrByZeile(5);
-                if (config != null && config.aktiv) {
-                    nebenuhrC_threadRef = new NebenUhrC_thread();
-                    nebenuhrC_threadRef.start();
-                    Log.d("NebenUhrThread", "Nebenuhr C nach Confirm neu gestartet");
-                }
-            }
+            PlatinenDatabaseHelper.NebenuhrConfig config = dbHelper.getNebenuhrByZeile(5);
+            if (config != null && config.aktiv) startNebenuhrCIfNeeded("Confirm/Web-UI");
         }
     }
 

@@ -229,8 +229,9 @@ public class Carambola_IoThread extends Thread {
         if (carambola_serial_io == null) return false;
         String expected = DEFAULT_IMPULS_ANTWORT;
         try {
-            if (TurmtechnikActivity.turmtechnikContext != null) {
-                Platine platine = PlatinenDatabaseHelper.getInstance(TurmtechnikActivity.turmtechnikContext).getPlatine(_platineNummerMinus1 + 1);
+            android.content.Context runtimeContext = TurmtechnikActivity.getRuntimeContext();
+            if (runtimeContext != null) {
+                Platine platine = PlatinenDatabaseHelper.getInstance(runtimeContext).getPlatine(_platineNummerMinus1 + 1);
                 if (platine != null && platine.impulsAntwortErwartet != null && !platine.impulsAntwortErwartet.trim().isEmpty()) {
                     expected = platine.impulsAntwortErwartet.trim();
                 }
@@ -441,7 +442,7 @@ public class Carambola_IoThread extends Thread {
 
     /** WLAN kurz aus- und wieder einschalten, wenn Verbindung längere Zeit nicht zustande kommt (nur im WLAN-Modus). */
     private void cycleWifiOffOn() {
-        Context ctx = TurmtechnikActivity.turmtechnikContext;
+        Context ctx = TurmtechnikActivity.getRuntimeContext();
         if (ctx == null) return;
         try {
             WifiManager wm = (WifiManager) ctx.getApplicationContext().getSystemService(Context.WIFI_SERVICE);
@@ -480,8 +481,9 @@ public class Carambola_IoThread extends Thread {
         if (carambola_serial_io != null) {
             String expected = DEFAULT_IMPULS_ANTWORT;
             try {
-                if (TurmtechnikActivity.turmtechnikContext != null) {
-                    Platine platine = PlatinenDatabaseHelper.getInstance(TurmtechnikActivity.turmtechnikContext).getPlatine(_platineNummerMinus1 + 1);
+                android.content.Context runtimeContext = TurmtechnikActivity.getRuntimeContext();
+                if (runtimeContext != null) {
+                    Platine platine = PlatinenDatabaseHelper.getInstance(runtimeContext).getPlatine(_platineNummerMinus1 + 1);
                     if (platine != null && platine.impulsAntwortErwartet != null && !platine.impulsAntwortErwartet.trim().isEmpty()) {
                         expected = platine.impulsAntwortErwartet.trim();
                     }

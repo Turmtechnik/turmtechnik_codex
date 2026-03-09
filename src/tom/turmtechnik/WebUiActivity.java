@@ -38,6 +38,7 @@ import java.net.URL;
  * Eine „Zurück“-Taste beendet die Activity und kehrt zur aufrufenden App zurück.
  */
 public class WebUiActivity extends Activity {
+    private static volatile WebUiActivity activeInstance;
 
     public static final String EXTRA_PATH = "path";
     /** Wenn true: URL = http://127.0.0.1:8080/&lt;path&gt; (immer funktionsfähig beim Bildschirmschoner vom gleichen Gerät). */
@@ -70,6 +71,7 @@ public class WebUiActivity extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        activeInstance = this;
         requestWindowFeature(Window.FEATURE_NO_TITLE);
         getWindow().setFlags(
                 WindowManager.LayoutParams.FLAG_FULLSCREEN,
@@ -314,12 +316,14 @@ public class WebUiActivity extends Activity {
     protected void onResume() {
         super.onResume();
         hideSystemUi();
+        StartTurmtechnikService.reportVisibleActivity(this, getClass().getName());
         StartTurmtechnikService.touchHeartbeat();
         startHeartbeat();
     }
 
     @Override
     protected void onPause() {
+        StartTurmtechnikService.reportHiddenActivity(getClass().getName());
         stopHeartbeat();
         super.onPause();
     }
@@ -349,6 +353,10 @@ public class WebUiActivity extends Activity {
 
     @Override
     protected void onDestroy() {
+        if (activeInstance == this) {
+            activeInstance = null;
+        }
+        StartTurmtechnikService.reportHiddenActivity(getClass().getName());
         stopHeartbeat();
         screensaverHandler.removeCallbacks(screensaverRunnable);
         if (screenDimRunnable != null) {
@@ -357,9 +365,26 @@ public class WebUiActivity extends Activity {
         super.onDestroy();
     }
 
+    public static void closeIfOpen() {
+        final WebUiActivity activity = activeInstance;
+        if (activity == null) return;
+        activity.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                if (!activity.isFinishing()) {
+                    activity.finish();
+                }
+            }
+        });
+    }
+
     /** Tastendruck (z. B. E) bei Schoner/abgedunkeltem Bildschirm: Aufwecken und direkt Layout-Seite anzeigen, ohne Sperrbildschirm. */
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
+        if (keyCode == KeyEvent.KEYCODE_BACK && !(showingScreensaver || screenDimOverlay != null)) {
+            onBackPressed();
+            return true;
+        }
         if (showingScreensaver || screenDimOverlay != null) {
             try {
                 PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
@@ -392,7 +417,18 @@ public class WebUiActivity extends Activity {
         if (webView != null && webView.canGoBack()) {
             webView.goBack();
         } else {
-            super.onBackPressed();
+            try {
+                TurmtechnikActivity.prepareAppExitForSettings(getApplicationContext(), 30);
+                Intent home = new Intent(Intent.ACTION_MAIN);
+                home.addCategory(Intent.CATEGORY_HOME);
+                home.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                startActivity(home);
+                moveTaskToBack(true);
+                finish();
+            } catch (Exception e) {
+                Log.w("WebUiActivity", "Zurück aktiviert Tablet-Freigabe nicht: " + (e != null ? e.getMessage() : ""));
+                moveTaskToBack(true);
+            }
         }
     }
 

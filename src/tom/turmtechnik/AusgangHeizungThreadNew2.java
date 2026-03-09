@@ -23,7 +23,7 @@ public class AusgangHeizungThreadNew2 extends Thread {
         // Sofort nach Neustart: gespeicherten Ausgangszustand wiederherstellen (Relais wieder ein,
         // wenn Zeit noch nicht um). Damit bleibt der Ausgang nach App-Absturz/Neustart an bis zur geplanten Ausschaltzeit.
         try {
-            if (TurmtechnikActivity.turmtechnikContext != null) {
+            if (TurmtechnikActivity.getRuntimeContext() != null) {
                 SaveAndLoadHeizung restore = new SaveAndLoadHeizung();
                 int relais = restore.loadHeizungRelais();
                 if (relais > 0) {

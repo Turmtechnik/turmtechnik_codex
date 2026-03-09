@@ -11,7 +11,7 @@ public class NebenUhrB_thread extends Thread {
     private PlatinenDatabaseHelper.NebenuhrConfig nebenuhrConfig; // Konfiguration aus Datenbank
 
     public void run() {
-        PlatinenDatabaseHelper dbHelper = PlatinenDatabaseHelper.getInstance(TurmtechnikActivity.turmtechnikContext);
+        PlatinenDatabaseHelper dbHelper = PlatinenDatabaseHelper.getInstance(TurmtechnikActivity.getRuntimeContext());
         PlatinenDatabaseHelper.NebenuhrConfig config = dbHelper.getNebenuhrByZeile(4); // Zeile 4 = Uhr B
 
         if (config == null) {
@@ -29,7 +29,7 @@ public class NebenUhrB_thread extends Thread {
             // Prüfe, ob Konfiguration neu geladen werden muss (wenn über Web-UI geändert)
             if (StaticVariable.nebenuhrB_configNeuLaden) {
                 android.util.Log.d("NebenUhrB_thread", "Konfiguration wurde geändert, lade neu...");
-                PlatinenDatabaseHelper dbHelperReload = PlatinenDatabaseHelper.getInstance(TurmtechnikActivity.turmtechnikContext);
+                PlatinenDatabaseHelper dbHelperReload = PlatinenDatabaseHelper.getInstance(TurmtechnikActivity.getRuntimeContext());
                 PlatinenDatabaseHelper.NebenuhrConfig newConfig = dbHelperReload.getNebenuhrByZeile(4);
                 if (newConfig != null) {
                     this.nebenuhrConfig = newConfig;
@@ -190,7 +190,7 @@ public class NebenUhrB_thread extends Thread {
             }
             if (Serial_IoThread.getSerialIoStatus2()) {
                 try {
-                    PlatinenDatabaseHelper dbHelper = PlatinenDatabaseHelper.getInstance(TurmtechnikActivity.turmtechnikContext);
+                    PlatinenDatabaseHelper dbHelper = PlatinenDatabaseHelper.getInstance(TurmtechnikActivity.getRuntimeContext());
                     PlatinenDatabaseHelper.NebenuhrConfig saveConfig = dbHelper.getNebenuhrByZeile(4);
                     if (saveConfig != null) {
                         saveConfig.lastRelaisA = nextLastRelaisA;
@@ -277,7 +277,7 @@ public class NebenUhrB_thread extends Thread {
                 incrementAngezeigteZeit_B();
                 StaticVariable.uhrB_lastRelaisA = nextLastRelaisA;
                 try {
-                    PlatinenDatabaseHelper dbHelper = PlatinenDatabaseHelper.getInstance(TurmtechnikActivity.turmtechnikContext);
+                    PlatinenDatabaseHelper dbHelper = PlatinenDatabaseHelper.getInstance(TurmtechnikActivity.getRuntimeContext());
                     PlatinenDatabaseHelper.NebenuhrConfig c = dbHelper.getNebenuhrByZeile(4);
                     if (c != null) {
                         c.angezeigteZeit = StaticVariable.uhrB_angezeigteZeit;

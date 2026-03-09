@@ -28,7 +28,7 @@ public class NebenUhrD_thread extends Thread {
     private static final long SERIAL_NOT_OK_LOG_INTERVAL_MS = 30000; // 30 Sekunden
 
     public void run() {
-        PlatinenDatabaseHelper dbHelper = PlatinenDatabaseHelper.getInstance(TurmtechnikActivity.turmtechnikContext);
+        PlatinenDatabaseHelper dbHelper = PlatinenDatabaseHelper.getInstance(TurmtechnikActivity.getRuntimeContext());
         PlatinenDatabaseHelper.NebenuhrConfig config = dbHelper.getNebenuhrByZeile(6); // Zeile 6 = Uhr D (Monduhr)
         if (config == null) {
             Log.w("NebenUhrD_thread", "Monduhr D nicht in Datenbank gefunden. Bitte über Web-UI konfigurieren.");
@@ -46,7 +46,7 @@ public class NebenUhrD_thread extends Thread {
             // Prüfe, ob Konfiguration neu geladen werden muss (wenn über Web-UI geändert)
             if (StaticVariable.nebenuhrD_configNeuLaden) {
                 Log.d("MonduhrD", "Konfiguration wurde geändert, lade neu...");
-                PlatinenDatabaseHelper dbHelperReload = PlatinenDatabaseHelper.getInstance(TurmtechnikActivity.turmtechnikContext);
+                PlatinenDatabaseHelper dbHelperReload = PlatinenDatabaseHelper.getInstance(TurmtechnikActivity.getRuntimeContext());
                 PlatinenDatabaseHelper.NebenuhrConfig newConfig = dbHelperReload.getNebenuhrByZeile(6);
                 if (newConfig != null) {
                     this.nebenuhrConfig = newConfig;
@@ -130,7 +130,7 @@ public class NebenUhrD_thread extends Thread {
 
         // Speichere Mondphase beim Beenden
         try {
-            PlatinenDatabaseHelper dbHelper2 = PlatinenDatabaseHelper.getInstance(TurmtechnikActivity.turmtechnikContext);
+            PlatinenDatabaseHelper dbHelper2 = PlatinenDatabaseHelper.getInstance(TurmtechnikActivity.getRuntimeContext());
             PlatinenDatabaseHelper.NebenuhrConfig saveConfig = dbHelper2.getNebenuhrByZeile(6);
             if (saveConfig != null) {
                 saveConfig.mondphaseIst = StaticVariable.uhrD_mondphaseIst;
@@ -347,7 +347,7 @@ public class NebenUhrD_thread extends Thread {
                     Serial_IoThread.relaisOld[relaisNumberToUse - 1] = false;
                 }
                 try {
-                    PlatinenDatabaseHelper dbHelper = PlatinenDatabaseHelper.getInstance(TurmtechnikActivity.turmtechnikContext);
+                    PlatinenDatabaseHelper dbHelper = PlatinenDatabaseHelper.getInstance(TurmtechnikActivity.getRuntimeContext());
                     PlatinenDatabaseHelper.NebenuhrConfig c = dbHelper.getNebenuhrByZeile(6);
                     if (c != null) {
                         c.mondphaseIst = StaticVariable.uhrD_mondphaseIst;
@@ -364,7 +364,7 @@ public class NebenUhrD_thread extends Thread {
             
             // WICHTIG: Sofort nach erfolgreichem Impuls in Datenbank speichern
             try {
-                PlatinenDatabaseHelper dbHelper = PlatinenDatabaseHelper.getInstance(TurmtechnikActivity.turmtechnikContext);
+                PlatinenDatabaseHelper dbHelper = PlatinenDatabaseHelper.getInstance(TurmtechnikActivity.getRuntimeContext());
                 PlatinenDatabaseHelper.NebenuhrConfig saveConfig = dbHelper.getNebenuhrByZeile(6);
                 if (saveConfig != null) {
                     saveConfig.mondphaseIst = StaticVariable.uhrD_mondphaseIst;
@@ -399,7 +399,7 @@ public class NebenUhrD_thread extends Thread {
     }
 
     private int getImpulseProMondphase() {
-        PlatinenDatabaseHelper dbHelper = PlatinenDatabaseHelper.getInstance(TurmtechnikActivity.turmtechnikContext);
+        PlatinenDatabaseHelper dbHelper = PlatinenDatabaseHelper.getInstance(TurmtechnikActivity.getRuntimeContext());
         return dbHelper.getMondImpulseProPhase();
     }
 

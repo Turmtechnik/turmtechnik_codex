@@ -67,7 +67,7 @@
             android:configChanges="uiMode"
             android:label="@string/title_activity_turmtechnik"
             android:largeHeap="true"
-            android:launchMode="singleTop"
+            android:launchMode="singleTask"
             android:screenOrientation="landscape"
             android:theme="@android:style/Theme.NoTitleBar.Fullscreen"
             android:windowSoftInputMode="adjustResize"
@@ -81,9 +81,7 @@
                 <action android:name="android.intent.action.MAIN"/>
 
                 <category android:name="android.intent.category.LAUNCHER"/>
-                <!-- das macht das programm zum default home: -->
                 <category android:name="android.intent.category.DEFAULT"/>
-                <category android:name="android.intent.category.HOME"/>
             </intent-filter>
         </activity>
         <activity

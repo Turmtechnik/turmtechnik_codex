@@ -120,8 +120,7 @@ public class BootUpReceiver extends BroadcastReceiver {
     private static void startTurmtechnikActivity(Context appContext) {
         StartTurmtechnikService.touchHeartbeat();
         StartTurmtechnikService.setTimeTurmtechnik(90);
-        Intent i = new Intent(appContext, TurmtechnikActivity.class);
-        i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_REORDER_TO_FRONT | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+        Intent i = StartTurmtechnikService.createTurmtechnikLaunchIntent(appContext);
         appContext.startActivity(i);
     }
 

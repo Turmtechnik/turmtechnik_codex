@@ -231,7 +231,7 @@ public class UhrThread extends Thread {
                 // + 2 war notwendig zum Test der Zukunft !!! ( z.B. 2015 )
 
                 // Benutzerprogramm kann für dieses Datum einen Programmtag erzwingen (ganzer Tag umschalten)
-                android.content.Context ctx = TurmtechnikActivity.turmtechnikContext;
+                android.content.Context ctx = TurmtechnikActivity.getRuntimeContext();
                 if (ctx != null) TurmtechnikActivity.loadBenutzerprogrammeFromDb(ctx);
                 String benutzerTagtyp = TurmtechnikActivity.getBenutzerprogrammTagtypForDate(festtageTag, festtageMonat, festtageJahr);
                 if (benutzerTagtyp != null && !benutzerTagtyp.isEmpty()) {
@@ -258,7 +258,7 @@ public class UhrThread extends Thread {
                 String tagtypNameForDB = excelTableFileName;
                 if (!programmeInDB) {
                     try {
-                        android.content.Context context = TurmtechnikActivity.turmtechnikContext;
+                        android.content.Context context = TurmtechnikActivity.getRuntimeContext();
                         if (context != null) {
                             PlatinenDatabaseHelper dbHelper = PlatinenDatabaseHelper.getInstance(context);
                             java.util.List<Programm> programme = dbHelper.getProgrammeByTagtyp(tagtypNameForDB);
@@ -497,7 +497,7 @@ public class UhrThread extends Thread {
             festtageTag = calendar.get(Calendar.DAY_OF_MONTH);
             festtageMonat = calendar.get(Calendar.MONTH);
             festtageJahr = calendar.get(Calendar.YEAR);
-            android.content.Context ctxInit = TurmtechnikActivity.turmtechnikContext;
+                    android.content.Context ctxInit = TurmtechnikActivity.getRuntimeContext();
             if (ctxInit != null) TurmtechnikActivity.loadBenutzerprogrammeFromDb(ctxInit);
             String benutzerTagtypInit = TurmtechnikActivity.getBenutzerprogrammTagtypForDate(festtageTag, festtageMonat, festtageJahr);
             if (benutzerTagtypInit != null && !benutzerTagtypInit.isEmpty()) {
@@ -519,7 +519,7 @@ public class UhrThread extends Thread {
             boolean programmeInDB = false;
             if (!programmeInDB) {
                 try {
-                    android.content.Context context = TurmtechnikActivity.turmtechnikContext;
+                            android.content.Context context = TurmtechnikActivity.getRuntimeContext();
                     if (context != null) {
                         PlatinenDatabaseHelper dbHelper = PlatinenDatabaseHelper.getInstance(context);
                         java.util.List<Programm> programme = dbHelper.getProgrammeByTagtyp(excelTableFileName);
@@ -957,7 +957,7 @@ public class UhrThread extends Thread {
             int candidateBenutzerSlot = -1;
             int candidateBenutzerStunde = 25;
             int candidateBenutzerMinute = 61;
-            android.content.Context ctx = TurmtechnikActivity.turmtechnikContext;
+                    android.content.Context ctx = TurmtechnikActivity.getRuntimeContext();
             if (ctx != null) {
                 TurmtechnikActivity.loadBenutzerprogrammeFromDb(ctx);
             }
@@ -987,7 +987,7 @@ public class UhrThread extends Thread {
                 }
             }
 
-            android.content.Context context = TurmtechnikActivity.turmtechnikContext;
+                        android.content.Context context = TurmtechnikActivity.getRuntimeContext();
             if (context == null) {
                 return;
             }
@@ -1378,7 +1378,7 @@ public class UhrThread extends Thread {
         }
         
         try {
-            android.content.Context context = TurmtechnikActivity.turmtechnikContext;
+            android.content.Context context = TurmtechnikActivity.getRuntimeContext();
             if (context == null) {
                 Log.w(sourceFileName, "makeZeitenZeilenFutureFromDatabase: Context ist null");
                 return;
@@ -2522,7 +2522,7 @@ public class UhrThread extends Thread {
     }
 
     private void berechneSonnenAufUndUntergang() {
-        android.content.Context context = TurmtechnikActivity.turmtechnikContext;
+            android.content.Context context = TurmtechnikActivity.getRuntimeContext();
         PlatinenDatabaseHelper.AnlagenstandortConfig config = TurmtechnikActivity.loadAnlagenstandortConfig(context);
         if (config == null) return;
 
