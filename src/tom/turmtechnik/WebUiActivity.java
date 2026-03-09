@@ -68,6 +68,50 @@ public class WebUiActivity extends Activity {
     private Handler heartbeatHandler = new Handler(Looper.getMainLooper());
     private Runnable heartbeatRunnable;
 
+    private void cancelScreenDimState() {
+        if (screenDimRunnable != null) {
+            screenOffHandler.removeCallbacks(screenDimRunnable);
+        }
+        try {
+            getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+            WindowManager.LayoutParams lp = getWindow().getAttributes();
+            lp.screenBrightness = 0.85f;
+            getWindow().setAttributes(lp);
+        } catch (Exception e) {
+            Log.w("WebUiActivity", "ScreenDim-Reset: " + (e != null ? e.getMessage() : ""));
+        }
+        if (screenDimOverlay != null) {
+            ViewGroup parent = (ViewGroup) screenDimOverlay.getParent();
+            if (parent != null) parent.removeView(screenDimOverlay);
+            screenDimOverlay = null;
+        }
+    }
+
+    private void refreshScreensaverFromUserInteraction() {
+        if (isFinishing()) return;
+        StartTurmtechnikService.touchHeartbeat();
+        if (showingScreensaver) return;
+        cancelScreenDimState();
+        if (webView != null) {
+            String currentUrl = webView.getUrl();
+            if (currentUrl != null && !currentUrl.contains("screensaver.html")) {
+                pageBeforeScreensaver = currentUrl;
+            }
+        }
+        startScreensaverTimer();
+    }
+
+    public static void notifyUserInteraction() {
+        final WebUiActivity activity = activeInstance;
+        if (activity == null) return;
+        activity.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                activity.refreshScreensaverFromUserInteraction();
+            }
+        });
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -207,17 +251,7 @@ public class WebUiActivity extends Activity {
     private void handleScreensaverDismiss() {
         if (webView == null) return;
         showingScreensaver = false;
-        if (screenDimRunnable != null) screenOffHandler.removeCallbacks(screenDimRunnable);
-        // Wiedereinschalten: Helligkeit wieder hell, sonst kann man nichts einstellen
-        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-        WindowManager.LayoutParams lp = getWindow().getAttributes();
-        lp.screenBrightness = 0.85f;
-        getWindow().setAttributes(lp);
-        if (screenDimOverlay != null) {
-            ViewGroup parent = (ViewGroup) screenDimOverlay.getParent();
-            if (parent != null) parent.removeView(screenDimOverlay);
-            screenDimOverlay = null;
-        }
+        cancelScreenDimState();
         String targetUrl = (pageBeforeScreensaver != null && !pageBeforeScreensaver.isEmpty())
                 ? pageBeforeScreensaver
                 : DEFAULT_PAGE_AFTER_SCREENSAVER;
@@ -318,6 +352,7 @@ public class WebUiActivity extends Activity {
         hideSystemUi();
         StartTurmtechnikService.reportVisibleActivity(this, getClass().getName());
         StartTurmtechnikService.touchHeartbeat();
+        refreshScreensaverFromUserInteraction();
         startHeartbeat();
     }
 
@@ -376,6 +411,14 @@ public class WebUiActivity extends Activity {
                 }
             }
         });
+    }
+
+    @Override
+    public boolean dispatchTouchEvent(android.view.MotionEvent ev) {
+        if (ev != null && ev.getAction() == android.view.MotionEvent.ACTION_DOWN) {
+            refreshScreensaverFromUserInteraction();
+        }
+        return super.dispatchTouchEvent(ev);
     }
 
     /** Tastendruck (z. B. E) bei Schoner/abgedunkeltem Bildschirm: Aufwecken und direkt Layout-Seite anzeigen, ohne Sperrbildschirm. */

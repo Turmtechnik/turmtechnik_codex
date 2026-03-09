@@ -1010,6 +1010,20 @@ public class ConfigWebServer {
                 return handlePutBeschriftungTasten(request);
             }
         }
+        if (uri.equals(API_PREFIX + "/ui-funktionen") && "GET".equals(method)) {
+            return handleGetUiFunktionen();
+        }
+        if (uri.equals(API_PREFIX + "/layout-items") && "GET".equals(method)) {
+            return handleGetLayoutItems();
+        }
+        if (uri.equals(API_PREFIX + "/layout-grid-settings")) {
+            if ("GET".equals(method)) {
+                return handleGetLayoutGridSettings();
+            }
+            if ("PUT".equals(method)) {
+                return handlePutLayoutGridSettings(request);
+            }
+        }
         
         // /api/benutzerprogramme/:index - Benutzerprogramm (PUT)
         if (uri.matches(API_PREFIX + "/benutzerprogramme/\\d+")) {
@@ -1349,6 +1363,81 @@ public class ConfigWebServer {
         } catch (Exception e) {
             Log.e(TAG, "Fehler beim Lesen der Beschriftung-Tasten", e);
             String errorJson = "{\"error\":\"" + e.getMessage().replace("\"", "'") + "\"}";
+            return new SimpleHttpServer.HttpResponse(500, "application/json", errorJson);
+        }
+    }
+
+    private SimpleHttpServer.HttpResponse handleGetUiFunktionen() {
+        try {
+            PlatinenDatabaseHelper dbHelper = PlatinenDatabaseHelper.getInstance(context);
+            List<PlatinenDatabaseHelper.UiFunktion> rows = dbHelper.getAllUiFunktionen();
+            return new SimpleHttpServer.HttpResponse(200, "application/json", gson.toJson(rows));
+        } catch (Exception e) {
+            Log.e(TAG, "Fehler beim Lesen der UI-Funktionen", e);
+            String errorJson = "{\"error\":\"" + (e.getMessage() != null ? e.getMessage().replace("\"", "'") : "Lesefehler") + "\"}";
+            return new SimpleHttpServer.HttpResponse(500, "application/json", errorJson);
+        }
+    }
+
+    private SimpleHttpServer.HttpResponse handleGetLayoutItems() {
+        try {
+            PlatinenDatabaseHelper dbHelper = PlatinenDatabaseHelper.getInstance(context);
+            List<PlatinenDatabaseHelper.LayoutItem> rows = dbHelper.getAllLayoutItems();
+            return new SimpleHttpServer.HttpResponse(200, "application/json", gson.toJson(rows));
+        } catch (Exception e) {
+            Log.e(TAG, "Fehler beim Lesen der Layout-Items", e);
+            String errorJson = "{\"error\":\"" + (e.getMessage() != null ? e.getMessage().replace("\"", "'") : "Lesefehler") + "\"}";
+            return new SimpleHttpServer.HttpResponse(500, "application/json", errorJson);
+        }
+    }
+
+    private SimpleHttpServer.HttpResponse handleGetLayoutGridSettings() {
+        try {
+            PlatinenDatabaseHelper dbHelper = PlatinenDatabaseHelper.getInstance(context);
+            Map<String, Object> result = new HashMap<>();
+            int cols = dbHelper.getLayoutGridCols();
+            int rows = dbHelper.getLayoutGridRows();
+            result.put("cols", cols);
+            result.put("rows", rows);
+            result.put("pageRows", Math.max(1, (int) Math.ceil(24.0 / Math.max(1, cols))));
+            return new SimpleHttpServer.HttpResponse(200, "application/json", gson.toJson(result));
+        } catch (Exception e) {
+            Log.e(TAG, "Fehler beim Lesen der Layout-Grid-Einstellungen", e);
+            String errorJson = "{\"error\":\"" + (e.getMessage() != null ? e.getMessage().replace("\"", "'") : "Lesefehler") + "\"}";
+            return new SimpleHttpServer.HttpResponse(500, "application/json", errorJson);
+        }
+    }
+
+    private SimpleHttpServer.HttpResponse handlePutLayoutGridSettings(SimpleHttpServer.HttpRequest request) {
+        try {
+            String body = request != null && request.body != null ? request.body : "";
+            java.lang.reflect.Type mapType = new com.google.gson.reflect.TypeToken<Map<String, Object>>() {}.getType();
+            Map<String, Object> payload = gson.fromJson(body, mapType);
+            PlatinenDatabaseHelper dbHelper = PlatinenDatabaseHelper.getInstance(context);
+            int cols = PlatinenDatabaseHelper.DEFAULT_LAYOUT_GRID_COLS;
+            int rows = PlatinenDatabaseHelper.DEFAULT_LAYOUT_GRID_ROWS;
+            if (payload != null) {
+                Object colsObj = payload.get("cols");
+                Object rowsObj = payload.get("rows");
+                if (colsObj instanceof Number) cols = ((Number) colsObj).intValue();
+                else if (colsObj instanceof String && !((String) colsObj).trim().isEmpty()) cols = Integer.parseInt(((String) colsObj).trim());
+                if (rowsObj instanceof Number) rows = ((Number) rowsObj).intValue();
+                else if (rowsObj instanceof String && !((String) rowsObj).trim().isEmpty()) rows = Integer.parseInt(((String) rowsObj).trim());
+            }
+            cols = PlatinenDatabaseHelper.normalizeLayoutGridCols(cols);
+            rows = PlatinenDatabaseHelper.normalizeLayoutGridRows(rows);
+            dbHelper.setLayoutGridCols(cols);
+            dbHelper.setLayoutGridRows(rows);
+            dbHelper.rebuildLayoutItemsFromBeschriftungTasten();
+            Map<String, Object> result = new HashMap<>();
+            result.put("success", true);
+            result.put("cols", cols);
+            result.put("rows", rows);
+            result.put("pageRows", Math.max(1, (int) Math.ceil(24.0 / Math.max(1, cols))));
+            return new SimpleHttpServer.HttpResponse(200, "application/json", gson.toJson(result));
+        } catch (Exception e) {
+            Log.e(TAG, "Fehler beim Speichern der Layout-Grid-Einstellungen", e);
+            String errorJson = "{\"error\":\"" + (e.getMessage() != null ? e.getMessage().replace("\"", "'") : "Speicherfehler") + "\"}";
             return new SimpleHttpServer.HttpResponse(500, "application/json", errorJson);
         }
     }
@@ -3163,6 +3252,7 @@ public class ConfigWebServer {
             if (ctx == null) {
                 return new SimpleHttpServer.HttpResponse(503, "application/json", "{\"success\":false,\"error\":\"Kontext nicht verfügbar\"}");
             }
+            touchUserInteractionTimers();
             TurmtechnikActivity.allRelaisOffFromWeb(ctx);
             return new SimpleHttpServer.HttpResponse(200, "application/json", "{\"success\":true}");
         } catch (Exception e) {
@@ -3175,14 +3265,15 @@ public class ConfigWebServer {
     private SimpleHttpServer.HttpResponse handlePostControlHammer(SimpleHttpServer.HttpRequest request) {
         try {
             String body = request.body != null ? request.body : "";
-            Integer gridIndex = parseJsonInt(body, "gridIndex");
+            Integer gridIndex = resolveControlGridIndex(body);
             if (gridIndex == null || gridIndex < 0 || gridIndex >= TurmtechnikActivity.RELAIS_COUNT) {
-                return new SimpleHttpServer.HttpResponse(400, "application/json", "{\"success\":false,\"error\":\"Body muss { \\\"gridIndex\\\": 0..47 } enthalten\"}");
+                return new SimpleHttpServer.HttpResponse(400, "application/json", "{\"success\":false,\"error\":\"Body muss { \\\"gridIndex\\\": 0..47 } oder eine gueltige \\\"buttonId\\\" enthalten\"}");
             }
             android.content.Context ctx = TurmtechnikActivity.turmtechnikContext != null ? TurmtechnikActivity.turmtechnikContext : context;
             if (ctx == null) {
                 return new SimpleHttpServer.HttpResponse(503, "application/json", "{\"success\":false,\"error\":\"Kontext nicht verfügbar\"}");
             }
+            touchUserInteractionTimers();
             TurmtechnikActivity.triggerHammerFromWeb(ctx, gridIndex);
             return new SimpleHttpServer.HttpResponse(200, "application/json", "{\"success\":true,\"gridIndex\":" + gridIndex + "}");
         } catch (Exception e) {
@@ -3380,6 +3471,7 @@ public class ConfigWebServer {
     /** POST /api/control/programm-abfrage – löst Programmabfrage aus (wie Programmabfrage-Taste in der App: UhrThread aktualisiert Info-Text / nächstes Programm). */
     private SimpleHttpServer.HttpResponse handlePostControlProgrammAbfrage() {
         try {
+            touchUserInteractionTimers();
             StaticVariable.refreshInfoTextVerknuepfteTaste = true;
             return new SimpleHttpServer.HttpResponse(200, "application/json", "{\"success\":true}");
         } catch (Exception e) {
@@ -3601,6 +3693,7 @@ public class ConfigWebServer {
             if (TurmtechnikActivity.turmtechnikActivityInstance == null) {
                 return new SimpleHttpServer.HttpResponse(503, "application/json", "{\"success\":false,\"error\":\"App-Activity nicht aktiv (Web kann Automatik erst \u00fcbergeben, wenn die App ge\u00f6ffnet ist)\"}");
             }
+            touchUserInteractionTimers();
             TurmtechnikActivity.setAutomaticFromWeb(null, on);
             return new SimpleHttpServer.HttpResponse(200, "application/json", "{\"success\":true,\"on\":" + on + "}");
         } catch (Exception e) {
@@ -3613,19 +3706,45 @@ public class ConfigWebServer {
     private SimpleHttpServer.HttpResponse handlePostControlKey(SimpleHttpServer.HttpRequest request) {
         try {
             String body = request.body != null ? request.body : "";
-            Integer gridIndex = parseJsonInt(body, "gridIndex");
+            Integer gridIndex = resolveControlGridIndex(body);
             if (gridIndex == null || gridIndex < 0 || gridIndex >= TurmtechnikActivity.RELAIS_COUNT) {
-                return new SimpleHttpServer.HttpResponse(400, "application/json", "{\"success\":false,\"error\":\"Body muss { \\\"gridIndex\\\": 0..47 } enthalten\"}");
+                return new SimpleHttpServer.HttpResponse(400, "application/json", "{\"success\":false,\"error\":\"Body muss { \\\"gridIndex\\\": 0..47 } oder eine gueltige \\\"buttonId\\\" enthalten\"}");
             }
             if (TurmtechnikActivity.turmtechnikActivityInstance == null) {
                 return new SimpleHttpServer.HttpResponse(503, "application/json", "{\"success\":false,\"error\":\"App-Activity nicht aktiv\"}");
             }
+            touchUserInteractionTimers();
             TurmtechnikActivity.triggerKeyFromWeb(null, gridIndex);
             return new SimpleHttpServer.HttpResponse(200, "application/json", "{\"success\":true,\"gridIndex\":" + gridIndex + "}");
         } catch (Exception e) {
             Log.e(TAG, "Fehler bei POST /api/control/key", e);
             return new SimpleHttpServer.HttpResponse(500, "application/json", "{\"success\":false,\"error\":\"" + escapeJsonString(e.getMessage()) + "\"}");
         }
+    }
+
+    private Integer resolveControlGridIndex(String jsonBody) {
+        Integer gridIndex = parseJsonInt(jsonBody, "gridIndex");
+        if (gridIndex != null && gridIndex >= 0 && gridIndex < TurmtechnikActivity.RELAIS_COUNT) {
+            return gridIndex;
+        }
+        String buttonId = parseJsonString(jsonBody, "buttonId");
+        if (buttonId != null) {
+            int resolved = TurmtechnikActivity.findGridIndexByButtonId(buttonId);
+            if (resolved >= 0) return resolved;
+        }
+        return gridIndex;
+    }
+
+    private void touchUserInteractionTimers() {
+        try {
+            StartTurmtechnikService.touchHeartbeat();
+        } catch (Exception ignored) { }
+        try {
+            TurmtechnikActivity.notifyUserInteractionFromWeb();
+        } catch (Exception ignored) { }
+        try {
+            WebUiActivity.notifyUserInteraction();
+        } catch (Exception ignored) { }
     }
 
     /** Liest aus JSON-String den Wert des Keys key als Integer. */
@@ -3668,6 +3787,17 @@ public class ConfigWebServer {
             Log.e(TAG, "Fehler beim Neuladen der Programme aus Excel", e);
             String errorJson = "{\"error\":\"" + e.getMessage() + "\"}";
             return new SimpleHttpServer.HttpResponse(500, "application/json", errorJson);
+        }
+    }
+
+    private String parseJsonString(String json, String key) {
+        try {
+            if (json == null || json.trim().isEmpty()) return null;
+            com.google.gson.JsonObject obj = gson.fromJson(json, com.google.gson.JsonObject.class);
+            if (obj == null || !obj.has(key) || obj.get(key).isJsonNull()) return null;
+            return obj.get(key).getAsString();
+        } catch (Exception e) {
+            return null;
         }
     }
     
@@ -4216,7 +4346,7 @@ public class ConfigWebServer {
                 "        .app-nav-link { font-size: 0.75rem; color: var(--tt-muted); text-decoration: none; margin-right: 0.5rem; }\n" +
                 "        .app-nav-link:hover { color: var(--tt-accent); }\n" +
                 "        .app-page-main { flex: 1; display: flex; flex-direction: column; min-height: 0; padding: 3.5rem 1rem 0.5rem 1rem; }\n" +
-                "        .app-grid { display: grid; grid-template-columns: repeat(8, 1fr); grid-template-rows: repeat(3, 1fr); gap: 0.5rem; width: 100%; height: 55vh; min-height: 200px; cursor: pointer; touch-action: manipulation; box-sizing: border-box; }\n" +
+                "        .app-grid { display: grid; gap: 0.5rem; width: 100%; height: 55vh; min-height: 200px; cursor: pointer; touch-action: manipulation; box-sizing: border-box; grid-auto-flow: dense; }\n" +
                 "        .app-cell { background: var(--tt-card); border: 2px solid var(--tt-border); border-radius: 8px; padding: 0.4rem; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; box-sizing: border-box; min-height: 44px; transition: box-shadow 0.1s, outline 0.1s; -webkit-tap-highlight-color: rgba(201,162,39,0.25); touch-action: manipulation; }\n" +
                 "        .app-cell:hover { outline: 2px solid var(--tt-accent); outline-offset: 2px; box-shadow: 0 0 0 1px var(--tt-accent); }\n" +
                 "        .app-cell.leer { background: var(--tt-bg); border: none; color: var(--tt-bg); }\n" +
@@ -4353,24 +4483,30 @@ public class ConfigWebServer {
                 "        document.getElementById(\"timepickerDeaktivierenBtn\").onclick=deaktivierenTimepicker;\n" +
                 "        \n" +
                 "        function stopAlle(){ fetch('/api/control/stop', { method:'POST', headers:{'Content-Type':'application/json'}, body:'{}' }).then(function(r){ return r.json(); }).then(function(d){ refreshSoon(); if(!d.success) showStatus(d.error||'Fehler', 'danger'); }).catch(function(e){ showStatus('Fehler: '+e.message, 'danger'); }); }\n" +
-                "        function triggerHammer(gridIdx){ fetch('/api/control/hammer', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({gridIndex:gridIdx}) }).then(function(r){ return r.json(); }).then(function(d){ if(!d.success) showStatus(d.error||'Fehler', 'danger'); }).catch(function(e){ showStatus('Fehler: '+e.message, 'danger'); }); }\n" +
+                "        function triggerHammer(gridIdx, buttonId){ fetch('/api/control/hammer', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({gridIndex:gridIdx, buttonId:buttonId||''}) }).then(function(r){ return r.json(); }).then(function(d){ if(!d.success) showStatus(d.error||'Fehler', 'danger'); }).catch(function(e){ showStatus('Fehler: '+e.message, 'danger'); }); }\n" +
                 "        function toggleAutomatik(cellEl){ var newOn = !automatikOn; fetch('/api/control/automatic', { method:'PUT', headers:{'Content-Type':'application/json'}, body: JSON.stringify({on:newOn}) }).then(function(r){ return r.json(); }).then(function(d){ if(d.success){ automatikOn=newOn; if(cellEl){ cellEl.innerHTML='<span class=\"label\">Automatik</span>'+(newOn?'<span class=\"verknuepft-state\">Ein</span>':''); cellEl.classList.toggle('automatik-ein',newOn); cellEl.classList.toggle('automatik-aus',!newOn); cellEl.classList.toggle('verknuepft-ein',newOn); cellEl.classList.toggle('verknuepft-aus',!newOn); } refreshSoon(); } else showStatus(d.error||'Fehler','danger'); }).catch(function(e){ showStatus('Fehler: '+e.message,'danger'); }); }\n" +
-                "        function triggerKey(gridIdx, cellEl){ fetch('/api/control/key', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({gridIndex:gridIdx}) }).then(function(r){ return r.json(); }).then(function(d){ if(d.success && cellEl){ cellEl.classList.toggle('key-on'); cellEl.classList.toggle('key-off'); } refreshSoon(); if(!d.success) showStatus(d.error||'Fehler', 'danger'); }).catch(function(e){ showStatus('Fehler: '+e.message, 'danger'); }); }\n" +
+                "        function triggerKey(gridIdx, buttonId, cellEl){ fetch('/api/control/key', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({gridIndex:gridIdx, buttonId:buttonId||''}) }).then(function(r){ return r.json(); }).then(function(d){ if(d.success && cellEl){ cellEl.classList.toggle('key-on'); cellEl.classList.toggle('key-off'); } refreshSoon(); if(!d.success) showStatus(d.error||'Fehler', 'danger'); }).catch(function(e){ showStatus('Fehler: '+e.message, 'danger'); }); }\n" +
                 "        var automatikOn = false;\n" +
                 "        var keysOnList = [];\n" +
                 "        var soforttastenList = [];\n" +
-                "        function loadGrid(){ Promise.all([ fetch('/api/beschriftung-tasten').then(function(r){ return r.json(); }), fetch('/api/verknuepfte-tasten').then(function(r){ return r.json(); }), fetch('/api/control/keys-state').then(function(r){ return r.json(); }).catch(function(){ return {on:[]}; }), fetch('/api/soforttasten').then(function(r){ return r.json(); }).catch(function(){ return []; }), fetch('/api/control/automatic').then(function(r){ return r.json(); }).catch(function(){ return {}; }) ]).then(function(arr){\n" +
-                "            var grid = Array.isArray(arr[0]) ? arr[0] : []; verknuepfteTastenList = Array.isArray(arr[1]) ? arr[1] : []; keysOnList = Array.isArray(arr[2] && arr[2].on) ? arr[2].on : []; soforttastenList = Array.isArray(arr[3]) ? arr[3] : []; var autoState = arr[4] || {}; automatikOn = !!(autoState && (autoState.on === true || autoState.on === 'true' || autoState.on === 1));\n" +
-                "            renderGrid(grid);\n" +
+                "        function getPageLayoutMap(layoutItems){ var map={}; (Array.isArray(layoutItems)?layoutItems:[]).forEach(function(item){ var page=item&&item.pageNummer!=null?item.pageNummer:item&&item.page_nummer; var slot=item&&item.slotIndex!=null?item.slotIndex:item&&item.slot_index; if(parseInt(page,10)===PAGE_NUM && slot!=null){ map[parseInt(slot,10)||0]=item; } }); return map; }\n" +
+                "        function getLayoutValue(item, camelKey, snakeKey, fallback){ if(!item) return fallback; var value=item[camelKey]; if(value==null && snakeKey) value=item[snakeKey]; return value==null?fallback:value; }\n" +
+                "        function applyGridGeometry(g, layoutMap, layoutSettings){ var cols=Math.max(2, parseInt(layoutSettings&&layoutSettings.cols,10)||6); var maxCol=cols; var maxRow=0; for(var pageSlot=0; pageSlot<(PAGE_END-PAGE_START); pageSlot++){ var item=layoutMap[pageSlot]||null; var col=Math.max(0, parseInt(getLayoutValue(item,'gridCol','grid_col', pageSlot % cols),10)||0); var row=Math.max(0, parseInt(getLayoutValue(item,'gridRow','grid_row', Math.floor(pageSlot / cols)),10)||0); var width=Math.max(1, parseInt(getLayoutValue(item,'gridWidth','grid_width',1),10)||1); var height=Math.max(1, parseInt(getLayoutValue(item,'gridHeight','grid_height',1),10)||1); if(col + width > maxCol) maxCol = col + width; if(row + height > maxRow) maxRow = row + height; } if(maxRow < 1) maxRow = Math.max(1, Math.ceil((PAGE_END - PAGE_START) / Math.max(1, maxCol))); g.style.gridTemplateColumns='repeat('+maxCol+', minmax(0, 1fr))'; g.style.gridTemplateRows='repeat('+maxRow+', minmax(0, 1fr))'; }\n" +
+                "        function loadGrid(){ Promise.all([ fetch('/api/beschriftung-tasten').then(function(r){ return r.json(); }), fetch('/api/verknuepfte-tasten').then(function(r){ return r.json(); }), fetch('/api/control/keys-state').then(function(r){ return r.json(); }).catch(function(){ return {on:[]}; }), fetch('/api/soforttasten').then(function(r){ return r.json(); }).catch(function(){ return []; }), fetch('/api/control/automatic').then(function(r){ return r.json(); }).catch(function(){ return {}; }), fetch('/api/layout-items').then(function(r){ return r.json(); }).catch(function(){ return []; }), fetch('/api/layout-grid-settings').then(function(r){ return r.json(); }).catch(function(){ return { cols:6, rows:8 }; }) ]).then(function(arr){\n" +
+                "            var grid = Array.isArray(arr[0]) ? arr[0] : []; verknuepfteTastenList = Array.isArray(arr[1]) ? arr[1] : []; keysOnList = Array.isArray(arr[2] && arr[2].on) ? arr[2].on : []; soforttastenList = Array.isArray(arr[3]) ? arr[3] : []; var autoState = arr[4] || {}; var layoutItems = Array.isArray(arr[5]) ? arr[5] : []; var layoutSettings = arr[6] || {}; automatikOn = !!(autoState && (autoState.on === true || autoState.on === 'true' || autoState.on === 1));\n" +
+                "            renderGrid(grid, layoutItems, layoutSettings);\n" +
                 "        }).catch(function(e){ document.getElementById('tastenGrid').innerHTML = '<p class=\"text-danger\">Fehler beim Laden: ' + esc(e.message) + '</p>'; }); }\n" +
-                "        function renderGrid(grid){\n" +
-                "            var g = document.getElementById('tastenGrid'); if(!g) return; g.innerHTML = '';\n" +
+                "        function renderGrid(grid, layoutItems, layoutSettings){\n" +
+                "            var g = document.getElementById('tastenGrid'); if(!g) return; g.innerHTML = ''; var layoutMap = getPageLayoutMap(layoutItems); applyGridGeometry(g, layoutMap, layoutSettings);\n" +
                 "            for (var i = PAGE_START; i < PAGE_END; i++) {\n" +
+                "                var pageSlot = i - PAGE_START;\n" +
                 "                var slot = grid[i] || {};\n" +
+                "                var layoutItem = layoutMap[pageSlot] || null;\n" +
                 "                var c1 = (slot.c1 != null ? String(slot.c1).replace(/\\s+/g, ' ').trim() : ''); var c2 = (slot.c2 || '').trim();\n" +
                 "                var label = c2 || c1 || '';\n" +
                 "                var isLeer = (c1 === 'Leer' || (c1 !== '' && c1.toLowerCase() === 'leer') || c1 === '' || c1 === 'NULL' || (String(label).replace(/\\s+/g, ' ').trim().toLowerCase() === 'leer'));\n" +
-                "                var cell = document.createElement('div'); cell.className = 'app-cell'; cell.setAttribute('data-grid-index', String(i));\n" +
+                "                var cell = document.createElement('div'); cell.className = 'app-cell'; cell.setAttribute('data-grid-index', String(i)); if(slot.buttonId != null && String(slot.buttonId).trim() !== '' && String(slot.buttonId).trim().toLowerCase() !== 'null'){ cell.setAttribute('data-button-id', String(slot.buttonId).trim()); }\n" +
+                "                var fallbackCols = Math.max(2, parseInt(layoutSettings&&layoutSettings.cols,10)||6); var gridCol = Math.max(0, parseInt(getLayoutValue(layoutItem,'gridCol','grid_col', pageSlot % fallbackCols),10)||0); var gridRow = Math.max(0, parseInt(getLayoutValue(layoutItem,'gridRow','grid_row', Math.floor(pageSlot / fallbackCols)),10)||0); var gridWidth = Math.max(1, parseInt(getLayoutValue(layoutItem,'gridWidth','grid_width', 1),10)||1); var gridHeight = Math.max(1, parseInt(getLayoutValue(layoutItem,'gridHeight','grid_height', 1),10)||1); cell.style.gridColumn = String(gridCol + 1) + ' / span ' + String(gridWidth); cell.style.gridRow = String(gridRow + 1) + ' / span ' + String(gridHeight);\n" +
                 "                if (isLeer) { cell.classList.add('leer'); cell.innerHTML = ''; g.appendChild(cell); continue; }\n" +
                 "                if (c1 === 'Sofort Start') {\n" +
                 "                    cell.classList.add('cell-funktion-sofort');\n" +
@@ -4409,11 +4545,14 @@ public class ConfigWebServer {
                 "                } else {\n" +
                 "                    cell.classList.add('btn-action');\n" +
                 "                    cell.innerHTML = '<span class=\"label\">' + esc(label) + '</span>' + (c2 && c1 ? '<span class=\"typ\">' + esc(c1) + '</span>' : '');\n" +
-                "                    if (c1 !== 'Programmeingeben' && c1 !== 'Nebenuhr Stellen' && (c1 !== 'Zweite Seite' || PAGE_NUM !== 1)) { cell.setAttribute('data-action', 'key'); cell.classList.add('cell-funktion-key'); }\n" +
+                "                    if (c1 !== 'Programmeingeben' && c1 !== 'Nebenuhr Stellen' && c1 !== 'Home' && (c1 !== 'Zweite Seite' || PAGE_NUM !== 1)) { cell.setAttribute('data-action', 'key'); cell.classList.add('cell-funktion-key'); }\n" +
                 "                }\n" +
-                "                if (c1 === 'Zweite Seite' && PAGE_NUM === 1) {\n" +
-                "                    cell.classList.add('cell-funktion-zweite-seite'); cell.classList.add('btn-action'); cell.removeAttribute('data-action');\n" +
-                "                    cell.innerHTML = '<a href=\"/app-seite2.html\" class=\"label\">' + esc(label) + '</a><span class=\"typ\">Zweite Seite</span>';\n" +
+                "                if (c1 === 'Home') {\n" +
+                "                    cell.classList.add('cell-funktion-home'); cell.classList.add('btn-action'); cell.setAttribute('data-action', 'goto-page1');\n" +
+                "                    cell.innerHTML = '<span class=\"label\">' + esc(label || 'Home') + '</span><span class=\"typ\">Home</span>';\n" +
+                "                } else if (c1 === 'Zweite Seite' && PAGE_NUM === 1) {\n" +
+                "                    cell.classList.add('cell-funktion-zweite-seite'); cell.classList.add('btn-action'); cell.setAttribute('data-action', 'goto-page2');\n" +
+                "                    cell.innerHTML = '<span class=\"label\">' + esc(label) + '</span><span class=\"typ\">Zweite Seite</span>';\n" +
                 "                } else if (c1 === 'Programmeingeben') {\n" +
                 "                    cell.classList.add('cell-funktion-programm'); cell.classList.add('btn-action'); cell.removeAttribute('data-action');\n" +
                 "                    cell.innerHTML = '<a href=\"/benutzerprogramme.html\" class=\"label\">' + esc(label) + '</a><span class=\"typ\">Programmeingeben</span>';\n" +
@@ -4436,14 +4575,16 @@ public class ConfigWebServer {
                 "                var act = cell.getAttribute('data-action');\n" +
                 "                if (!act) return;\n" +
                 "                ev.preventDefault(); ev.stopPropagation();\n" +
-                "                var idx = parseInt(cell.getAttribute('data-grid-index'), 10);\n" +
+                "                var idx = parseInt(cell.getAttribute('data-grid-index'), 10); var buttonId = cell.getAttribute('data-button-id') || '';\n" +
                 "                if (isNaN(idx) || idx < 0) return;\n" +
-                "                if (act === 'key') { triggerKey(idx, cell); return; }\n" +
-                "                if (act === 'hammer') { triggerHammer(idx); return; }\n" +
+                "                if (act === 'key') { triggerKey(idx, buttonId, cell); return; }\n" +
+                "                if (act === 'hammer') { triggerHammer(idx, buttonId); return; }\n" +
                 "                if (act === 'stop') { stopAlle(); return; }\n" +
                 "                if (act === 'automatik') { toggleAutomatik(cell); return; }\n" +
                 "                if (act === 'verknuepft') { var vidx = parseInt(cell.getAttribute('data-verknuepft-idx'), 10); if (!isNaN(vidx)) toggleVerknuepft(vidx, cell); return; }\n" +
                 "                if (act === 'sofort') { var sidx = parseInt(cell.getAttribute('data-sofort-idx'), 10); var canOpen = cell.getAttribute('data-sofort-canopen') === '1'; if (!isNaN(sidx) && canOpen) openTimepicker(sidx); return; }\n" +
+                "                if (act === 'goto-page1') { window.location.href='/app-seite1.html'; return; }\n" +
+                "                if (act === 'goto-page2') { window.location.href='/app-seite2.html'; return; }\n" +
                 "                if (act === 'programm-abfrage') { window.location.href='/programm-abfrage.html'; return; }\n" +
                 "                if (act === 'nebenuhr-link') { window.location.href='/nebenuhr-layout.html'; return; }\n" +
                 "            };\n" +
@@ -11847,18 +11988,19 @@ public class ConfigWebServer {
         sb.append("        .bt-nav a.active{color:var(--tt-text)}\n");
         sb.append("        .bt-title{font-size:1.5rem;font-weight:600;margin-bottom:.35rem;color:var(--tt-text)}\n");
         sb.append("        .bt-lead{font-size:1rem;color:var(--tt-muted);margin-bottom:1.25rem;max-width:52em}\n");
-        sb.append("        .bt-vorlagen-title{font-size:1rem;font-weight:600;margin-bottom:.25rem;color:var(--tt-text)}\n");
-        sb.append("        .bt-vorlagen-hint{font-size:.9rem;color:var(--tt-muted);margin-bottom:.75rem}\n");
-        sb.append("        .bt-vorlage-item{font-size:.95rem!important;padding:.5rem .65rem!important;min-height:2.25em;display:flex;align-items:center;justify-content:center;text-align:center;border-radius:8px;background:var(--tt-card)!important;border:2px solid var(--tt-border)!important;color:var(--tt-text)!important;cursor:grab}\n");
-        sb.append("        #tastenGrid.bt-grid{gap:.5rem}\n");
-        sb.append("        .bt-cell{width:102px;min-height:58px;font-size:.9rem;line-height:1.3;padding:.4rem .35rem!important;cursor:pointer;word-break:break-word;display:flex;flex-direction:column;align-items:center;justify-content:center;border-radius:8px;border:2px solid var(--tt-border);background:var(--tt-card)!important;transition:box-shadow .2s,outline .2s}\n");
+        sb.append("        .bt-palette-title{font-size:1rem;font-weight:600;margin-bottom:.25rem;color:var(--tt-text)}\n");
+        sb.append("        .bt-palette-hint{font-size:.9rem;color:var(--tt-muted);margin-bottom:.75rem}\n");
+        sb.append("        .bt-palette-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:.5rem}\n");
+        sb.append("        .bt-palette-item{font-size:.92rem!important;padding:.65rem .7rem!important;min-height:3.4rem;display:flex;align-items:center;justify-content:center;text-align:center;border-radius:10px;background:var(--tt-card)!important;border:2px solid var(--tt-border)!important;color:var(--tt-text)!important;cursor:grab}\n");
+        sb.append("        #tastenGrid.bt-grid{display:grid;gap:.55rem;align-items:stretch}\n");
+        sb.append("        .bt-cell{min-height:74px;font-size:.9rem;line-height:1.3;padding:.4rem .35rem!important;cursor:pointer;word-break:break-word;display:flex;flex-direction:column;align-items:center;justify-content:center;border-radius:10px;border:2px solid var(--tt-border);background:var(--tt-card)!important;transition:box-shadow .2s,outline .2s;position:relative}\n");
         sb.append("        .bt-cell:hover{outline:2px solid var(--tt-accent);outline-offset:2px;box-shadow:0 0 0 1px var(--tt-accent)}\n");
         sb.append("        .bt-cell .bt-cell-label{font-weight:600;font-size:.95em;color:var(--tt-text)}\n");
         sb.append("        .bt-cell .bt-cell-typ{font-size:.78em;margin-top:.15em;color:var(--tt-muted)}\n");
         sb.append("        .bt-cell .bt-cell-leer{font-size:.9em;color:var(--tt-muted)}\n");
         sb.append("        .bt-cell.bt-typ-sofort{border-color:#17a2b8}.bt-cell.bt-typ-verknuepft{border-color:#152a45;background:var(--tt-card)!important}.bt-cell.bt-typ-hammer{border-color:#c9a86c}.bt-cell.bt-typ-stop{border:4px solid #c0392b;background:var(--tt-card)!important}.bt-cell.bt-typ-automatik{border-color:#6f42c1}.bt-cell.bt-typ-melodie,.bt-cell.bt-typ-schwingen{border-color:#a78ec9}.bt-cell.bt-typ-zweite-seite{border-color:#28a745}.bt-cell.bt-typ-programmeingeben{border-color:#5a9fd4}.bt-cell.bt-typ-nebenuhr{border-color:#e6a86c}.bt-cell.bt-typ-programmabfrage{border-color:#9b8bb8}.bt-cell.bt-typ-normal,.bt-cell.bt-typ-key{border-color:#a78ec9}.bt-cell.bt-typ-leer{border-color:#252525}\n");
         sb.append("        .bt-vorlage-item[data-typ=\"Verknüpft\"]{background:var(--tt-card)!important;border-color:#152a45!important}\n");
-        sb.append("        .bt-section-label{font-size:1rem;font-weight:600;margin-top:.5rem;margin-bottom:.35rem;flex-basis:100%;color:var(--tt-text)}\n");
+        sb.append("        .bt-slot-index{position:absolute;top:6px;right:8px;font-size:.72rem;color:var(--tt-muted)}\n");
         sb.append("        .bt-actions .btn{font-size:.95rem}\n");
         sb.append("        .bt-actions .btn-primary{background:var(--tt-accent);border-color:var(--tt-accent);color:#0a0a0a}\n");
         sb.append("        .bt-actions .btn-primary:hover{background:var(--tt-accent-hover);border-color:var(--tt-accent-hover);color:#0a0a0a}\n");
@@ -11906,6 +12048,15 @@ public class ConfigWebServer {
         sb.append("        .relais-legend{display:flex;flex-wrap:wrap;gap:20px;margin-top:10px;font-size:12px;color:var(--tt-muted)}\n");
         sb.append("        .relais-legend-item{display:flex;align-items:center;gap:8px}\n");
         sb.append("        .relais-legend-box{width:24px;height:24px;border:1px solid var(--tt-border);border-radius:4px}\n");
+        sb.append("        .bt-overview{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-bottom:1rem}\n");
+        sb.append("        .bt-overview-card{background:var(--tt-card);border:1px solid var(--tt-border);border-radius:12px;padding:14px}\n");
+        sb.append("        .bt-overview-card h3{font-size:.95rem;margin:0 0 6px 0;color:var(--tt-muted)}\n");
+        sb.append("        .bt-overview-value{font-size:1.6rem;font-weight:700;color:var(--tt-text)}\n");
+        sb.append("        .bt-overview-list{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}\n");
+        sb.append("        .bt-overview-pill{background:var(--tt-surface);border:1px solid var(--tt-border);border-radius:999px;padding:4px 8px;font-size:.82rem;color:var(--tt-text)}\n");
+        sb.append("        .bt-grid-controls{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:.5rem}\n");
+        sb.append("        .bt-grid-controls label{font-size:.85rem;color:var(--tt-muted);display:block;margin-bottom:4px}\n");
+        sb.append("        .bt-grid-note{font-size:.85rem;color:var(--tt-muted);margin-top:8px}\n");
         sb.append("    </style>\n");
         sb.append("    <script src=\"https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js\"></script>\n");
         sb.append("</head>\n<body class=\"bt-page\">\n");
@@ -11917,6 +12068,10 @@ public class ConfigWebServer {
         sb.append("        <p class=\"bt-lead\">Vorlagen links auf das Grid ziehen, Zelle anklicken zum Bearbeiten. Verknüpft- und Sofort-Start-IDs (2001+, 3001+) werden automatisch vergeben. Bei Typ „Sofort Start“ Melodie im Bearbeiten-Dialog zuordnen.</p>\n");
         sb.append("        <div id=\"statusMessage\" class=\"alert\" style=\"display:none;\"></div>\n");
         sb.append("        <div class=\"alert alert-warning\" id=\"btVerknuepftePruefungAlert\" style=\"display:none;\"></div>\n");
+        sb.append("        <div class=\"bt-overview\" id=\"btOverview\">\n");
+        sb.append("            <div class=\"bt-overview-card\"><h3>Palette</h3><p class=\"bt-palette-hint\">Diese Tasten auf das Grid ziehen.</p><div class=\"bt-palette-grid\" id=\"paletteListe\"></div></div>\n");
+        sb.append("            <div class=\"bt-overview-card\"><h3>Grid</h3><div class=\"bt-grid-controls\"><div><label for=\"gridColsInput\">Spalten</label><input type=\"number\" class=\"form-control\" id=\"gridColsInput\" min=\"2\" max=\"10\" value=\"6\"></div><div><label for=\"gridRowsInput\">Zeilen</label><input type=\"number\" class=\"form-control\" id=\"gridRowsInput\" min=\"1\" max=\"24\" value=\"8\"></div></div><div class=\"bt-grid-note\" id=\"gridInfoText\">48 Slots verfÃ¼gbar.</div></div>\n");
+        sb.append("        </div>\n");
         sb.append("        <div class=\"relais-balken\">\n");
         sb.append("            <h5>Relais-Status</h5>\n");
         sb.append("            <div class=\"relais-grid\" id=\"btRelaisGrid\"></div>\n");
@@ -11930,14 +12085,15 @@ public class ConfigWebServer {
         sb.append("                <div class=\"relais-legend-item\"><div class=\"relais-legend-box relais-funktion-ausgang\"></div><span>Ausgang</span></div>\n");
         sb.append("            </div>\n");
         sb.append("        </div>\n");
-        sb.append("        <div class=\"row\">\n            <div class=\"col-md-2\">\n                <h6 class=\"bt-vorlagen-title\">Vorlagen</h6>\n                <p class=\"bt-vorlagen-hint\">Auf Grid ziehen</p>\n                <div id=\"vorlagenListe\"></div>\n            </div>\n            <div class=\"col-md-10\">\n                <p class=\"bt-actions\"><button class=\"btn btn-primary\" id=\"btnSave\">Speichern</button> <button class=\"btn btn-outline-secondary\" id=\"btnListe\">Listenansicht</button> <button class=\"btn btn-outline-primary\" id=\"btnImportExcel\">Aus Excel importieren</button> <button class=\"btn btn-outline-secondary\" id=\"btnImportExcelUpload\">Datei hochladen</button> <input type=\"file\" id=\"btExcelFileInput\" accept=\".xls\" style=\"display:none;\"></p>\n                <p class=\"bt-actions-hint text-muted\">Aus Excel: liest <strong>Turmtechnik/Config/Beschriftung-Tasten.xls</strong> auf dem Gerät (wie bei Tagtypen). Oder „Datei hochladen“ wählen. Bestehende Tasten können per Drag auf eine andere Zelle gezogen werden (Tausch).</p>\n                <div id=\"gridContainer\">\n                    <div id=\"tastenGrid\" class=\"d-flex flex-wrap bt-grid\"></div>\n                </div>\n                <div id=\"listenContainer\" style=\"display:none;\">\n                    <div class=\"table-responsive\"><table class=\"table table-sm table-bordered\"><thead><tr><th></th><th>Typ</th><th>Beschriftung</th><th>Relais</th><th>Platine</th><th>Hammerzeit</th><th>buttonId</th><th>Sonder-ID</th><th>Sound</th><th></th></tr></thead><tbody id=\"btBody\"></tbody></table></div>\n                </div>\n            </div>\n        </div>\n    </div>\n");
+        sb.append("        <div class=\"row\">\n            <div class=\"col-12\">\n                <p class=\"bt-actions\"><button class=\"btn btn-primary\" id=\"btnSave\">Speichern</button> <button class=\"btn btn-outline-secondary\" id=\"btnListe\">Listenansicht</button> <button class=\"btn btn-outline-primary\" id=\"btnImportExcel\">Aus Excel importieren</button> <button class=\"btn btn-outline-secondary\" id=\"btnImportExcelUpload\">Datei hochladen</button> <input type=\"file\" id=\"btExcelFileInput\" accept=\".xls\" style=\"display:none;\"></p>\n                <p class=\"bt-actions-hint text-muted\">Aus Excel: liest <strong>Turmtechnik/Config/Beschriftung-Tasten.xls</strong> auf dem Gerät (wie bei Tagtypen). Oder „Datei hochladen“ wählen. Bestehende Tasten können per Drag auf eine andere Zelle gezogen werden (Tausch).</p>\n                <div id=\"gridContainer\">\n                    <div id=\"tastenGrid\" class=\"d-flex flex-wrap bt-grid\"></div>\n                </div>\n                <div id=\"listenContainer\" style=\"display:none;\">\n                    <div class=\"table-responsive\"><table class=\"table table-sm table-bordered\"><thead><tr><th></th><th>Typ</th><th>Beschriftung</th><th>Relais</th><th>Platine</th><th>Hammerzeit</th><th>buttonId</th><th>Sonder-ID</th><th>Sound</th><th></th></tr></thead><tbody id=\"btBody\"></tbody></table></div>\n                </div>\n            </div>\n        </div>\n    </div>\n");
         sb.append("    <div class=\"modal fade\" id=\"editModal\" tabindex=\"-1\"><div class=\"modal-dialog\"><div class=\"modal-content\"><div class=\"modal-header\"><h5 class=\"modal-title\">Taste bearbeiten</h5><button type=\"button\" class=\"btn-close\" data-bs-dismiss=\"modal\"></button></div><div class=\"modal-body\" id=\"editModalBody\"></div><div class=\"modal-footer\"><button type=\"button\" class=\"btn btn-secondary\" data-bs-dismiss=\"modal\">Schließen</button><button type=\"button\" class=\"btn btn-primary\" id=\"editModalSave\">Speichern</button></div></div></div></div>\n");
         sb.append("    <script src=\"https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js\"></script>\n    <script>\n");
         sb.append("        const TYPEN = '").append(BESCHRIFTUNG_TASTEN_TYPEN).append("'.split(',');\n");
         sb.append("        const GRID_ROWS = 6; const GRID_COLS = 8; const GRID_SIZE = GRID_ROWS * GRID_COLS;\n");
         sb.append("        const VERKNUEPFT_RELAIS_BASE = 2001; const SOFORT_RELAIS_BASE = 3001;\n");
         sb.append("        const SONDER_IDS = { 'Stop':1100, 'Automatik':1101, 'Home':1102, 'Help':1103, 'Schlagwerk':1104, 'Zweite Seite':1202, 'Programmeingeben':1203, 'Programmabfrage':1204, 'Nebenuhr Stellen':1205 };\n");
-        sb.append("        var melodien = []; var soforttasten = []; var soundFiles = [];\n");
+        sb.append("        var melodien = []; var soforttasten = []; var soundFiles = []; var uiFunktionen = []; var layoutItems = []; var displayCols = 6; var displayRows = 8;\n");
+        sb.append("        const PALETTE_TYPEN = ['Normal','VerknÃ¼pft','Sofort Start','Schwingen','Melodie','Ausgang','Hammer','Leer','NULL'];\n");
         sb.append("        function soundSelectOptions(currentVal){ var o='<option value=\"\">(kein)</option>'; (soundFiles||[]).forEach(function(f){ o+='<option value=\"'+esc(f)+'\"'+(currentVal===f?' selected':'')+'>'+esc(f)+'</option>'; }); if(currentVal&&soundFiles.indexOf(currentVal)<0) o+='<option value=\"'+esc(currentVal)+'\" selected>'+esc(currentVal)+'</option>'; return o; }\n");
         sb.append("        const TYPEN_BORDER = { 'Sofort Start':'#17a2b8', 'Verknüpft':'#6b9bd1', 'Hammer':'#c9a86c', 'Stop':'#c0392b', 'Automatik':'#6f42c1', 'Melodie':'#a78ec9', 'Schwingen':'#a78ec9', 'Zweite Seite':'#28a745', 'Programmeingeben':'#5a9fd4', 'Programmabfrage':'#9b8bb8', 'Nebenuhr Stellen':'#e6a86c', 'Leer':'#252525', 'NULL':'#252525', 'Normal':'#a78ec9' };\n");
         sb.append("        function typToSlug(typ){ var s={ 'Sofort Start':'sofort','Verknüpft':'verknuepft','Hammer':'hammer','Stop':'stop','Automatik':'automatik','Melodie':'melodie','Schwingen':'schwingen','Zweite Seite':'zweite-seite','Programmeingeben':'programmeingeben','Programmabfrage':'programmabfrage','Nebenuhr Stellen':'nebenuhr','Leer':'leer','NULL':'leer','Normal':'normal' }; return s[typ]||'key'; }\n");
@@ -11950,7 +12106,10 @@ public class ConfigWebServer {
         sb.append("        function showStatus(msg, type){ var el=document.getElementById('statusMessage'); el.textContent=msg; el.className='alert alert-'+type; el.style.display='block'; setTimeout(function(){ el.style.display='none'; }, 4000); }\n");
         sb.append("        function vorlageForTyp(typ){ if(typ==='Leer') return { id:0, c1:'leer', c2:'leer', c3:'leer', c4:'leer', c5:'leer', c13:'', sonder_id:null, c6:'', c7:'', c8:'', c9:'', c10:'', sound:'' }; if(typ==='NULL') return { id:0, c1:'NULL', c2:'NULL', c3:'NULL', c4:'NULL', c5:'NULL', c13:'NULL', sonder_id:null, c6:'', c7:'', c8:'', c9:'', c10:'', sound:'' }; return { id:0, c1:typ, c2:'', c3:'', c5:'1', c4:'', c13:'', sonder_id:SONDER_IDS[typ]||null, c6:'', c7:'', c8:'', c9:'', c10:'', sound:'' }; }\n");
         sb.append("        function copySlot(s){ if(!s) return null; return { id:s.id|0, c1:s.c1, c2:(s.c2!=null)?s.c2:'', c3:(s.c3!=null)?s.c3:'', c5:(s.c5!=null)?s.c5:'1', c4:(s.c4!=null)?s.c4:'', c13:(s.c13!=null)?s.c13:'', sonder_id:s.sonder_id, c6:(s.c6!=null)?s.c6:'', c7:(s.c7!=null)?s.c7:'', c8:(s.c8!=null)?s.c8:'', c9:(s.c9!=null)?s.c9:'', c10:(s.c10!=null)?s.c10:'', sound:(s.sound!=null)?s.sound:'', sofort_melodie:s.sofort_melodie }; }\n");
-        sb.append("        function renderVorlagen(){ var div=document.getElementById('vorlagenListe'); div.innerHTML=TYPEN.map(function(t){ var bc=(TYPEN_BORDER[t]||'#2a2a2a'); return '<div class=\"bt-vorlage-item border rounded mb-2\" draggable=\"true\" data-typ=\"'+esc(t)+'\" style=\"border-color:'+bc+' !important;\">'+esc(t)+'</div>'; }).join(''); TYPEN.forEach(function(t){ var el=div.querySelector('[data-typ=\"'+t+'\"]'); if(el) el.ondragstart=function(e){ e.dataTransfer.setData('text/plain',t); e.dataTransfer.effectAllowed='copy'; }; }); }\n");
+        sb.append("        function mapUiFunktionToTyp(code){ var c=parseInt(code,10)||0; var map={1100:'Stop',1101:'Automatik',1102:'Home',1103:'Help',1104:'Schlagwerk',1202:'Zweite Seite',1203:'Programmeingeben',1204:'Programmabfrage',1205:'Nebenuhr Stellen'}; return map[c]||null; }\n");
+        sb.append("        function makeSlotFromPaletteItem(item){ if(!item) return vorlageForTyp('Normal'); if(item.kind==='ui_funktion'){ var typ=mapUiFunktionToTyp(item.codeAlt); var slot=vorlageForTyp(typ||'Normal'); slot.c1=typ||slot.c1; slot.c2=item.label||slot.c1; slot.sonder_id=item.codeAlt; return slot; } return vorlageForTyp(item.typ||'Normal'); }\n");
+        sb.append("        function renderPaletteInto(containerId, items){ var div=document.getElementById(containerId); if(!div) return; div.innerHTML=(items||[]).map(function(item){ var label=item.label||item.typ||''; var typ=item.typ||mapUiFunktionToTyp(item.codeAlt)||label; var bc=(TYPEN_BORDER[typ]||'#2a2a2a'); return '<div class=\"bt-palette-item border rounded\" draggable=\"true\" data-kind=\"'+esc(item.kind)+'\" data-code=\"'+esc(item.codeAlt||'')+'\" data-typ=\"'+esc(item.typ||'')+'\" style=\"border-color:'+bc+' !important;\">'+esc(label)+'</div>'; }).join(''); Array.prototype.slice.call(div.querySelectorAll('.bt-palette-item')).forEach(function(el){ el.ondragstart=function(e){ var payload={ kind:el.dataset.kind||'typ', codeAlt:parseInt(el.dataset.code||'0',10)||0, typ:el.dataset.typ||'', label:el.textContent||'' }; e.dataTransfer.setData('application/x-bt-palette', JSON.stringify(payload)); e.dataTransfer.effectAllowed='copy'; }; }); }\n");
+        sb.append("        function renderVorlagen(){ var funktionItems=(uiFunktionen||[]).map(function(f){ return { kind:'ui_funktion', codeAlt:(f.codeAlt!=null?f.codeAlt:f.code_alt), label:(f.anzeigeName||f.anzeige_name||f.keyName||f.key_name||'' ) }; }).filter(function(item){ return !!mapUiFunktionToTyp(item.codeAlt); }); var basisItems=PALETTE_TYPEN.map(function(t){ return { kind:'typ', typ:t, label:t }; }); var items=funktionItems.concat(basisItems); renderPaletteInto('paletteListe', items); }\n");
         sb.append("        function renumberVerknuepftSofort(){ var v=0,s=0; for(var i=0;i<GRID_SIZE;i++){ if(grid[i]&&grid[i].c1==='Verknüpft'){ grid[i].c3=String(VERKNUEPFT_RELAIS_BASE+v); v++; } if(grid[i]&&grid[i].c1==='Sofort Start'){ grid[i].c3=String(SOFORT_RELAIS_BASE+s); s++; } } }\n");
         sb.append("        function renderGrid(){ var g=document.getElementById('tastenGrid'); g.innerHTML=''; var lbl1=document.createElement('div'); lbl1.className='w-100 bt-section-label'; lbl1.style.minHeight='24px'; lbl1.style.marginTop='8px'; lbl1.innerHTML='Seite 1'; lbl1.style.flexBasis='100%'; g.appendChild(lbl1); for(var i=0;i<24;i++){ (function(idx){ var cell=document.createElement('div'); var slot=grid[idx]; var slug=slot?typToSlug(slot.c1):'leer'; cell.className='bt-cell bt-typ-'+slug+' border rounded text-center'; cell.dataset.idx=idx; cell.innerHTML=slot&&(slot.c2||slot.c1) ? '<span class=\"bt-cell-label\">'+esc(slot.c2||slot.c1)+'</span>'+(slot.c2 ? '<span class=\"bt-cell-typ\">'+esc(slot.c1)+'</span>' : '') : '<span class=\"bt-cell-leer\">Leer</span>'; cell.onclick=function(){ openEdit(idx); }; if(slot&&slot.c1!=='leer'){ cell.draggable=true; cell.style.cursor='grab'; cell.ondragstart=function(ev){ ev.dataTransfer.setData('application/x-bt-grid-index',String(idx)); ev.dataTransfer.effectAllowed='move'; }; } else { cell.draggable=false; } cell.ondragover=function(e){ e.preventDefault(); cell.classList.add('border-primary'); }; cell.ondragleave=function(){ cell.classList.remove('border-primary'); }; cell.ondrop=function(e){ e.preventDefault(); cell.classList.remove('border-primary'); var gridIndex=e.dataTransfer.getData('application/x-bt-grid-index'); if(gridIndex!==''){ var srcIdx=parseInt(gridIndex,10); if(!isNaN(srcIdx)&&srcIdx!==idx){ var tmp=copySlot(grid[idx]); grid[idx]=copySlot(grid[srcIdx]); grid[srcIdx]=tmp; renumberVerknuepftSofort(); renderGrid(); return; } } var typ=e.dataTransfer.getData('text/plain'); if(typ){ grid[idx]=vorlageForTyp(typ); if(typ==='Verknüpft'){ var n=0; for(var j=0;j<GRID_SIZE;j++) if(grid[j]&&grid[j].c1==='Verknüpft') n++; grid[idx].c3=String(VERKNUEPFT_RELAIS_BASE+n-1); } else if(typ==='Sofort Start'){ var n=0; for(var j=0;j<GRID_SIZE;j++) if(grid[j]&&grid[j].c1==='Sofort Start') n++; grid[idx].c3=String(SOFORT_RELAIS_BASE+n-1); } renderGrid(); } }; g.appendChild(cell); })(i); } var lbl2=document.createElement('div'); lbl2.className='w-100 bt-section-label'; lbl2.style.minHeight='24px'; lbl2.style.marginTop='16px'; lbl2.innerHTML='Seite 2'; lbl2.style.flexBasis='100%'; g.appendChild(lbl2); for(var i=24;i<GRID_SIZE;i++){ (function(idx){ var cell=document.createElement('div'); var slot=grid[idx]; var slug=slot?typToSlug(slot.c1):'leer'; cell.className='bt-cell bt-typ-'+slug+' border rounded text-center'; cell.dataset.idx=idx; cell.innerHTML=slot&&(slot.c2||slot.c1) ? '<span class=\"bt-cell-label\">'+esc(slot.c2||slot.c1)+'</span>'+(slot.c2 ? '<span class=\"bt-cell-typ\">'+esc(slot.c1)+'</span>' : '') : '<span class=\"bt-cell-leer\">Leer</span>'; cell.onclick=function(){ openEdit(idx); }; if(slot&&slot.c1!=='leer'){ cell.draggable=true; cell.style.cursor='grab'; cell.ondragstart=function(ev){ ev.dataTransfer.setData('application/x-bt-grid-index',String(idx)); ev.dataTransfer.effectAllowed='move'; }; } else { cell.draggable=false; } cell.ondragover=function(e){ e.preventDefault(); cell.classList.add('border-primary'); }; cell.ondragleave=function(){ cell.classList.remove('border-primary'); }; cell.ondrop=function(e){ e.preventDefault(); cell.classList.remove('border-primary'); var gridIndex=e.dataTransfer.getData('application/x-bt-grid-index'); if(gridIndex!==''){ var srcIdx=parseInt(gridIndex,10); if(!isNaN(srcIdx)&&srcIdx!==idx){ var tmp=copySlot(grid[idx]); grid[idx]=copySlot(grid[srcIdx]); grid[srcIdx]=tmp; renumberVerknuepftSofort(); renderGrid(); return; } } var typ=e.dataTransfer.getData('text/plain'); if(typ){ grid[idx]=vorlageForTyp(typ); if(typ==='Verknüpft'){ var n=0; for(var j=0;j<GRID_SIZE;j++) if(grid[j]&&grid[j].c1==='Verknüpft') n++; grid[idx].c3=String(VERKNUEPFT_RELAIS_BASE+n-1); } else if(typ==='Sofort Start'){ var n=0; for(var j=0;j<GRID_SIZE;j++) if(grid[j]&&grid[j].c1==='Sofort Start') n++; grid[idx].c3=String(SOFORT_RELAIS_BASE+n-1); } renderGrid(); } }; g.appendChild(cell); })(i); } }\n");
         sb.append("        function addRow(data, atIndex){\n            data = data || {};\n            var id = (data.id|0);\n            var c1 = data.c1||'Normal'; var c2 = data.c2||''; var c3 = data.c3||''; var c5 = data.c5||''; var c4 = data.c4||''; var c13 = data.c13||''; var sid = data.sonder_id; var sound = (data.sound!=null)?data.sound:'';\n            var c6=(data.c6!=null)?data.c6:''; var c7=(data.c7!=null)?data.c7:''; var c8=(data.c8!=null)?data.c8:''; var c9=(data.c9!=null)?data.c9:''; var c10=(data.c10!=null)?data.c10:'';\n");
@@ -11962,7 +12121,8 @@ public class ConfigWebServer {
         sb.append("        function gridToArray(){ var out=[]; for(var i=0;i<GRID_SIZE;i++){ if(grid[i]) out.push(Object.assign({}, grid[i], { id: grid[i].id|0 })); else out.push({ id:0, c1:'leer', c2:'leer', c3:'leer', c4:'leer', c5:'leer', c13:'', sonder_id:null, c6:'', c7:'', c8:'', c9:'', c10:'', sound:'' }); } return out; }\n");
         sb.append("        function normNull(v,emptyVal){ var s=(v!=null&&v!==undefined)?String(v).trim():''; if(s===''||s.toLowerCase()==='null') return emptyVal; return s; }\n");
         sb.append("        function arrayToGrid(arr){ for(var i=0;i<GRID_SIZE;i++) grid[i]=null; if(Array.isArray(arr)) for(var j=0;j<arr.length&&j<GRID_SIZE;j++){ var it=arr[j]; var isNullRow=it.c1&&String(it.c1).toLowerCase()==='null'; grid[j]={ id:it.id|0, c1:isNullRow?'NULL':normNull(it.c1,'Leer'), c2:isNullRow?'NULL':normNull(it.c2,''), c3:isNullRow?'NULL':normNull(it.c3,''), c5:isNullRow?'NULL':(it.c5||'1'), c4:isNullRow?'NULL':(it.c4||''), c13:isNullRow?'NULL':(it.c13||''), sonder_id:it.sonder_id, c6:it.c6||'', c7:it.c7||'', c8:it.c8||'', c9:it.c9||'', c10:it.c10||'', sound:it.sound||'', sofort_melodie:it.sofort_melodie }; if(grid[j].c1==='Leer'&&!grid[j].c2) grid[j]=null; } }\n");
-        sb.append("        document.getElementById('btnSave').onclick=function(){ if(listView){ var rows=document.querySelectorAll('#btBody tr'); for(var k=0;k<rows.length;k++){ var tr=rows[k]; var idx=parseInt(tr.dataset.idx,10); if(isNaN(idx)) continue; var obj=listRowToObj(tr); if(!obj) continue; if(obj.c1==='Leer'&&!(obj.c2||'').trim()) grid[idx]=null; else grid[idx]={ id:obj.id|0, c1:obj.c1, c2:obj.c2||'', c3:obj.c3||'', c5:obj.c5||'1', c4:obj.c4||'', c13:obj.c13||'', sonder_id:obj.sonder_id, c6:(grid[idx]&&grid[idx].c6)||'', c7:(grid[idx]&&grid[idx].c7)||'', c8:(grid[idx]&&grid[idx].c8)||'', c9:(grid[idx]&&grid[idx].c9)||'', c10:(grid[idx]&&grid[idx].c10)||'', sound:(obj.sound!==undefined?obj.sound:(grid[idx]&&grid[idx].sound))||'', sofort_melodie:(grid[idx]&&grid[idx].sofort_melodie) }; } } var arr=gridToArray(); fetch('/api/beschriftung-tasten', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(arr) }).then(function(r){ return r.json().then(function(d){ if(!r.ok) throw new Error(d.error||r.status); showStatus('Gespeichert.', 'success'); load(); }); }).catch(function(e){ showStatus('Fehler: '+e.message, 'danger'); }); };\n");
+        sb.append("        function saveLayoutGridSettings(){ return fetch('/api/layout-grid-settings', { method:'PUT', headers:{ 'Content-Type':'application/json' }, body: JSON.stringify({ cols:displayCols, rows:displayRows }) }).then(function(r){ return r.json().then(function(d){ if(!r.ok) throw new Error(d.error||r.status); return d; }); }); }\n");
+        sb.append("        document.getElementById('btnSave').onclick=function(){ if(listView){ var rows=document.querySelectorAll('#btBody tr'); for(var k=0;k<rows.length;k++){ var tr=rows[k]; var idx=parseInt(tr.dataset.idx,10); if(isNaN(idx)) continue; var obj=listRowToObj(tr); if(!obj) continue; if(obj.c1==='Leer'&&!(obj.c2||'').trim()) grid[idx]=null; else grid[idx]={ id:obj.id|0, c1:obj.c1, c2:obj.c2||'', c3:obj.c3||'', c5:obj.c5||'1', c4:obj.c4||'', c13:obj.c13||'', sonder_id:obj.sonder_id, c6:(grid[idx]&&grid[idx].c6)||'', c7:(grid[idx]&&grid[idx].c7)||'', c8:(grid[idx]&&grid[idx].c8)||'', c9:(grid[idx]&&grid[idx].c9)||'', c10:(grid[idx]&&grid[idx].c10)||'', sound:(obj.sound!==undefined?obj.sound:(grid[idx]&&grid[idx].sound))||'', sofort_melodie:(grid[idx]&&grid[idx].sofort_melodie) }; } } var arr=gridToArray(); Promise.all([saveLayoutGridSettings(), fetch('/api/beschriftung-tasten', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(arr) }).then(function(r){ return r.json().then(function(d){ if(!r.ok) throw new Error(d.error||r.status); return d; }); })]).then(function(){ showStatus('Gespeichert.', 'success'); load(); }).catch(function(e){ showStatus('Fehler: '+e.message, 'danger'); }); };\n");
         sb.append("        document.getElementById('btnImportExcel').onclick=function(){ showStatus('Importiere aus Turmtechnik/Config/Beschriftung-Tasten.xls...', 'info'); fetch('/api/beschriftung-tasten/import-from-device', { method:'POST' }).then(function(r){ return r.json(); }).then(function(d){ if(d.success){ showStatus(d.message||'Import erfolgreich', 'success'); load(); } else { showStatus(d.message||d.error||'Import fehlgeschlagen', 'danger'); } }).catch(function(err){ showStatus('Fehler: '+err.message, 'danger'); }); };\n");
         sb.append("        document.getElementById('btnImportExcelUpload').onclick=function(){ document.getElementById('btExcelFileInput').click(); };\n");
         sb.append("        document.getElementById('btExcelFileInput').onchange=function(e){ var f=e.target.files[0]; if(!f){ return; } var fd=new FormData(); fd.append('file',f); fetch('/api/beschriftung-tasten/import-from-excel', { method:'POST', body:fd }).then(function(r){ return r.json(); }).then(function(d){ if(d.success){ showStatus(d.message||'Import erfolgreich', 'success'); load(); } else { showStatus(d.message||d.error||'Import fehlgeschlagen', 'danger'); } e.target.value=''; }).catch(function(err){ showStatus('Fehler: '+err.message, 'danger'); e.target.value=''; }); };\n");
@@ -11971,7 +12131,13 @@ public class ConfigWebServer {
         sb.append("        function listRowToObj(tr){ var cells=tr.querySelectorAll('td'); if(!cells||cells.length<8) return null; var v=function(i){ return (cells[i].querySelector('input')||{}).value||''; }; var sel=function(i){ return (cells[i].querySelector('select')||{}).value||''; }; var cellVal=function(i){ var el=cells[i].querySelector('select')||cells[i].querySelector('input'); return el?el.value:''; }; var soundVal=(cells.length>=14)?cellVal(13):(cells.length>=9?cellVal(8):''); return { id:tr.dataset.id|0, c1:sel(1), c2:v(2), c3:v(3), c5:v(4), c4:v(5), c13:v(6), sonder_id:parseInt(v(7),10)||null, c6:cells.length>=14?v(8):'', c7:cells.length>=14?v(9):'', c8:cells.length>=14?v(10):'', c9:cells.length>=14?v(11):'', c10:cells.length>=14?v(12):'', sound:soundVal }; }\n");
         sb.append("        function addListRow(data, idx){ data=data||{}; var c1=data.c1||(data.c2?'Normal':'Leer'), c2=data.c2||'', c3=data.c3||'', c5=data.c5||'1', c4=data.c4||'', c13=data.c13||'', sid=data.sonder_id, sound=(data.sound!=null)?data.sound:''; var opt=TYPEN.map(function(t){ return '<option value=\"'+esc(t)+'\"'+(c1===t?' selected':'')+'>'+esc(t)+'</option>'; }).join(''); var tr=document.createElement('tr'); tr.dataset.id=data.id|0; tr.dataset.idx=idx; tr.innerHTML='<td style=\"cursor:grab\">≡</td><td><select class=\"form-select form-select-sm\">'+opt+'</select></td><td><input type=\"text\" class=\"form-control form-control-sm\" value=\"'+esc(c2)+'\" placeholder=\"Beschriftung\"></td><td><input type=\"text\" class=\"form-control form-control-sm\" value=\"'+esc(c3)+'\" placeholder=\"Relais\"></td><td><input type=\"text\" class=\"form-control form-control-sm\" value=\"'+esc(c5)+'\" placeholder=\"Platine\"></td><td><input type=\"text\" class=\"form-control form-control-sm\" value=\"'+esc(c4)+'\" placeholder=\"Hammerzeit\"></td><td><input type=\"text\" class=\"form-control form-control-sm\" value=\"'+esc(c13)+'\" placeholder=\"buttonId\"></td><td><input type=\"number\" class=\"form-control form-control-sm\" value=\"'+(sid!==undefined&&sid!==null?sid:'')+'\" placeholder=\"Sonder-ID\"></td><td><select class=\"form-select form-select-sm\">'+soundSelectOptions(sound)+'</select></td><td><button type=\"button\" class=\"btn btn-outline-danger btn-sm\" data-action=\"del\">Löschen</button></td>'; tr.querySelector('[data-action=del]').onclick=function(){ grid[parseInt(tr.dataset.idx,10)]=null; tr.remove(); }; document.getElementById('btBody').appendChild(tr); return tr; }\n");
         sb.append("        function initSortableList(){ if(sortableBt) try{ sortableBt.destroy(); }catch(e){} var tb=document.getElementById('btBody'); if(tb) sortableBt=Sortable.create(tb, { handle: 'td:first-child', animation: 150 }); }\n");
-        sb.append("        function load(){ fetch('/api/beschriftung-tasten').then(function(r){ return r.json(); }).then(function(arr){ grid=[]; for(var i=0;i<GRID_SIZE;i++) grid[i]=null; arrayToGrid(Array.isArray(arr)?arr:[]); renderVorlagen(); renderGrid(); loadBTRelaisData().then(function(){ renderRelaisBalkenBT(); }); fetch('/api/melodien').then(function(r){ return r.json(); }).then(function(d){ melodien=(d&&d.melodien)||[]; }); fetch('/api/soforttasten').then(function(r){ return r.json(); }).then(function(d){ soforttasten=Array.isArray(d)?d:[]; }); fetch('/api/sound-files').then(function(r){ return r.json(); }).then(function(d){ soundFiles=(d&&d.files)||[]; }); }); }\n");
+        sb.append("        function renderNeueBasisUebersicht(uiFunktionen, layoutItems){ var countEl=document.getElementById('uiFunktionenCount'); var listEl=document.getElementById('uiFunktionenList'); var layoutCountEl=document.getElementById('layoutItemsCount'); var kindsEl=document.getElementById('layoutTargetKinds'); if(countEl) countEl.textContent=Array.isArray(uiFunktionen)?String(uiFunktionen.length):'0'; if(listEl){ var top=(Array.isArray(uiFunktionen)?uiFunktionen:[]).slice(0,8); listEl.innerHTML=top.map(function(it){ return '<span class=\"bt-overview-pill\">'+esc(it.anzeigeName||it.keyName||it.codeAlt||'')+'</span>'; }).join(''); } if(layoutCountEl) layoutCountEl.textContent=Array.isArray(layoutItems)?String(layoutItems.length):'0'; if(kindsEl){ var counts={}; (Array.isArray(layoutItems)?layoutItems:[]).forEach(function(it){ var k=(it&&it.targetKind)?it.targetKind:'unbekannt'; counts[k]=(counts[k]||0)+1; }); kindsEl.innerHTML=Object.keys(counts).sort().map(function(k){ return '<span class=\"bt-overview-pill\">'+esc(k)+': '+counts[k]+'</span>'; }).join(''); } }\n");
+        sb.append("        function renderNeueBasisUebersicht(uiFunktionenData, layoutItemsData, gridSettings){ uiFunktionen=Array.isArray(uiFunktionenData)?uiFunktionenData:[]; layoutItems=Array.isArray(layoutItemsData)?layoutItemsData:[]; if(gridSettings){ displayCols=Math.max(2, Math.min(10, parseInt(gridSettings.cols,10)||displayCols)); displayRows=Math.max(1, Math.min(24, parseInt(gridSettings.rows,10)||displayRows)); } renderVorlagen(); updateGridInfo(); var colsEl=document.getElementById('gridColsInput'); var rowsEl=document.getElementById('gridRowsInput'); if(colsEl){ colsEl.value=displayCols; colsEl.onchange=applyGridSettingsFromInputs; colsEl.oninput=applyGridSettingsFromInputs; } if(rowsEl){ rowsEl.value=displayRows; rowsEl.onchange=applyGridSettingsFromInputs; rowsEl.oninput=applyGridSettingsFromInputs; } }\n");
+        sb.append("        function getVisibleSlotCount(){ return GRID_SIZE; }\n");
+        sb.append("        function updateGridInfo(){ var el=document.getElementById('gridInfoText'); if(el){ var minRows=Math.ceil(GRID_SIZE / Math.max(1, displayCols)); el.textContent=GRID_SIZE+' Slots sichtbar. Bei '+displayCols+' Spalten werden mindestens '+minRows+' Zeilen benötigt.'; } }\n");
+        sb.append("        function applyGridSettingsFromInputs(){ var colsEl=document.getElementById('gridColsInput'); var rowsEl=document.getElementById('gridRowsInput'); displayCols=Math.max(2, Math.min(10, parseInt(colsEl&&colsEl.value,10)||6)); displayRows=Math.max(1, Math.min(24, parseInt(rowsEl&&rowsEl.value,10)||8)); if(colsEl) colsEl.value=displayCols; if(rowsEl) rowsEl.value=displayRows; renderGrid(); }\n");
+        sb.append("        function renderGrid(){ var g=document.getElementById('tastenGrid'); if(!g) return; g.className='bt-grid'; if(g.classList){ g.classList.remove('d-flex'); g.classList.remove('flex-wrap'); } g.style.display='grid'; g.innerHTML=''; g.style.gridTemplateColumns='repeat('+displayCols+', minmax(0, 1fr))'; var visibleCount=getVisibleSlotCount(); for(var i=0;i<visibleCount;i++){ (function(idx){ var cell=document.createElement('div'); var slot=grid[idx]; var slug=slot?typToSlug(slot.c1):'leer'; cell.className='bt-cell bt-typ-'+slug+' border rounded text-center'; cell.dataset.idx=idx; cell.innerHTML='<span class=\"bt-slot-index\">'+(idx+1)+'</span>'+(slot&&(slot.c2||slot.c1) ? '<span class=\"bt-cell-label\">'+esc(slot.c2||slot.c1)+'</span>'+(slot.c2 ? '<span class=\"bt-cell-typ\">'+esc(slot.c1)+'</span>' : '') : '<span class=\"bt-cell-leer\">Leer</span>'); cell.onclick=function(){ openEdit(idx); }; if(slot&&slot.c1!=='leer'){ cell.draggable=true; cell.style.cursor='grab'; cell.ondragstart=function(ev){ ev.dataTransfer.setData('application/x-bt-grid-index',String(idx)); ev.dataTransfer.effectAllowed='move'; }; } else { cell.draggable=false; } cell.ondragover=function(e){ e.preventDefault(); cell.classList.add('border-primary'); }; cell.ondragleave=function(){ cell.classList.remove('border-primary'); }; cell.ondrop=function(e){ e.preventDefault(); cell.classList.remove('border-primary'); var gridIndex=e.dataTransfer.getData('application/x-bt-grid-index'); if(gridIndex!==''){ var srcIdx=parseInt(gridIndex,10); if(!isNaN(srcIdx)&&srcIdx!==idx){ var tmp=copySlot(grid[idx]); grid[idx]=copySlot(grid[srcIdx]); grid[srcIdx]=tmp; renumberVerknuepftSofort(); renderGrid(); return; } } var raw=e.dataTransfer.getData('application/x-bt-palette'); if(raw){ try{ var payload=JSON.parse(raw); grid[idx]=makeSlotFromPaletteItem(payload); if(grid[idx].c1==='VerknÃ¼pft'){ var n=0; for(var j=0;j<GRID_SIZE;j++) if(grid[j]&&grid[j].c1==='VerknÃ¼pft') n++; grid[idx].c3=String(VERKNUEPFT_RELAIS_BASE+n-1); } else if(grid[idx].c1==='Sofort Start'){ var n=0; for(var j=0;j<GRID_SIZE;j++) if(grid[j]&&grid[j].c1==='Sofort Start') n++; grid[idx].c3=String(SOFORT_RELAIS_BASE+n-1); } renderGrid(); return; } catch(err){} } var typ=e.dataTransfer.getData('text/plain'); if(typ){ grid[idx]=vorlageForTyp(typ); renderGrid(); } }; g.appendChild(cell); })(i); } updateGridInfo(); }\n");
+        sb.append("        function load(){ Promise.all([fetch('/api/beschriftung-tasten').then(function(r){ return r.json(); }), fetch('/api/ui-funktionen').then(function(r){ return r.json(); }).catch(function(){ return []; }), fetch('/api/layout-items').then(function(r){ return r.json(); }).catch(function(){ return []; }), fetch('/api/layout-grid-settings').then(function(r){ return r.json(); }).catch(function(){ return { cols:6, rows:8 }; })]).then(function(all){ var arr=all[0], uiFunktionen=all[1], layoutItems=all[2], gridSettings=all[3]; grid=[]; for(var i=0;i<GRID_SIZE;i++) grid[i]=null; arrayToGrid(Array.isArray(arr)?arr:[]); renderNeueBasisUebersicht(uiFunktionen, layoutItems, gridSettings); renderGrid(); loadBTRelaisData().then(function(){ renderRelaisBalkenBT(); }); fetch('/api/melodien').then(function(r){ return r.json(); }).then(function(d){ melodien=(d&&d.melodien)||[]; }); fetch('/api/soforttasten').then(function(r){ return r.json(); }).then(function(d){ soforttasten=Array.isArray(d)?d:[]; }); fetch('/api/sound-files').then(function(r){ return r.json(); }).then(function(d){ soundFiles=(d&&d.files)||[]; }); }); }\n");
         sb.append("        load();\n");
         sb.append("        fetch('/api/verknuepfte-tasten-pruefung').then(function(r){ return r.json(); }).then(function(d){ if(!d.ok&&d.fehlend&&d.fehlend.length){ var el=document.getElementById('btVerknuepftePruefungAlert'); if(el){ var esc=function(s){ return String(s).replace(/</g,'&lt;').replace(/\"/g,'&quot;'); }; var fehlendStr=d.fehlend.map(function(f){ var t=(f&&f.taste)?esc(f.taste):''; var tags=(f&&f.tagtypen&&f.tagtypen.length)?' (Tag: '+f.tagtypen.map(esc).join(', ')+')':''; return t+tags; }).join('; '); el.innerHTML='In den Programmtagen werden Tasten verwendet, die hier nicht als „Verknüpft“ vorkommen: <strong>'+fehlendStr+'</strong>. Bitte anlegen oder im <a href=\"/programm-editor.html\">Programm-Editor</a> anpassen.'; el.style.display='block'; } } });\n");
         sb.append("    </script>\n</body>\n</html>");

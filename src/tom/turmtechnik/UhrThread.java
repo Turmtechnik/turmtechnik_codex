@@ -486,6 +486,19 @@ public class UhrThread extends Thread {
 
 
     private void checkNextAutomaticStart() {
+        if (!TurmtechnikActivity.flagAutomaticOnOff) {
+            nextProgrammZeile = -1;
+            nextProgrammStunde = -1;
+            nextProgrammMinute = -1;
+            nextProgrammBeginnMs = -1;
+            nextProgrammBeginnMsPublic = -1;
+            newSearchAutomaticStart = false;
+            if (shouldShowAutomaticOffInfo()) {
+                StaticVariable.stringInfoTextField[0] = StaticVariable.getUebersetzung(0);
+                StaticVariable.stringInfoTextField[2] = "";
+            }
+            return;
+        }
         if (StaticVariable.sofortStartPopupGefunden) {
             return;
         }
@@ -922,6 +935,22 @@ public class UhrThread extends Thread {
         if (excelread != null) {
             incrementSearchTime();
         }
+    }
+
+    private boolean shouldShowAutomaticOffInfo() {
+        String current = StaticVariable.stringInfoTextField[0];
+        if (current == null) return true;
+        String trimmed = current.trim();
+        if (trimmed.isEmpty()) return true;
+        String autoOff = StaticVariable.getUebersetzung(0);
+        String autoOn = StaticVariable.getUebersetzung(17);
+        if (autoOff != null && trimmed.equals(autoOff.trim())) return true;
+        if (autoOn != null && trimmed.equals(autoOn.trim())) return true;
+        String lower = trimmed.toLowerCase(java.util.Locale.GERMAN);
+        return lower.contains("nächster start")
+                || lower.contains("naechster start")
+                || lower.contains("automatik")
+                || lower.startsWith("morgen um ");
     }
 
     /**

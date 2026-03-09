@@ -537,6 +537,20 @@ public class TurmtechnikActivity extends Activity {
         }
     }
 
+    public static void notifyUserInteractionFromWeb() {
+        final TurmtechnikActivity activity = turmtechnikActivityInstance;
+        if (activity == null) return;
+        activity.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                if (!activity.isFinishing()) {
+                    activity.resetScreensaverTimer();
+                    StartTurmtechnikService.touchHeartbeat();
+                }
+            }
+        });
+    }
+
     /** Holt das Hauptlayout (Layoutseite 1) wieder in den Vordergrund, nachdem der Schoner ausgeblendet wurde. */
     private void bringMainContentToFront() {
         if (screensaverContentRoot == null) return;
@@ -1271,12 +1285,9 @@ public class TurmtechnikActivity extends Activity {
                             } else {
                                 PlatinenDatabaseHelper db = PlatinenDatabaseHelper.getInstance(TurmtechnikActivity.this);
                                 String wv = db != null ? db.getConfigValue(CONFIG_WEB_UI_VOLLBILD_TEST) : null;
-                                boolean webUiVollbildTest = wv == null || !"0".equals(wv.trim());
+                                boolean webUiVollbildTest = "1".equals(wv != null ? wv.trim() : "");
                                 // Web-UI anzeigen wenn gewünscht oder wenn Layout nicht gebaut wurde (damit nach Init immer etwas kommt)
-                                if (webUiVollbildTest || layoutCreated == null) {
-                                    ensureWebServerStarted(TurmtechnikActivity.this);
-                                    openWebUiInBrowser(TurmtechnikActivity.this, "/app-seite1.html");
-                                } else if (parentLayout != null) {
+                                if (parentLayout != null) {
                                     parentLayout.addView(layoutCreated);
                                 }
                             }
@@ -2608,7 +2619,6 @@ public class TurmtechnikActivity extends Activity {
     public void onResume() {
         super.onResume();
         applyExitActionFromIntent(getIntent());
-        WebUiActivity.closeIfOpen();
         isInForeground = true;
         StartTurmtechnikService.reportVisibleActivity(this, getClass().getName());
         // „Turmtechnik starten“-Notification aufheben, wenn die App wieder im Vordergrund ist (Full-Screen-Intent oder Tipp)
@@ -6886,6 +6896,19 @@ public class TurmtechnikActivity extends Activity {
 
     public static String getButtonId(int index) {
         return buttonId[index];
+    }
+
+    public static int findGridIndexByButtonId(String rowId) {
+        if (rowId == null) return -1;
+        String needle = rowId.trim();
+        if (needle.isEmpty() || "null".equalsIgnoreCase(needle)) return -1;
+        for (int i = 0; i < RELAIS_COUNT; i++) {
+            String current = buttonId[i];
+            if (current != null && needle.equals(current)) {
+                return i;
+            }
+        }
+        return -1;
     }
 
     public Handler myHandler = new Handler() {

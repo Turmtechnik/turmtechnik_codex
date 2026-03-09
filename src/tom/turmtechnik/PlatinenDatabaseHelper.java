@@ -16,7 +16,7 @@ import java.util.List;
 public class PlatinenDatabaseHelper extends SQLiteOpenHelper {
     private static final String TAG = "PlatinenDatabaseHelper";
     private static final String DATABASE_NAME = "turmtechnik_config.db";
-    private static final int DATABASE_VERSION = 28; // 28: Relais-Kategorien + Relais-Zuordnung (Software-Relais zu Hardware)
+    private static final int DATABASE_VERSION = 29; // 29: UI-Funktionen + Layout-Items als neue Basis fuer Tasten-Layout
     
     private static final String TABLE_PLATINEN = "platinen_config";
     private static final String TABLE_IO_CONFIG = "io_config";
@@ -35,6 +35,8 @@ public class PlatinenDatabaseHelper extends SQLiteOpenHelper {
     private static final String TABLE_SCHLAGWERK_CONFIG = "schlagwerk_config";
     private static final String TABLE_RELAIS_KATEGORIEN = "relais_kategorien";
     private static final String TABLE_RELAIS_ZUORDNUNG = "relais_zuordnung";
+    private static final String TABLE_UI_FUNKTION = "ui_funktion";
+    private static final String TABLE_LAYOUT_ITEM = "layout_item";
     
     private static final String CREATE_TABLE_PLATINEN = 
         "CREATE TABLE " + TABLE_PLATINEN + " (" +
@@ -293,6 +295,44 @@ public class PlatinenDatabaseHelper extends SQLiteOpenHelper {
         "created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, " +
         "updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP" +
         ")";
+
+    private static final String CREATE_TABLE_UI_FUNKTION =
+        "CREATE TABLE " + TABLE_UI_FUNKTION + " (" +
+        "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+        "code_alt INTEGER NOT NULL UNIQUE, " +
+        "key_name TEXT NOT NULL UNIQUE, " +
+        "anzeige_name TEXT NOT NULL, " +
+        "beschreibung TEXT, " +
+        "aktiv INTEGER DEFAULT 1, " +
+        "sortierung INTEGER DEFAULT 0, " +
+        "created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, " +
+        "updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP" +
+        ")";
+
+    private static final String CREATE_TABLE_LAYOUT_ITEM =
+        "CREATE TABLE " + TABLE_LAYOUT_ITEM + " (" +
+        "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+        "page_nummer INTEGER NOT NULL DEFAULT 1, " +
+        "slot_index INTEGER NOT NULL, " +
+        "grid_row INTEGER DEFAULT 0, " +
+        "grid_col INTEGER DEFAULT 0, " +
+        "grid_width INTEGER DEFAULT 1, " +
+        "grid_height INTEGER DEFAULT 1, " +
+        "label_text TEXT, " +
+        "button_id TEXT, " +
+        "target_kind TEXT, " +
+        "target_id INTEGER, " +
+        "legacy_code TEXT, " +
+        "legacy_platine TEXT, " +
+        "legacy_hammerzeit TEXT, " +
+        "legacy_funktion TEXT, " +
+        "sound TEXT, " +
+        "sichtbar INTEGER DEFAULT 1, " +
+        "sortierung INTEGER DEFAULT 0, " +
+        "created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, " +
+        "updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, " +
+        "UNIQUE(page_nummer, slot_index)" +
+        ")";
     
     private static final String CREATE_INDEX = 
         "CREATE INDEX IF NOT EXISTS idx_platinen_nummer ON " + TABLE_PLATINEN + "(platine_nummer)";
@@ -343,6 +383,10 @@ public class PlatinenDatabaseHelper extends SQLiteOpenHelper {
         "CREATE INDEX IF NOT EXISTS idx_relais_zuordnung_software_id ON " + TABLE_RELAIS_ZUORDNUNG + "(software_relais_id)";
     private static final String CREATE_INDEX_RELAIS_ZUORDNUNG_KATEGORIE =
         "CREATE INDEX IF NOT EXISTS idx_relais_zuordnung_kategorie ON " + TABLE_RELAIS_ZUORDNUNG + "(kategorie_id)";
+    private static final String CREATE_INDEX_UI_FUNKTION_CODE =
+        "CREATE INDEX IF NOT EXISTS idx_ui_funktion_code_alt ON " + TABLE_UI_FUNKTION + "(code_alt)";
+    private static final String CREATE_INDEX_LAYOUT_ITEM_PAGE_SLOT =
+        "CREATE INDEX IF NOT EXISTS idx_layout_item_page_slot ON " + TABLE_LAYOUT_ITEM + "(page_nummer, slot_index)";
     
     private static PlatinenDatabaseHelper instance;
     private Context context;
@@ -403,6 +447,8 @@ public class PlatinenDatabaseHelper extends SQLiteOpenHelper {
         db.execSQL(CREATE_TABLE_SCHLAGWERK_CONFIG);
         db.execSQL(CREATE_TABLE_RELAIS_KATEGORIEN);
         db.execSQL(CREATE_TABLE_RELAIS_ZUORDNUNG);
+        db.execSQL(CREATE_TABLE_UI_FUNKTION);
+        db.execSQL(CREATE_TABLE_LAYOUT_ITEM);
         db.execSQL(CREATE_INDEX);
         db.execSQL(CREATE_INDEX_NEBENUHR);
         db.execSQL(CREATE_INDEX_TAGTYPEN);
@@ -420,6 +466,8 @@ public class PlatinenDatabaseHelper extends SQLiteOpenHelper {
         db.execSQL(CREATE_INDEX_SCHLAGWERK_CONFIG);
         db.execSQL(CREATE_INDEX_RELAIS_ZUORDNUNG_SOFTWARE);
         db.execSQL(CREATE_INDEX_RELAIS_ZUORDNUNG_KATEGORIE);
+        db.execSQL(CREATE_INDEX_UI_FUNKTION_CODE);
+        db.execSQL(CREATE_INDEX_LAYOUT_ITEM_PAGE_SLOT);
         
         // Default-Modus: wifi
         android.content.ContentValues values = new android.content.ContentValues();
@@ -469,6 +517,7 @@ public class PlatinenDatabaseHelper extends SQLiteOpenHelper {
         
         // Standard-Relais-Kategorien
         insertDefaultRelaisKategorien(db);
+        insertDefaultUiFunktionen(db);
         
         if (!runExcelMigrations) {
             // Neuanlage/Werkszustand: Normalprogramm + Stop/Automatik + feste Feiertage (ohne Excel)
@@ -496,6 +545,7 @@ public class PlatinenDatabaseHelper extends SQLiteOpenHelper {
                 Log.w(TAG, "Fehler bei Migration von Vorschwingen in onCreate", e);
             }
         }
+        ensureLayoutItemsFromBeschriftungTasten(db);
     }
 
     /**
@@ -509,6 +559,8 @@ public class PlatinenDatabaseHelper extends SQLiteOpenHelper {
         try {
             db.execSQL("DROP TABLE IF EXISTS " + TABLE_RELAIS_ZUORDNUNG);
             db.execSQL("DROP TABLE IF EXISTS " + TABLE_RELAIS_KATEGORIEN);
+            db.execSQL("DROP TABLE IF EXISTS " + TABLE_LAYOUT_ITEM);
+            db.execSQL("DROP TABLE IF EXISTS " + TABLE_UI_FUNKTION);
             db.execSQL("DROP TABLE IF EXISTS " + TABLE_SCHLAGWERK_CONFIG);
             db.execSQL("DROP TABLE IF EXISTS " + TABLE_BESCHRIFTUNG_TASTEN);
             db.execSQL("DROP TABLE IF EXISTS " + TABLE_MELODIE_ZEILEN);
@@ -1009,6 +1061,19 @@ public class PlatinenDatabaseHelper extends SQLiteOpenHelper {
                 Log.d(TAG, "Tabellen relais_kategorien und relais_zuordnung hinzugefügt (Version 28)");
             } catch (Exception e) {
                 Log.e(TAG, "Fehler beim Hinzufügen der Relais-Kategorien/Zuordnung (Version 28)", e);
+            }
+        }
+        if (oldVersion < 29) {
+            try {
+                db.execSQL(CREATE_TABLE_UI_FUNKTION);
+                db.execSQL(CREATE_TABLE_LAYOUT_ITEM);
+                db.execSQL(CREATE_INDEX_UI_FUNKTION_CODE);
+                db.execSQL(CREATE_INDEX_LAYOUT_ITEM_PAGE_SLOT);
+                insertDefaultUiFunktionen(db);
+                ensureLayoutItemsFromBeschriftungTasten(db);
+                Log.d(TAG, "Tabellen ui_funktion und layout_item hinzugefuegt (Version 29)");
+            } catch (Exception e) {
+                Log.e(TAG, "Fehler beim Hinzufuegen von ui_funktion/layout_item (Version 29)", e);
             }
         }
     }
@@ -1727,6 +1792,10 @@ public class PlatinenDatabaseHelper extends SQLiteOpenHelper {
 
     public static final String KEY_MOND_IMPULSE_PRO_PHASE = "mond_impulse_pro_phase";
     public static final int DEFAULT_MOND_IMPULSE_PRO_PHASE = 60;
+    public static final String KEY_LAYOUT_GRID_COLS = "layout_grid_cols";
+    public static final String KEY_LAYOUT_GRID_ROWS = "layout_grid_rows";
+    public static final int DEFAULT_LAYOUT_GRID_COLS = 6;
+    public static final int DEFAULT_LAYOUT_GRID_ROWS = 8;
 
     public int getMondImpulseProPhase() {
         String value = getConfigValue(KEY_MOND_IMPULSE_PRO_PHASE);
@@ -1744,6 +1813,38 @@ public class PlatinenDatabaseHelper extends SQLiteOpenHelper {
         setConfigValue(KEY_MOND_IMPULSE_PRO_PHASE, String.valueOf(normalizeMondImpulseProPhase(impulseProPhase)));
     }
 
+    public int getLayoutGridCols() {
+        String value = getConfigValue(KEY_LAYOUT_GRID_COLS);
+        if (value != null && !value.trim().isEmpty()) {
+            try {
+                return normalizeLayoutGridCols(Integer.parseInt(value.trim()));
+            } catch (NumberFormatException e) {
+                Log.w(TAG, "Ungueltiger Wert fuer layout_grid_cols: " + value, e);
+            }
+        }
+        return DEFAULT_LAYOUT_GRID_COLS;
+    }
+
+    public void setLayoutGridCols(int cols) {
+        setConfigValue(KEY_LAYOUT_GRID_COLS, String.valueOf(normalizeLayoutGridCols(cols)));
+    }
+
+    public int getLayoutGridRows() {
+        String value = getConfigValue(KEY_LAYOUT_GRID_ROWS);
+        if (value != null && !value.trim().isEmpty()) {
+            try {
+                return normalizeLayoutGridRows(Integer.parseInt(value.trim()));
+            } catch (NumberFormatException e) {
+                Log.w(TAG, "Ungueltiger Wert fuer layout_grid_rows: " + value, e);
+            }
+        }
+        return DEFAULT_LAYOUT_GRID_ROWS;
+    }
+
+    public void setLayoutGridRows(int rows) {
+        setConfigValue(KEY_LAYOUT_GRID_ROWS, String.valueOf(normalizeLayoutGridRows(rows)));
+    }
+
     public static int normalizeMondImpulseProPhase(int impulseProPhase) {
         if (impulseProPhase < 4) return 4;
         if (impulseProPhase > 360) return 360;
@@ -1755,6 +1856,18 @@ public class PlatinenDatabaseHelper extends SQLiteOpenHelper {
         int normalized = mondphase % maxImpulse;
         if (normalized < 0) normalized += maxImpulse;
         return normalized;
+    }
+
+    public static int normalizeLayoutGridCols(int cols) {
+        if (cols < 2) return 2;
+        if (cols > 10) return 10;
+        return cols;
+    }
+
+    public static int normalizeLayoutGridRows(int rows) {
+        if (rows < 1) return 1;
+        if (rows > 24) return 24;
+        return rows;
     }
 
     /** Max. Anzahl Benutzerprogramm-Slots (wie ConfigWebServer / TurmtechnikActivity). */
@@ -2546,6 +2659,44 @@ public class PlatinenDatabaseHelper extends SQLiteOpenHelper {
         public int platineNummer;
         public int relaisNummer;
     }
+
+    /**
+     * Stammdaten fuer UI-Funktionen (frueher Sonder-/Systemtasten 1100-1206).
+     */
+    public static class UiFunktion {
+        public int id;
+        public int codeAlt;
+        public String keyName;
+        public String anzeigeName;
+        public String beschreibung;
+        public boolean aktiv;
+        public int sortierung;
+    }
+
+    /**
+     * Neues Layout-Modell als Nachfolger von Beschriftung-Tasten.
+     * Es beschreibt Position/Anzeige und verweist auf UI-Funktionen oder spaeter andere Zielobjekte.
+     */
+    public static class LayoutItem {
+        public int id;
+        public int pageNummer;
+        public int slotIndex;
+        public int gridRow;
+        public int gridCol;
+        public int gridWidth;
+        public int gridHeight;
+        public String labelText;
+        public String buttonId;
+        public String targetKind;
+        public Integer targetId;
+        public String legacyCode;
+        public String legacyPlatine;
+        public String legacyHammerzeit;
+        public String legacyFunktion;
+        public String sound;
+        public boolean sichtbar;
+        public int sortierung;
+    }
     
     /**
      * Zeile aus Beschriftung-Tasten. c1=Funktion (Tastentyp), c2=Beschriftung, c3=Relais, c4=Hammerzeit,
@@ -2721,6 +2872,80 @@ public class PlatinenDatabaseHelper extends SQLiteOpenHelper {
         return rows;
     }
 
+    public List<UiFunktion> getAllUiFunktionen() {
+        List<UiFunktion> rows = new ArrayList<>();
+        SQLiteDatabase db = getReadableDatabase();
+        Cursor cursor = db.query(TABLE_UI_FUNKTION,
+            new String[]{"id", "code_alt", "key_name", "anzeige_name", "beschreibung", "aktiv", "sortierung"},
+            null, null, null, null, "sortierung ASC, code_alt ASC");
+        try {
+            while (cursor.moveToNext()) {
+                UiFunktion item = new UiFunktion();
+                item.id = cursor.getInt(0);
+                item.codeAlt = cursor.getInt(1);
+                item.keyName = cursor.getString(2);
+                item.anzeigeName = cursor.getString(3);
+                item.beschreibung = cursor.isNull(4) ? null : cursor.getString(4);
+                item.aktiv = cursor.getInt(5) != 0;
+                item.sortierung = cursor.getInt(6);
+                rows.add(item);
+            }
+        } finally {
+            cursor.close();
+        }
+        return rows;
+    }
+
+    public List<LayoutItem> getAllLayoutItems() {
+        ensureLayoutItemsBackfilled();
+        List<LayoutItem> rows = new ArrayList<>();
+        SQLiteDatabase db = getReadableDatabase();
+        Cursor cursor = db.query(TABLE_LAYOUT_ITEM,
+            new String[]{"id", "page_nummer", "slot_index", "grid_row", "grid_col", "grid_width", "grid_height",
+                "label_text", "button_id", "target_kind", "target_id", "legacy_code", "legacy_platine",
+                "legacy_hammerzeit", "legacy_funktion", "sound", "sichtbar", "sortierung"},
+            null, null, null, null, "page_nummer ASC, slot_index ASC");
+        try {
+            while (cursor.moveToNext()) {
+                LayoutItem item = new LayoutItem();
+                item.id = cursor.getInt(0);
+                item.pageNummer = cursor.getInt(1);
+                item.slotIndex = cursor.getInt(2);
+                item.gridRow = cursor.getInt(3);
+                item.gridCol = cursor.getInt(4);
+                item.gridWidth = cursor.getInt(5);
+                item.gridHeight = cursor.getInt(6);
+                item.labelText = cursor.isNull(7) ? null : cursor.getString(7);
+                item.buttonId = cursor.isNull(8) ? null : cursor.getString(8);
+                item.targetKind = cursor.isNull(9) ? null : cursor.getString(9);
+                item.targetId = cursor.isNull(10) ? null : cursor.getInt(10);
+                item.legacyCode = cursor.isNull(11) ? null : cursor.getString(11);
+                item.legacyPlatine = cursor.isNull(12) ? null : cursor.getString(12);
+                item.legacyHammerzeit = cursor.isNull(13) ? null : cursor.getString(13);
+                item.legacyFunktion = cursor.isNull(14) ? null : cursor.getString(14);
+                item.sound = cursor.isNull(15) ? null : cursor.getString(15);
+                item.sichtbar = cursor.getInt(16) != 0;
+                item.sortierung = cursor.getInt(17);
+                rows.add(item);
+            }
+        } finally {
+            cursor.close();
+        }
+        return rows;
+    }
+
+    public void rebuildLayoutItemsFromBeschriftungTasten() {
+        SQLiteDatabase db = getWritableDatabase();
+        db.beginTransaction();
+        try {
+            db.delete(TABLE_LAYOUT_ITEM, null, null);
+            ensureLayoutItemsFromBeschriftungTasten(db);
+            db.setTransactionSuccessful();
+        } finally {
+            db.endTransaction();
+        }
+    }
+
     /**
      * Importiert Beschriftung-Tasten aus einer Excel-Datei (Beschriftung-Tasten.xls, Sheet 0).
      * Spalten: 0=Funktion (c1, optional), 2=Beschriftung (c2), 3=Relais (c3), 4=Hammerzeit (c4), 5=Platine (c5), 13=buttonId (c13).
@@ -2893,6 +3118,8 @@ public class PlatinenDatabaseHelper extends SQLiteOpenHelper {
                 values.put("sound", r.sound != null ? r.sound : "");
                 db.insert(TABLE_BESCHRIFTUNG_TASTEN, null, values);
             }
+            db.delete(TABLE_LAYOUT_ITEM, null, null);
+            ensureLayoutItemsFromBeschriftungTasten(db);
             db.setTransactionSuccessful();
         } finally {
             db.endTransaction();
@@ -4271,8 +4498,166 @@ public class PlatinenDatabaseHelper extends SQLiteOpenHelper {
     }
     
     /** Sonder-IDs für Systemtasten (wie in ConfigWebServer/App). */
+    private void insertDefaultUiFunktionen(SQLiteDatabase db) {
+        Object[][] defaults = new Object[][]{
+            {1100, "stop", "Stop", "Stoppt Glocken, Melodien und setzt die Automatik-Suche neu.", 1},
+            {1101, "automatic_toggle", "Automatik", "Schaltet die Automatik ein oder aus.", 2},
+            {1102, "home", "Home", "Geht von Unterseiten zur Hauptansicht zurueck.", 3},
+            {1103, "help", "Hilfe", "Oeffnet die Hilfe-Seite.", 4},
+            {1104, "schlagwerk_toggle", "Schlagwerk", "Schaltet das Schlagwerk ein oder aus.", 5},
+            {1202, "open_page_2", "Seite 2", "Oeffnet die zweite Bedienseite.", 6},
+            {1203, "open_programm_eingeben", "Programm eingeben", "Oeffnet die Benutzerprogrammeingabe.", 7},
+            {1204, "open_programm_abfragen", "Programm abfragen", "Oeffnet die Programmkontrolle.", 8},
+            {1205, "open_set_nebenuhr", "Nebenuhr einstellen", "Oeffnet den Nebenuhr-Dialog.", 9},
+            {1206, "open_manueler_start", "Manueller Start", "Oeffnet den manuellen Start.", 10}
+        };
+        for (Object[] row : defaults) {
+            android.content.ContentValues values = new android.content.ContentValues();
+            values.put("code_alt", (Integer) row[0]);
+            values.put("key_name", (String) row[1]);
+            values.put("anzeige_name", (String) row[2]);
+            values.put("beschreibung", (String) row[3]);
+            values.put("aktiv", 1);
+            values.put("sortierung", (Integer) row[4]);
+            try {
+                db.insertWithOnConflict(TABLE_UI_FUNKTION, null, values, SQLiteDatabase.CONFLICT_IGNORE);
+            } catch (Exception e) {
+                Log.w(TAG, "Fehler beim Einfuegen UI-Funktion " + row[1], e);
+            }
+        }
+        Log.d(TAG, "Standard-UI-Funktionen eingefuegt");
+    }
+
     private static final int SONDER_ID_STOP = 1100;
     private static final int SONDER_ID_AUTOMATIK = 1101;
+
+    private void ensureLayoutItemsBackfilled() {
+        ensureLayoutItemsFromBeschriftungTasten(getWritableDatabase());
+    }
+
+    private void ensureLayoutItemsFromBeschriftungTasten(SQLiteDatabase db) {
+        final int layoutCols = getLayoutGridCols();
+        Cursor countCursor = null;
+        try {
+            countCursor = db.rawQuery("SELECT COUNT(*) FROM " + TABLE_LAYOUT_ITEM, null);
+            if (countCursor.moveToFirst() && countCursor.getInt(0) > 0) {
+                return;
+            }
+        } finally {
+            if (countCursor != null) countCursor.close();
+        }
+
+        insertDefaultUiFunktionen(db);
+
+        Cursor uiCursor = null;
+        Cursor buttonCursor = null;
+        boolean startedTransaction = false;
+        try {
+            java.util.HashMap<Integer, Integer> uiFunktionIdByCode = new java.util.HashMap<>();
+            uiCursor = db.query(TABLE_UI_FUNKTION, new String[]{"id", "code_alt"}, null, null, null, null, null);
+            while (uiCursor.moveToNext()) {
+                uiFunktionIdByCode.put(uiCursor.getInt(1), uiCursor.getInt(0));
+            }
+
+            buttonCursor = db.query(TABLE_BESCHRIFTUNG_TASTEN,
+                new String[]{"zeile_index", "c1", "c2", "c3", "c4", "c5", "c13", "sound", "sonder_id"},
+                null, null, null, null, "zeile_index ASC");
+
+            if (!db.inTransaction()) {
+                db.beginTransaction();
+                startedTransaction = true;
+            }
+            while (buttonCursor.moveToNext()) {
+                int zeileIndex = buttonCursor.getInt(0);
+                String c1 = buttonCursor.isNull(1) ? null : buttonCursor.getString(1);
+                String c2 = buttonCursor.isNull(2) ? null : buttonCursor.getString(2);
+                String c3 = buttonCursor.isNull(3) ? null : buttonCursor.getString(3);
+                String c4 = buttonCursor.isNull(4) ? null : buttonCursor.getString(4);
+                String c5 = buttonCursor.isNull(5) ? null : buttonCursor.getString(5);
+                String c13 = buttonCursor.isNull(6) ? null : buttonCursor.getString(6);
+                String sound = buttonCursor.isNull(7) ? null : buttonCursor.getString(7);
+                Integer sonderId = buttonCursor.isNull(8) ? null : buttonCursor.getInt(8);
+                int code = sonderId != null ? sonderId : parseIntegerOrDefault(c3, Integer.MIN_VALUE);
+                int slotOnPage = zeileIndex % 24;
+
+                android.content.ContentValues values = new android.content.ContentValues();
+                values.put("page_nummer", (zeileIndex / 24) + 1);
+                values.put("slot_index", slotOnPage);
+                values.put("grid_row", slotOnPage / layoutCols);
+                values.put("grid_col", slotOnPage % layoutCols);
+                values.put("grid_width", 1);
+                values.put("grid_height", 1);
+                values.put("label_text", c2);
+                values.put("button_id", c13);
+                values.put("legacy_code", c3);
+                values.put("legacy_platine", c5);
+                values.put("legacy_hammerzeit", c4);
+                values.put("legacy_funktion", c1);
+                values.put("sound", sound);
+                values.put("sichtbar", isVisibleLegacyButton(c1, c2) ? 1 : 0);
+                values.put("sortierung", zeileIndex);
+
+                Integer uiFunktionId = uiFunktionIdByCode.get(code);
+                if (uiFunktionId != null) {
+                    values.put("target_kind", "ui_funktion");
+                    values.put("target_id", uiFunktionId);
+                } else if (isLegacyVerknuepfteTaste(code)) {
+                    values.put("target_kind", "verknuepfte_funktion_legacy");
+                } else if (isLegacyPopupCode(code)) {
+                    values.put("target_kind", "popup_legacy");
+                } else if (isLegacyHardwareRelais(c3)) {
+                    values.put("target_kind", "hardware_relais_legacy");
+                } else {
+                    values.put("target_kind", "leer");
+                }
+
+                db.insertWithOnConflict(TABLE_LAYOUT_ITEM, null, values, SQLiteDatabase.CONFLICT_REPLACE);
+            }
+            if (startedTransaction) {
+                db.setTransactionSuccessful();
+            }
+            Log.d(TAG, "layout_item aus beschriftung_tasten initial gefuellt");
+        } finally {
+            if (startedTransaction && db.inTransaction()) {
+                db.endTransaction();
+            }
+            if (uiCursor != null) uiCursor.close();
+            if (buttonCursor != null) buttonCursor.close();
+        }
+    }
+
+    private static boolean isVisibleLegacyButton(String c1, String c2) {
+        return !isEmptyOrEqualsIgnoreCase(c1, "NULL")
+            && !isEmptyOrEqualsIgnoreCase(c2, "NULL");
+    }
+
+    private static boolean isLegacyHardwareRelais(String c3) {
+        int code = parseIntegerOrDefault(c3, Integer.MIN_VALUE);
+        return code >= 0 && code < 1000;
+    }
+
+    private static boolean isLegacyVerknuepfteTaste(int code) {
+        return code >= 2001 && code < 3000;
+    }
+
+    private static boolean isLegacyPopupCode(int code) {
+        return code >= 3000;
+    }
+
+    private static boolean isEmptyOrEqualsIgnoreCase(String value, String match) {
+        return value == null || value.trim().isEmpty() || match.equalsIgnoreCase(value.trim());
+    }
+
+    private static int parseIntegerOrDefault(String value, int defaultValue) {
+        if (value == null) {
+            return defaultValue;
+        }
+        try {
+            return Integer.parseInt(value.trim());
+        } catch (Exception e) {
+            return defaultValue;
+        }
+    }
     
     /**
      * Fügt bei Neuanlage/Werkszustand den Tagtyp „Normalprogramm“ und ein Minimal-Programm ein,
