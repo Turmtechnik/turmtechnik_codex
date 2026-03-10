@@ -218,11 +218,40 @@ public class NebenUhrA_thread extends Thread {
             //Log.i("Relais" , "Nr.:" + relaisNumber);
             String relaisLetterA = (relaisNumber == nebenuhrConfig.relaisA) ? "A" : "B";
             int platineIndex = (relaisNumber - 1) / 32;
-            // Impuls so oft wiederholen, bis er durch ist – keine Minute aufgeben
+            // Impuls so oft wiederholen, bis er durch ist – max. MAX_IMPULS_RETRIES Versuche, sonst Abbruch (Endlosschleife vermeiden)
+            final int MAX_IMPULS_RETRIES = 30; // ~60 s bei 2 s Pause
+            int retryCount = 0;
             boolean ersteRunde = true;
             for (;;) {
+                if (retryCount >= MAX_IMPULS_RETRIES) {
+                    TurmtechnikActivity.tryEnableWifiIfDisabled();
+                    Log.w("NebenUhrA_thread", "Verbindung dauerhaft fehl – breche nach " + MAX_IMPULS_RETRIES + " Versuchen ab. Naechster Versuch in 1 Min.");
+                    Serial_IoThread.relaisNew[relaisNumber - 1] = false;
+                    LogTurmtechnik2.appendNebenuhrRelaisLogRelaisEinAus("A", relaisLetterA, false);
+                    LogTurmtechnik2.appendNebenuhrRelaisLogAbbruch("A", relaisNumber, StaticVariable.uhrA_calendarZeit, StaticVariable.uhrA_angezeigteZeit, StaticVariable.uhrA_lastRelaisA);
+                    lastAbortA = true;
+                    StaticVariable.uhrA_pendingImpuls = false;
+                    StaticVariable.uhrA_pendingRelaisA = false;
+                    if (platineIndex >= 0 && platineIndex < StaticVariable.nebenuhrImpulsLaeuftPlatine.length) {
+                        StaticVariable.nebenuhrImpulsLaeuftPlatine[platineIndex] = false;
+                    }
+                    try {
+                        PlatinenDatabaseHelper dbHelper = PlatinenDatabaseHelper.getInstance(TurmtechnikActivity.getRuntimeContext());
+                        PlatinenDatabaseHelper.NebenuhrConfig c = dbHelper.getNebenuhrByZeile(3);
+                        if (c != null) {
+                            c.impulsAusstehend = false;
+                            c.pendingRelaisA = null;
+                            dbHelper.saveNebenuhr(c);
+                        }
+                    } catch (Exception e) {
+                        Log.e("NebenUhrA_thread", "Fehler beim Zuruecksetzen impulsAusstehend nach Abbruch", e);
+                    }
+                    sleepTime(60000); // 1 Min. Pause, damit keine Endlosschleife im aeusseren while
+                    return;
+                }
                 if (!ersteRunde) {
                     sleepTime(2000);
+                    retryCount++;
                     if (relaisNumber > 0 && relaisNumber <= Serial_IoThread.relaisOld.length) {
                         Serial_IoThread.relaisOld[relaisNumber - 1] = false;
                     }
@@ -318,6 +347,7 @@ public class NebenUhrA_thread extends Thread {
                 return;
             }
             if (!Serial_IoThread.getSerialIoStatus2()) {
+                TurmtechnikActivity.tryEnableWifiIfDisabled();
                 Log.w("NebenUhrA_thread", "Keine Verbindung – wiederhole Impuls in 2 s, bis er durch ist.");
                 continue;
             }

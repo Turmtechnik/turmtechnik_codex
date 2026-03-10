@@ -1,0 +1,212 @@
+-- Merging decision tree log ---
+manifest
+ADDED from C:\Users\ThinkStation P920\Documents\Turmtechnik-studio3 - mit codex überarbeiten\TurmtechnikFernbedienung\app\src\main\AndroidManifest.xml:2:1-25:12
+INJECTED from C:\Users\ThinkStation P920\Documents\Turmtechnik-studio3 - mit codex überarbeiten\TurmtechnikFernbedienung\app\src\main\AndroidManifest.xml:2:1-25:12
+INJECTED from C:\Users\ThinkStation P920\Documents\Turmtechnik-studio3 - mit codex überarbeiten\TurmtechnikFernbedienung\app\src\main\AndroidManifest.xml:2:1-25:12
+INJECTED from C:\Users\ThinkStation P920\Documents\Turmtechnik-studio3 - mit codex überarbeiten\TurmtechnikFernbedienung\app\src\main\AndroidManifest.xml:2:1-25:12
+MERGED from [androidx.databinding:viewbinding:8.2.2] C:\Users\ThinkStation P920\.gradle\caches\9.0-milestone-1\transforms\d695fa6bd838c3cc0504acde185420df\transformed\viewbinding-8.2.2\AndroidManifest.xml:2:1-7:12
+MERGED from [androidx.appcompat:appcompat-resources:1.6.1] C:\Users\ThinkStation P920\.gradle\caches\9.0-milestone-1\transforms\0f64a3d7e6bb16e6513fde61cc09a8c4\transformed\appcompat-resources-1.6.1\AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.appcompat:appcompat:1.6.1] C:\Users\ThinkStation P920\.gradle\caches\9.0-milestone-1\transforms\d7521f5749408ce1888060f746428074\transformed\appcompat-1.6.1\AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.fragment:fragment:1.3.6] C:\Users\ThinkStation P920\.gradle\caches\9.0-milestone-1\transforms\070a9fb82295fa5296f06e07c66c0cc0\transformed\fragment-1.3.6\AndroidManifest.xml:17:1-24:12
+MERGED from [androidx.activity:activity:1.6.0] C:\Users\ThinkStation P920\.gradle\caches\9.0-milestone-1\transforms\5563dfb3a2f9fb2f03c89d0b1efb0c5c\transformed\activity-1.6.0\AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.drawerlayout:drawerlayout:1.0.0] C:\Users\ThinkStation P920\.gradle\caches\9.0-milestone-1\transforms\5ca16654ef2b9d05e0902017109ddb2d\transformed\drawerlayout-1.0.0\AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.emoji2:emoji2-views-helper:1.2.0] C:\Users\ThinkStation P920\.gradle\caches\9.0-milestone-1\transforms\a70538629c11be428c24c2b1029c2a08\transformed\emoji2-views-helper-1.2.0\AndroidManifest.xml:2:1-7:12
+MERGED from [androidx.emoji2:emoji2:1.2.0] C:\Users\ThinkStation P920\.gradle\caches\9.0-milestone-1\transforms\0271f5f8dc0c5c9c0195dbb93654523d\transformed\emoji2-1.2.0\AndroidManifest.xml:17:1-35:12
+MERGED from [androidx.vectordrawable:vectordrawable-animated:1.1.0] C:\Users\ThinkStation P920\.gradle\caches\9.0-milestone-1\transforms\38fc3d8d53f22c894a7d61d4383a7ae0\transformed\vectordrawable-animated-1.1.0\AndroidManifest.xml:17:1-24:12
+MERGED from [androidx.vectordrawable:vectordrawable:1.1.0] C:\Users\ThinkStation P920\.gradle\caches\9.0-milestone-1\transforms\0ddca510ddbd3d49e4553552fa4b9b02\transformed\vectordrawable-1.1.0\AndroidManifest.xml:17:1-24:12
+MERGED from [androidx.loader:loader:1.0.0] C:\Users\ThinkStation P920\.gradle\caches\9.0-milestone-1\transforms\954af2429544237a98de2f22d54d83e8\transformed\loader-1.0.0\AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.lifecycle:lifecycle-viewmodel:2.5.1] C:\Users\ThinkStation P920\.gradle\caches\9.0-milestone-1\transforms\17e638ac85fe18132742c4a99f7cbd67\transformed\lifecycle-viewmodel-2.5.1\AndroidManifest.xml:17:1-24:12
+MERGED from [androidx.lifecycle:lifecycle-viewmodel-savedstate:2.5.1] C:\Users\ThinkStation P920\.gradle\caches\9.0-milestone-1\transforms\93e0300dc38bf01a3a8da78476b7c522\transformed\lifecycle-viewmodel-savedstate-2.5.1\AndroidManifest.xml:17:1-24:12
+MERGED from [androidx.core:core-ktx:1.9.0] C:\Users\ThinkStation P920\.gradle\caches\9.0-milestone-1\transforms\a846efefff3ae8de84c07f8a09ddf4a4\transformed\core-ktx-1.9.0\AndroidManifest.xml:2:1-7:12
+MERGED from [androidx.viewpager:viewpager:1.0.0] C:\Users\ThinkStation P920\.gradle\caches\9.0-milestone-1\transforms\0971db8dd97671331713398296dfc055\transformed\viewpager-1.0.0\AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.customview:customview:1.0.0] C:\Users\ThinkStation P920\.gradle\caches\9.0-milestone-1\transforms\400fd4ab610618a319042750e1095222\transformed\customview-1.0.0\AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.core:core:1.9.0] C:\Users\ThinkStation P920\.gradle\caches\9.0-milestone-1\transforms\b3329962f4aa65c16b5c26083ff650ae\transformed\core-1.9.0\AndroidManifest.xml:17:1-30:12
+MERGED from [androidx.cursoradapter:cursoradapter:1.0.0] C:\Users\ThinkStation P920\.gradle\caches\9.0-milestone-1\transforms\c05770d0fc784dffdc3570a003cf7312\transformed\cursoradapter-1.0.0\AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.lifecycle:lifecycle-process:2.4.1] C:\Users\ThinkStation P920\.gradle\caches\9.0-milestone-1\transforms\19534682b146748a0026c3db6d8472e6\transformed\lifecycle-process-2.4.1\AndroidManifest.xml:17:1-37:12
+MERGED from [androidx.lifecycle:lifecycle-runtime:2.5.1] C:\Users\ThinkStation P920\.gradle\caches\9.0-milestone-1\transforms\cb08f8895e4d94fcebff50d92a0fc691\transformed\lifecycle-runtime-2.5.1\AndroidManifest.xml:17:1-24:12
+MERGED from [androidx.savedstate:savedstate:1.2.0] C:\Users\ThinkStation P920\.gradle\caches\9.0-milestone-1\transforms\2184b369cbb1bb4252d2d71c87ff1101\transformed\savedstate-1.2.0\AndroidManifest.xml:17:1-24:12
+MERGED from [androidx.startup:startup-runtime:1.1.1] C:\Users\ThinkStation P920\.gradle\caches\9.0-milestone-1\transforms\dac125e7f4cd63c15fc7093419b42d6e\transformed\startup-runtime-1.1.1\AndroidManifest.xml:17:1-33:12
+MERGED from [androidx.tracing:tracing:1.0.0] C:\Users\ThinkStation P920\.gradle\caches\9.0-milestone-1\transforms\2998d0494972d7bd1c24bd9b835479ba\transformed\tracing-1.0.0\AndroidManifest.xml:17:1-24:12
+MERGED from [androidx.versionedparcelable:versionedparcelable:1.1.1] C:\Users\ThinkStation P920\.gradle\caches\9.0-milestone-1\transforms\9fa0464615b0c3c3123bc5a2f66f960b\transformed\versionedparcelable-1.1.1\AndroidManifest.xml:17:1-27:12
+MERGED from [androidx.lifecycle:lifecycle-livedata:2.0.0] C:\Users\ThinkStation P920\.gradle\caches\9.0-milestone-1\transforms\3a317976dc986adaced903f0b1231ecd\transformed\lifecycle-livedata-2.0.0\AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.lifecycle:lifecycle-livedata-core:2.5.1] C:\Users\ThinkStation P920\.gradle\caches\9.0-milestone-1\transforms\5f0e5f51ebe0fe30b76ea6868d31811e\transformed\lifecycle-livedata-core-2.5.1\AndroidManifest.xml:17:1-24:12
+MERGED from [androidx.arch.core:core-runtime:2.1.0] C:\Users\ThinkStation P920\.gradle\caches\9.0-milestone-1\transforms\6d7f3964fca2ce6f0a4daefb7fb7dee9\transformed\core-runtime-2.1.0\AndroidManifest.xml:17:1-24:12
+MERGED from [androidx.interpolator:interpolator:1.0.0] C:\Users\ThinkStation P920\.gradle\caches\9.0-milestone-1\transforms\4f04e1d0f10107997dbd0ce94b44ff9c\transformed\interpolator-1.0.0\AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.annotation:annotation-experimental:1.3.0] C:\Users\ThinkStation P920\.gradle\caches\9.0-milestone-1\transforms\75cfcfa3c8cf2fbec4ea3d8ec4e3e85c\transformed\annotation-experimental-1.3.0\AndroidManifest.xml:17:1-22:12
+	package
+		INJECTED from C:\Users\ThinkStation P920\Documents\Turmtechnik-studio3 - mit codex überarbeiten\TurmtechnikFernbedienung\app\src\main\AndroidManifest.xml
+	android:versionName
+		INJECTED from C:\Users\ThinkStation P920\Documents\Turmtechnik-studio3 - mit codex überarbeiten\TurmtechnikFernbedienung\app\src\main\AndroidManifest.xml
+	android:versionCode
+		INJECTED from C:\Users\ThinkStation P920\Documents\Turmtechnik-studio3 - mit codex überarbeiten\TurmtechnikFernbedienung\app\src\main\AndroidManifest.xml
+	xmlns:android
+		ADDED from C:\Users\ThinkStation P920\Documents\Turmtechnik-studio3 - mit codex überarbeiten\TurmtechnikFernbedienung\app\src\main\AndroidManifest.xml:2:11-69
+uses-permission#android.permission.INTERNET
+ADDED from C:\Users\ThinkStation P920\Documents\Turmtechnik-studio3 - mit codex überarbeiten\TurmtechnikFernbedienung\app\src\main\AndroidManifest.xml:4:5-67
+	android:name
+		ADDED from C:\Users\ThinkStation P920\Documents\Turmtechnik-studio3 - mit codex überarbeiten\TurmtechnikFernbedienung\app\src\main\AndroidManifest.xml:4:22-64
+uses-permission#android.permission.ACCESS_NETWORK_STATE
+ADDED from C:\Users\ThinkStation P920\Documents\Turmtechnik-studio3 - mit codex überarbeiten\TurmtechnikFernbedienung\app\src\main\AndroidManifest.xml:5:5-79
+	android:name
+		ADDED from C:\Users\ThinkStation P920\Documents\Turmtechnik-studio3 - mit codex überarbeiten\TurmtechnikFernbedienung\app\src\main\AndroidManifest.xml:5:22-76
+application
+ADDED from C:\Users\ThinkStation P920\Documents\Turmtechnik-studio3 - mit codex überarbeiten\TurmtechnikFernbedienung\app\src\main\AndroidManifest.xml:7:5-24:19
+INJECTED from C:\Users\ThinkStation P920\Documents\Turmtechnik-studio3 - mit codex überarbeiten\TurmtechnikFernbedienung\app\src\main\AndroidManifest.xml:7:5-24:19
+MERGED from [androidx.emoji2:emoji2:1.2.0] C:\Users\ThinkStation P920\.gradle\caches\9.0-milestone-1\transforms\0271f5f8dc0c5c9c0195dbb93654523d\transformed\emoji2-1.2.0\AndroidManifest.xml:23:5-33:19
+MERGED from [androidx.emoji2:emoji2:1.2.0] C:\Users\ThinkStation P920\.gradle\caches\9.0-milestone-1\transforms\0271f5f8dc0c5c9c0195dbb93654523d\transformed\emoji2-1.2.0\AndroidManifest.xml:23:5-33:19
+MERGED from [androidx.core:core:1.9.0] C:\Users\ThinkStation P920\.gradle\caches\9.0-milestone-1\transforms\b3329962f4aa65c16b5c26083ff650ae\transformed\core-1.9.0\AndroidManifest.xml:28:5-89
+MERGED from [androidx.core:core:1.9.0] C:\Users\ThinkStation P920\.gradle\caches\9.0-milestone-1\transforms\b3329962f4aa65c16b5c26083ff650ae\transformed\core-1.9.0\AndroidManifest.xml:28:5-89
+MERGED from [androidx.lifecycle:lifecycle-process:2.4.1] C:\Users\ThinkStation P920\.gradle\caches\9.0-milestone-1\transforms\19534682b146748a0026c3db6d8472e6\transformed\lifecycle-process-2.4.1\AndroidManifest.xml:25:5-35:19
+MERGED from [androidx.lifecycle:lifecycle-process:2.4.1] C:\Users\ThinkStation P920\.gradle\caches\9.0-milestone-1\transforms\19534682b146748a0026c3db6d8472e6\transformed\lifecycle-process-2.4.1\AndroidManifest.xml:25:5-35:19
+MERGED from [androidx.startup:startup-runtime:1.1.1] C:\Users\ThinkStation P920\.gradle\caches\9.0-milestone-1\transforms\dac125e7f4cd63c15fc7093419b42d6e\transformed\startup-runtime-1.1.1\AndroidManifest.xml:25:5-31:19
+MERGED from [androidx.startup:startup-runtime:1.1.1] C:\Users\ThinkStation P920\.gradle\caches\9.0-milestone-1\transforms\dac125e7f4cd63c15fc7093419b42d6e\transformed\startup-runtime-1.1.1\AndroidManifest.xml:25:5-31:19
+MERGED from [androidx.versionedparcelable:versionedparcelable:1.1.1] C:\Users\ThinkStation P920\.gradle\caches\9.0-milestone-1\transforms\9fa0464615b0c3c3123bc5a2f66f960b\transformed\versionedparcelable-1.1.1\AndroidManifest.xml:24:5-25:19
+MERGED from [androidx.versionedparcelable:versionedparcelable:1.1.1] C:\Users\ThinkStation P920\.gradle\caches\9.0-milestone-1\transforms\9fa0464615b0c3c3123bc5a2f66f960b\transformed\versionedparcelable-1.1.1\AndroidManifest.xml:24:5-25:19
+	android:extractNativeLibs
+		INJECTED from C:\Users\ThinkStation P920\Documents\Turmtechnik-studio3 - mit codex überarbeiten\TurmtechnikFernbedienung\app\src\main\AndroidManifest.xml
+	android:appComponentFactory
+		ADDED from [androidx.core:core:1.9.0] C:\Users\ThinkStation P920\.gradle\caches\9.0-milestone-1\transforms\b3329962f4aa65c16b5c26083ff650ae\transformed\core-1.9.0\AndroidManifest.xml:28:18-86
+	android:supportsRtl
+		ADDED from C:\Users\ThinkStation P920\Documents\Turmtechnik-studio3 - mit codex überarbeiten\TurmtechnikFernbedienung\app\src\main\AndroidManifest.xml:11:9-35
+	android:label
+		ADDED from C:\Users\ThinkStation P920\Documents\Turmtechnik-studio3 - mit codex überarbeiten\TurmtechnikFernbedienung\app\src\main\AndroidManifest.xml:10:9-41
+	android:icon
+		ADDED from C:\Users\ThinkStation P920\Documents\Turmtechnik-studio3 - mit codex überarbeiten\TurmtechnikFernbedienung\app\src\main\AndroidManifest.xml:9:9-59
+	android:allowBackup
+		ADDED from C:\Users\ThinkStation P920\Documents\Turmtechnik-studio3 - mit codex überarbeiten\TurmtechnikFernbedienung\app\src\main\AndroidManifest.xml:8:9-35
+	android:theme
+		ADDED from C:\Users\ThinkStation P920\Documents\Turmtechnik-studio3 - mit codex überarbeiten\TurmtechnikFernbedienung\app\src\main\AndroidManifest.xml:12:9-51
+	android:usesCleartextTraffic
+		ADDED from C:\Users\ThinkStation P920\Documents\Turmtechnik-studio3 - mit codex überarbeiten\TurmtechnikFernbedienung\app\src\main\AndroidManifest.xml:13:9-44
+activity#tom.turmtechnik.fernbedienung.MainActivity
+ADDED from C:\Users\ThinkStation P920\Documents\Turmtechnik-studio3 - mit codex überarbeiten\TurmtechnikFernbedienung\app\src\main\AndroidManifest.xml:14:9-23:20
+	android:screenOrientation
+		ADDED from C:\Users\ThinkStation P920\Documents\Turmtechnik-studio3 - mit codex überarbeiten\TurmtechnikFernbedienung\app\src\main\AndroidManifest.xml:18:13-52
+	android:exported
+		ADDED from C:\Users\ThinkStation P920\Documents\Turmtechnik-studio3 - mit codex überarbeiten\TurmtechnikFernbedienung\app\src\main\AndroidManifest.xml:16:13-36
+	android:configChanges
+		ADDED from C:\Users\ThinkStation P920\Documents\Turmtechnik-studio3 - mit codex überarbeiten\TurmtechnikFernbedienung\app\src\main\AndroidManifest.xml:17:13-74
+	android:name
+		ADDED from C:\Users\ThinkStation P920\Documents\Turmtechnik-studio3 - mit codex überarbeiten\TurmtechnikFernbedienung\app\src\main\AndroidManifest.xml:15:13-41
+intent-filter#action:name:android.intent.action.MAIN+category:name:android.intent.category.LAUNCHER
+ADDED from C:\Users\ThinkStation P920\Documents\Turmtechnik-studio3 - mit codex überarbeiten\TurmtechnikFernbedienung\app\src\main\AndroidManifest.xml:19:13-22:29
+action#android.intent.action.MAIN
+ADDED from C:\Users\ThinkStation P920\Documents\Turmtechnik-studio3 - mit codex überarbeiten\TurmtechnikFernbedienung\app\src\main\AndroidManifest.xml:20:17-69
+	android:name
+		ADDED from C:\Users\ThinkStation P920\Documents\Turmtechnik-studio3 - mit codex überarbeiten\TurmtechnikFernbedienung\app\src\main\AndroidManifest.xml:20:25-66
+category#android.intent.category.LAUNCHER
+ADDED from C:\Users\ThinkStation P920\Documents\Turmtechnik-studio3 - mit codex überarbeiten\TurmtechnikFernbedienung\app\src\main\AndroidManifest.xml:21:17-77
+	android:name
+		ADDED from C:\Users\ThinkStation P920\Documents\Turmtechnik-studio3 - mit codex überarbeiten\TurmtechnikFernbedienung\app\src\main\AndroidManifest.xml:21:27-74
+uses-sdk
+INJECTED from C:\Users\ThinkStation P920\Documents\Turmtechnik-studio3 - mit codex überarbeiten\TurmtechnikFernbedienung\app\src\main\AndroidManifest.xml reason: use-sdk injection requested
+INJECTED from C:\Users\ThinkStation P920\Documents\Turmtechnik-studio3 - mit codex überarbeiten\TurmtechnikFernbedienung\app\src\main\AndroidManifest.xml
+INJECTED from C:\Users\ThinkStation P920\Documents\Turmtechnik-studio3 - mit codex überarbeiten\TurmtechnikFernbedienung\app\src\main\AndroidManifest.xml
+MERGED from [androidx.databinding:viewbinding:8.2.2] C:\Users\ThinkStation P920\.gradle\caches\9.0-milestone-1\transforms\d695fa6bd838c3cc0504acde185420df\transformed\viewbinding-8.2.2\AndroidManifest.xml:5:5-44
+MERGED from [androidx.databinding:viewbinding:8.2.2] C:\Users\ThinkStation P920\.gradle\caches\9.0-milestone-1\transforms\d695fa6bd838c3cc0504acde185420df\transformed\viewbinding-8.2.2\AndroidManifest.xml:5:5-44
+MERGED from [androidx.appcompat:appcompat-resources:1.6.1] C:\Users\ThinkStation P920\.gradle\caches\9.0-milestone-1\transforms\0f64a3d7e6bb16e6513fde61cc09a8c4\transformed\appcompat-resources-1.6.1\AndroidManifest.xml:20:5-44
+MERGED from [androidx.appcompat:appcompat-resources:1.6.1] C:\Users\ThinkStation P920\.gradle\caches\9.0-milestone-1\transforms\0f64a3d7e6bb16e6513fde61cc09a8c4\transformed\appcompat-resources-1.6.1\AndroidManifest.xml:20:5-44
+MERGED from [androidx.appcompat:appcompat:1.6.1] C:\Users\ThinkStation P920\.gradle\caches\9.0-milestone-1\transforms\d7521f5749408ce1888060f746428074\transformed\appcompat-1.6.1\AndroidManifest.xml:20:5-44
+MERGED from [androidx.appcompat:appcompat:1.6.1] C:\Users\ThinkStation P920\.gradle\caches\9.0-milestone-1\transforms\d7521f5749408ce1888060f746428074\transformed\appcompat-1.6.1\AndroidManifest.xml:20:5-44
+MERGED from [androidx.fragment:fragment:1.3.6] C:\Users\ThinkStation P920\.gradle\caches\9.0-milestone-1\transforms\070a9fb82295fa5296f06e07c66c0cc0\transformed\fragment-1.3.6\AndroidManifest.xml:20:5-22:41
+MERGED from [androidx.fragment:fragment:1.3.6] C:\Users\ThinkStation P920\.gradle\caches\9.0-milestone-1\transforms\070a9fb82295fa5296f06e07c66c0cc0\transformed\fragment-1.3.6\AndroidManifest.xml:20:5-22:41
+MERGED from [androidx.activity:activity:1.6.0] C:\Users\ThinkStation P920\.gradle\caches\9.0-milestone-1\transforms\5563dfb3a2f9fb2f03c89d0b1efb0c5c\transformed\activity-1.6.0\AndroidManifest.xml:20:5-44
+MERGED from [androidx.activity:activity:1.6.0] C:\Users\ThinkStation P920\.gradle\caches\9.0-milestone-1\transforms\5563dfb3a2f9fb2f03c89d0b1efb0c5c\transformed\activity-1.6.0\AndroidManifest.xml:20:5-44
+MERGED from [androidx.drawerlayout:drawerlayout:1.0.0] C:\Users\ThinkStation P920\.gradle\caches\9.0-milestone-1\transforms\5ca16654ef2b9d05e0902017109ddb2d\transformed\drawerlayout-1.0.0\AndroidManifest.xml:20:5-44
+MERGED from [androidx.drawerlayout:drawerlayout:1.0.0] C:\Users\ThinkStation P920\.gradle\caches\9.0-milestone-1\transforms\5ca16654ef2b9d05e0902017109ddb2d\transformed\drawerlayout-1.0.0\AndroidManifest.xml:20:5-44
+MERGED from [androidx.emoji2:emoji2-views-helper:1.2.0] C:\Users\ThinkStation P920\.gradle\caches\9.0-milestone-1\transforms\a70538629c11be428c24c2b1029c2a08\transformed\emoji2-views-helper-1.2.0\AndroidManifest.xml:5:5-44
+MERGED from [androidx.emoji2:emoji2-views-helper:1.2.0] C:\Users\ThinkStation P920\.gradle\caches\9.0-milestone-1\transforms\a70538629c11be428c24c2b1029c2a08\transformed\emoji2-views-helper-1.2.0\AndroidManifest.xml:5:5-44
+MERGED from [androidx.emoji2:emoji2:1.2.0] C:\Users\ThinkStation P920\.gradle\caches\9.0-milestone-1\transforms\0271f5f8dc0c5c9c0195dbb93654523d\transformed\emoji2-1.2.0\AndroidManifest.xml:21:5-44
+MERGED from [androidx.emoji2:emoji2:1.2.0] C:\Users\ThinkStation P920\.gradle\caches\9.0-milestone-1\transforms\0271f5f8dc0c5c9c0195dbb93654523d\transformed\emoji2-1.2.0\AndroidManifest.xml:21:5-44
+MERGED from [androidx.vectordrawable:vectordrawable-animated:1.1.0] C:\Users\ThinkStation P920\.gradle\caches\9.0-milestone-1\transforms\38fc3d8d53f22c894a7d61d4383a7ae0\transformed\vectordrawable-animated-1.1.0\AndroidManifest.xml:20:5-22:41
+MERGED from [androidx.vectordrawable:vectordrawable-animated:1.1.0] C:\Users\ThinkStation P920\.gradle\caches\9.0-milestone-1\transforms\38fc3d8d53f22c894a7d61d4383a7ae0\transformed\vectordrawable-animated-1.1.0\AndroidManifest.xml:20:5-22:41
+MERGED from [androidx.vectordrawable:vectordrawable:1.1.0] C:\Users\ThinkStation P920\.gradle\caches\9.0-milestone-1\transforms\0ddca510ddbd3d49e4553552fa4b9b02\transformed\vectordrawable-1.1.0\AndroidManifest.xml:20:5-22:41
+MERGED from [androidx.vectordrawable:vectordrawable:1.1.0] C:\Users\ThinkStation P920\.gradle\caches\9.0-milestone-1\transforms\0ddca510ddbd3d49e4553552fa4b9b02\transformed\vectordrawable-1.1.0\AndroidManifest.xml:20:5-22:41
+MERGED from [androidx.loader:loader:1.0.0] C:\Users\ThinkStation P920\.gradle\caches\9.0-milestone-1\transforms\954af2429544237a98de2f22d54d83e8\transformed\loader-1.0.0\AndroidManifest.xml:20:5-44
+MERGED from [androidx.loader:loader:1.0.0] C:\Users\ThinkStation P920\.gradle\caches\9.0-milestone-1\transforms\954af2429544237a98de2f22d54d83e8\transformed\loader-1.0.0\AndroidManifest.xml:20:5-44
+MERGED from [androidx.lifecycle:lifecycle-viewmodel:2.5.1] C:\Users\ThinkStation P920\.gradle\caches\9.0-milestone-1\transforms\17e638ac85fe18132742c4a99f7cbd67\transformed\lifecycle-viewmodel-2.5.1\AndroidManifest.xml:20:5-22:41
+MERGED from [androidx.lifecycle:lifecycle-viewmodel:2.5.1] C:\Users\ThinkStation P920\.gradle\caches\9.0-milestone-1\transforms\17e638ac85fe18132742c4a99f7cbd67\transformed\lifecycle-viewmodel-2.5.1\AndroidManifest.xml:20:5-22:41
+MERGED from [androidx.lifecycle:lifecycle-viewmodel-savedstate:2.5.1] C:\Users\ThinkStation P920\.gradle\caches\9.0-milestone-1\transforms\93e0300dc38bf01a3a8da78476b7c522\transformed\lifecycle-viewmodel-savedstate-2.5.1\AndroidManifest.xml:20:5-22:41
+MERGED from [androidx.lifecycle:lifecycle-viewmodel-savedstate:2.5.1] C:\Users\ThinkStation P920\.gradle\caches\9.0-milestone-1\transforms\93e0300dc38bf01a3a8da78476b7c522\transformed\lifecycle-viewmodel-savedstate-2.5.1\AndroidManifest.xml:20:5-22:41
+MERGED from [androidx.core:core-ktx:1.9.0] C:\Users\ThinkStation P920\.gradle\caches\9.0-milestone-1\transforms\a846efefff3ae8de84c07f8a09ddf4a4\transformed\core-ktx-1.9.0\AndroidManifest.xml:5:5-44
+MERGED from [androidx.core:core-ktx:1.9.0] C:\Users\ThinkStation P920\.gradle\caches\9.0-milestone-1\transforms\a846efefff3ae8de84c07f8a09ddf4a4\transformed\core-ktx-1.9.0\AndroidManifest.xml:5:5-44
+MERGED from [androidx.viewpager:viewpager:1.0.0] C:\Users\ThinkStation P920\.gradle\caches\9.0-milestone-1\transforms\0971db8dd97671331713398296dfc055\transformed\viewpager-1.0.0\AndroidManifest.xml:20:5-44
+MERGED from [androidx.viewpager:viewpager:1.0.0] C:\Users\ThinkStation P920\.gradle\caches\9.0-milestone-1\transforms\0971db8dd97671331713398296dfc055\transformed\viewpager-1.0.0\AndroidManifest.xml:20:5-44
+MERGED from [androidx.customview:customview:1.0.0] C:\Users\ThinkStation P920\.gradle\caches\9.0-milestone-1\transforms\400fd4ab610618a319042750e1095222\transformed\customview-1.0.0\AndroidManifest.xml:20:5-44
+MERGED from [androidx.customview:customview:1.0.0] C:\Users\ThinkStation P920\.gradle\caches\9.0-milestone-1\transforms\400fd4ab610618a319042750e1095222\transformed\customview-1.0.0\AndroidManifest.xml:20:5-44
+MERGED from [androidx.core:core:1.9.0] C:\Users\ThinkStation P920\.gradle\caches\9.0-milestone-1\transforms\b3329962f4aa65c16b5c26083ff650ae\transformed\core-1.9.0\AndroidManifest.xml:20:5-44
+MERGED from [androidx.core:core:1.9.0] C:\Users\ThinkStation P920\.gradle\caches\9.0-milestone-1\transforms\b3329962f4aa65c16b5c26083ff650ae\transformed\core-1.9.0\AndroidManifest.xml:20:5-44
+MERGED from [androidx.cursoradapter:cursoradapter:1.0.0] C:\Users\ThinkStation P920\.gradle\caches\9.0-milestone-1\transforms\c05770d0fc784dffdc3570a003cf7312\transformed\cursoradapter-1.0.0\AndroidManifest.xml:20:5-44
+MERGED from [androidx.cursoradapter:cursoradapter:1.0.0] C:\Users\ThinkStation P920\.gradle\caches\9.0-milestone-1\transforms\c05770d0fc784dffdc3570a003cf7312\transformed\cursoradapter-1.0.0\AndroidManifest.xml:20:5-44
+MERGED from [androidx.lifecycle:lifecycle-process:2.4.1] C:\Users\ThinkStation P920\.gradle\caches\9.0-milestone-1\transforms\19534682b146748a0026c3db6d8472e6\transformed\lifecycle-process-2.4.1\AndroidManifest.xml:21:5-23:41
+MERGED from [androidx.lifecycle:lifecycle-process:2.4.1] C:\Users\ThinkStation P920\.gradle\caches\9.0-milestone-1\transforms\19534682b146748a0026c3db6d8472e6\transformed\lifecycle-process-2.4.1\AndroidManifest.xml:21:5-23:41
+MERGED from [androidx.lifecycle:lifecycle-runtime:2.5.1] C:\Users\ThinkStation P920\.gradle\caches\9.0-milestone-1\transforms\cb08f8895e4d94fcebff50d92a0fc691\transformed\lifecycle-runtime-2.5.1\AndroidManifest.xml:20:5-22:41
+MERGED from [androidx.lifecycle:lifecycle-runtime:2.5.1] C:\Users\ThinkStation P920\.gradle\caches\9.0-milestone-1\transforms\cb08f8895e4d94fcebff50d92a0fc691\transformed\lifecycle-runtime-2.5.1\AndroidManifest.xml:20:5-22:41
+MERGED from [androidx.savedstate:savedstate:1.2.0] C:\Users\ThinkStation P920\.gradle\caches\9.0-milestone-1\transforms\2184b369cbb1bb4252d2d71c87ff1101\transformed\savedstate-1.2.0\AndroidManifest.xml:20:5-22:41
+MERGED from [androidx.savedstate:savedstate:1.2.0] C:\Users\ThinkStation P920\.gradle\caches\9.0-milestone-1\transforms\2184b369cbb1bb4252d2d71c87ff1101\transformed\savedstate-1.2.0\AndroidManifest.xml:20:5-22:41
+MERGED from [androidx.startup:startup-runtime:1.1.1] C:\Users\ThinkStation P920\.gradle\caches\9.0-milestone-1\transforms\dac125e7f4cd63c15fc7093419b42d6e\transformed\startup-runtime-1.1.1\AndroidManifest.xml:21:5-23:41
+MERGED from [androidx.startup:startup-runtime:1.1.1] C:\Users\ThinkStation P920\.gradle\caches\9.0-milestone-1\transforms\dac125e7f4cd63c15fc7093419b42d6e\transformed\startup-runtime-1.1.1\AndroidManifest.xml:21:5-23:41
+MERGED from [androidx.tracing:tracing:1.0.0] C:\Users\ThinkStation P920\.gradle\caches\9.0-milestone-1\transforms\2998d0494972d7bd1c24bd9b835479ba\transformed\tracing-1.0.0\AndroidManifest.xml:20:5-22:41
+MERGED from [androidx.tracing:tracing:1.0.0] C:\Users\ThinkStation P920\.gradle\caches\9.0-milestone-1\transforms\2998d0494972d7bd1c24bd9b835479ba\transformed\tracing-1.0.0\AndroidManifest.xml:20:5-22:41
+MERGED from [androidx.versionedparcelable:versionedparcelable:1.1.1] C:\Users\ThinkStation P920\.gradle\caches\9.0-milestone-1\transforms\9fa0464615b0c3c3123bc5a2f66f960b\transformed\versionedparcelable-1.1.1\AndroidManifest.xml:20:5-22:41
+MERGED from [androidx.versionedparcelable:versionedparcelable:1.1.1] C:\Users\ThinkStation P920\.gradle\caches\9.0-milestone-1\transforms\9fa0464615b0c3c3123bc5a2f66f960b\transformed\versionedparcelable-1.1.1\AndroidManifest.xml:20:5-22:41
+MERGED from [androidx.lifecycle:lifecycle-livedata:2.0.0] C:\Users\ThinkStation P920\.gradle\caches\9.0-milestone-1\transforms\3a317976dc986adaced903f0b1231ecd\transformed\lifecycle-livedata-2.0.0\AndroidManifest.xml:20:5-44
+MERGED from [androidx.lifecycle:lifecycle-livedata:2.0.0] C:\Users\ThinkStation P920\.gradle\caches\9.0-milestone-1\transforms\3a317976dc986adaced903f0b1231ecd\transformed\lifecycle-livedata-2.0.0\AndroidManifest.xml:20:5-44
+MERGED from [androidx.lifecycle:lifecycle-livedata-core:2.5.1] C:\Users\ThinkStation P920\.gradle\caches\9.0-milestone-1\transforms\5f0e5f51ebe0fe30b76ea6868d31811e\transformed\lifecycle-livedata-core-2.5.1\AndroidManifest.xml:20:5-22:41
+MERGED from [androidx.lifecycle:lifecycle-livedata-core:2.5.1] C:\Users\ThinkStation P920\.gradle\caches\9.0-milestone-1\transforms\5f0e5f51ebe0fe30b76ea6868d31811e\transformed\lifecycle-livedata-core-2.5.1\AndroidManifest.xml:20:5-22:41
+MERGED from [androidx.arch.core:core-runtime:2.1.0] C:\Users\ThinkStation P920\.gradle\caches\9.0-milestone-1\transforms\6d7f3964fca2ce6f0a4daefb7fb7dee9\transformed\core-runtime-2.1.0\AndroidManifest.xml:20:5-22:41
+MERGED from [androidx.arch.core:core-runtime:2.1.0] C:\Users\ThinkStation P920\.gradle\caches\9.0-milestone-1\transforms\6d7f3964fca2ce6f0a4daefb7fb7dee9\transformed\core-runtime-2.1.0\AndroidManifest.xml:20:5-22:41
+MERGED from [androidx.interpolator:interpolator:1.0.0] C:\Users\ThinkStation P920\.gradle\caches\9.0-milestone-1\transforms\4f04e1d0f10107997dbd0ce94b44ff9c\transformed\interpolator-1.0.0\AndroidManifest.xml:20:5-44
+MERGED from [androidx.interpolator:interpolator:1.0.0] C:\Users\ThinkStation P920\.gradle\caches\9.0-milestone-1\transforms\4f04e1d0f10107997dbd0ce94b44ff9c\transformed\interpolator-1.0.0\AndroidManifest.xml:20:5-44
+MERGED from [androidx.annotation:annotation-experimental:1.3.0] C:\Users\ThinkStation P920\.gradle\caches\9.0-milestone-1\transforms\75cfcfa3c8cf2fbec4ea3d8ec4e3e85c\transformed\annotation-experimental-1.3.0\AndroidManifest.xml:20:5-44
+MERGED from [androidx.annotation:annotation-experimental:1.3.0] C:\Users\ThinkStation P920\.gradle\caches\9.0-milestone-1\transforms\75cfcfa3c8cf2fbec4ea3d8ec4e3e85c\transformed\annotation-experimental-1.3.0\AndroidManifest.xml:20:5-44
+	android:targetSdkVersion
+		INJECTED from C:\Users\ThinkStation P920\Documents\Turmtechnik-studio3 - mit codex überarbeiten\TurmtechnikFernbedienung\app\src\main\AndroidManifest.xml
+	android:minSdkVersion
+		INJECTED from C:\Users\ThinkStation P920\Documents\Turmtechnik-studio3 - mit codex überarbeiten\TurmtechnikFernbedienung\app\src\main\AndroidManifest.xml
+provider#androidx.startup.InitializationProvider
+ADDED from [androidx.emoji2:emoji2:1.2.0] C:\Users\ThinkStation P920\.gradle\caches\9.0-milestone-1\transforms\0271f5f8dc0c5c9c0195dbb93654523d\transformed\emoji2-1.2.0\AndroidManifest.xml:24:9-32:20
+MERGED from [androidx.lifecycle:lifecycle-process:2.4.1] C:\Users\ThinkStation P920\.gradle\caches\9.0-milestone-1\transforms\19534682b146748a0026c3db6d8472e6\transformed\lifecycle-process-2.4.1\AndroidManifest.xml:26:9-34:20
+MERGED from [androidx.lifecycle:lifecycle-process:2.4.1] C:\Users\ThinkStation P920\.gradle\caches\9.0-milestone-1\transforms\19534682b146748a0026c3db6d8472e6\transformed\lifecycle-process-2.4.1\AndroidManifest.xml:26:9-34:20
+MERGED from [androidx.startup:startup-runtime:1.1.1] C:\Users\ThinkStation P920\.gradle\caches\9.0-milestone-1\transforms\dac125e7f4cd63c15fc7093419b42d6e\transformed\startup-runtime-1.1.1\AndroidManifest.xml:26:9-30:34
+MERGED from [androidx.startup:startup-runtime:1.1.1] C:\Users\ThinkStation P920\.gradle\caches\9.0-milestone-1\transforms\dac125e7f4cd63c15fc7093419b42d6e\transformed\startup-runtime-1.1.1\AndroidManifest.xml:26:9-30:34
+	tools:node
+		ADDED from [androidx.emoji2:emoji2:1.2.0] C:\Users\ThinkStation P920\.gradle\caches\9.0-milestone-1\transforms\0271f5f8dc0c5c9c0195dbb93654523d\transformed\emoji2-1.2.0\AndroidManifest.xml:28:13-31
+	android:authorities
+		ADDED from [androidx.emoji2:emoji2:1.2.0] C:\Users\ThinkStation P920\.gradle\caches\9.0-milestone-1\transforms\0271f5f8dc0c5c9c0195dbb93654523d\transformed\emoji2-1.2.0\AndroidManifest.xml:26:13-68
+	android:exported
+		ADDED from [androidx.emoji2:emoji2:1.2.0] C:\Users\ThinkStation P920\.gradle\caches\9.0-milestone-1\transforms\0271f5f8dc0c5c9c0195dbb93654523d\transformed\emoji2-1.2.0\AndroidManifest.xml:27:13-37
+	android:name
+		ADDED from [androidx.emoji2:emoji2:1.2.0] C:\Users\ThinkStation P920\.gradle\caches\9.0-milestone-1\transforms\0271f5f8dc0c5c9c0195dbb93654523d\transformed\emoji2-1.2.0\AndroidManifest.xml:25:13-67
+meta-data#androidx.emoji2.text.EmojiCompatInitializer
+ADDED from [androidx.emoji2:emoji2:1.2.0] C:\Users\ThinkStation P920\.gradle\caches\9.0-milestone-1\transforms\0271f5f8dc0c5c9c0195dbb93654523d\transformed\emoji2-1.2.0\AndroidManifest.xml:29:13-31:52
+	android:value
+		ADDED from [androidx.emoji2:emoji2:1.2.0] C:\Users\ThinkStation P920\.gradle\caches\9.0-milestone-1\transforms\0271f5f8dc0c5c9c0195dbb93654523d\transformed\emoji2-1.2.0\AndroidManifest.xml:31:17-49
+	android:name
+		ADDED from [androidx.emoji2:emoji2:1.2.0] C:\Users\ThinkStation P920\.gradle\caches\9.0-milestone-1\transforms\0271f5f8dc0c5c9c0195dbb93654523d\transformed\emoji2-1.2.0\AndroidManifest.xml:30:17-75
+permission#${applicationId}.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION
+ADDED from [androidx.core:core:1.9.0] C:\Users\ThinkStation P920\.gradle\caches\9.0-milestone-1\transforms\b3329962f4aa65c16b5c26083ff650ae\transformed\core-1.9.0\AndroidManifest.xml:22:5-24:47
+	android:protectionLevel
+		ADDED from [androidx.core:core:1.9.0] C:\Users\ThinkStation P920\.gradle\caches\9.0-milestone-1\transforms\b3329962f4aa65c16b5c26083ff650ae\transformed\core-1.9.0\AndroidManifest.xml:24:9-44
+	android:name
+		ADDED from [androidx.core:core:1.9.0] C:\Users\ThinkStation P920\.gradle\caches\9.0-milestone-1\transforms\b3329962f4aa65c16b5c26083ff650ae\transformed\core-1.9.0\AndroidManifest.xml:23:9-81
+permission#tom.turmtechnik.fernbedienung.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION
+ADDED from [androidx.core:core:1.9.0] C:\Users\ThinkStation P920\.gradle\caches\9.0-milestone-1\transforms\b3329962f4aa65c16b5c26083ff650ae\transformed\core-1.9.0\AndroidManifest.xml:22:5-24:47
+	android:protectionLevel
+		ADDED from [androidx.core:core:1.9.0] C:\Users\ThinkStation P920\.gradle\caches\9.0-milestone-1\transforms\b3329962f4aa65c16b5c26083ff650ae\transformed\core-1.9.0\AndroidManifest.xml:24:9-44
+	android:name
+		ADDED from [androidx.core:core:1.9.0] C:\Users\ThinkStation P920\.gradle\caches\9.0-milestone-1\transforms\b3329962f4aa65c16b5c26083ff650ae\transformed\core-1.9.0\AndroidManifest.xml:23:9-81
+uses-permission#${applicationId}.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION
+ADDED from [androidx.core:core:1.9.0] C:\Users\ThinkStation P920\.gradle\caches\9.0-milestone-1\transforms\b3329962f4aa65c16b5c26083ff650ae\transformed\core-1.9.0\AndroidManifest.xml:26:5-97
+	android:name
+		ADDED from [androidx.core:core:1.9.0] C:\Users\ThinkStation P920\.gradle\caches\9.0-milestone-1\transforms\b3329962f4aa65c16b5c26083ff650ae\transformed\core-1.9.0\AndroidManifest.xml:26:22-94
+uses-permission#tom.turmtechnik.fernbedienung.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION
+ADDED from [androidx.core:core:1.9.0] C:\Users\ThinkStation P920\.gradle\caches\9.0-milestone-1\transforms\b3329962f4aa65c16b5c26083ff650ae\transformed\core-1.9.0\AndroidManifest.xml:26:5-97
+	android:name
+		ADDED from [androidx.core:core:1.9.0] C:\Users\ThinkStation P920\.gradle\caches\9.0-milestone-1\transforms\b3329962f4aa65c16b5c26083ff650ae\transformed\core-1.9.0\AndroidManifest.xml:26:22-94
+meta-data#androidx.lifecycle.ProcessLifecycleInitializer
+ADDED from [androidx.lifecycle:lifecycle-process:2.4.1] C:\Users\ThinkStation P920\.gradle\caches\9.0-milestone-1\transforms\19534682b146748a0026c3db6d8472e6\transformed\lifecycle-process-2.4.1\AndroidManifest.xml:31:13-33:52
+	android:value
+		ADDED from [androidx.lifecycle:lifecycle-process:2.4.1] C:\Users\ThinkStation P920\.gradle\caches\9.0-milestone-1\transforms\19534682b146748a0026c3db6d8472e6\transformed\lifecycle-process-2.4.1\AndroidManifest.xml:33:17-49
+	android:name
+		ADDED from [androidx.lifecycle:lifecycle-process:2.4.1] C:\Users\ThinkStation P920\.gradle\caches\9.0-milestone-1\transforms\19534682b146748a0026c3db6d8472e6\transformed\lifecycle-process-2.4.1\AndroidManifest.xml:32:17-78

@@ -9,11 +9,16 @@ import android.util.Log;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
+import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.net.Inet4Address;
 import java.net.InetSocketAddress;
@@ -90,9 +95,14 @@ public class ConfigWebServer {
                 return handleApiRequest(request);
             }
             
-            // HTML-Seiten
+            // Root = Hauptseite für Anwender (App Seite 1). Config nur unter /config.html mit Passwort.
             if (uri.equals("/") || uri.equals("/index.html")) {
-                return serveIndexPage();
+                SimpleHttpServer.HttpResponse redirect = new SimpleHttpServer.HttpResponse(302, "text/html", "");
+                redirect.headers.put("Location", "/app-seite1.html");
+                return redirect;
+            }
+            if (uri.equals("/config.html")) {
+                return serveConfigIndexPage();
             }
             
             if (uri.equals("/programm-editor.html")) {
@@ -421,6 +431,19 @@ public class ConfigWebServer {
         // GET /api/device-ip - Geräte-IP (WLAN) für Anzeige im Layout-Header
         if (uri.equals(API_PREFIX + "/device-ip") && "GET".equals(method)) {
             return handleGetDeviceIp();
+        }
+        // Tailscale Node Sharing (automatisierte Freigabe)
+        if (uri.equals(API_PREFIX + "/tailscale/config") && "GET".equals(method)) {
+            return handleGetTailscaleConfig();
+        }
+        if (uri.equals(API_PREFIX + "/tailscale/config") && "PUT".equals(method)) {
+            return handlePutTailscaleConfig(request);
+        }
+        if (uri.equals(API_PREFIX + "/tailscale/share-status") && "GET".equals(method)) {
+            return handleGetTailscaleShareStatus();
+        }
+        if (uri.equals(API_PREFIX + "/tailscale/create-share") && "POST".equals(method)) {
+            return handlePostTailscaleCreateShare(request);
         }
         if (uri.equals(API_PREFIX + "/mondphase-aktuell") && "GET".equals(method)) {
             return handleGetMondphaseAktuell();
@@ -3395,10 +3418,14 @@ public class ConfigWebServer {
             if (pi != null && pi.versionName != null) version = pi.versionName;
         } catch (Exception ignored) { }
         if (version.isEmpty()) version = "?";
+        String rustdeskDirect = "";
+        String connectIp = (!tailscale.isEmpty()) ? tailscale : ip;
+        if (!connectIp.isEmpty()) rustdeskDirect = connectIp + ":21118";
         String ipEsc = ip.replace("\\", "\\\\").replace("\"", "\\\"");
         String tsEsc = tailscale.replace("\\", "\\\\").replace("\"", "\\\"");
         String versionEsc = version.replace("\\", "\\\\").replace("\"", "\\\"");
-        return new SimpleHttpServer.HttpResponse(200, "application/json", "{\"ip\":\"" + ipEsc + "\",\"tailscale\":\"" + tsEsc + "\",\"version\":\"" + versionEsc + "\"}");
+        String rdEsc = rustdeskDirect.replace("\\", "\\\\").replace("\"", "\\\"");
+        return new SimpleHttpServer.HttpResponse(200, "application/json", "{\"ip\":\"" + ipEsc + "\",\"tailscale\":\"" + tsEsc + "\",\"version\":\"" + versionEsc + "\",\"rustdesk_direct\":\"" + rdEsc + "\"}");
     }
 
     /**
@@ -3459,6 +3486,208 @@ public class ConfigWebServer {
             Log.w(TAG, "Tailscale-IP nicht ermittelt", e);
         }
         return null;
+    }
+
+    private static final String TAILSCALE_CONFIG_TOKEN_KEY = "tailscale_api_token";
+    private static final String TAILSCALE_API_BASE = "https://api.tailscale.com/api/v2";
+
+    /** GET /api/tailscale/config – ob API-Token gesetzt ist (Token wird nicht zurückgegeben). */
+    private SimpleHttpServer.HttpResponse handleGetTailscaleConfig() {
+        try {
+            String token = PlatinenDatabaseHelper.getInstance(context).getConfigValue(TAILSCALE_CONFIG_TOKEN_KEY);
+            boolean configured = token != null && !token.trim().isEmpty();
+            return new SimpleHttpServer.HttpResponse(200, "application/json", "{\"apiTokenConfigured\":" + configured + "}");
+        } catch (Exception e) {
+            Log.e(TAG, "Tailscale config GET fehlgeschlagen", e);
+            return new SimpleHttpServer.HttpResponse(500, "application/json", "{\"error\":\"" + jsonEsc(e.getMessage()) + "\"}");
+        }
+    }
+
+    /** PUT /api/tailscale/config – API-Token speichern (Body: { "apiToken": "tskey-..." }). */
+    private SimpleHttpServer.HttpResponse handlePutTailscaleConfig(SimpleHttpServer.HttpRequest request) {
+        try {
+            if (request.body == null || request.body.trim().isEmpty()) {
+                return new SimpleHttpServer.HttpResponse(400, "application/json", "{\"error\":\"Body fehlt\"}");
+            }
+            @SuppressWarnings("unchecked")
+            Map<String, Object> body = gson.fromJson(request.body, Map.class);
+            String token = body != null && body.containsKey("apiToken") ? String.valueOf(body.get("apiToken")).trim() : "";
+            PlatinenDatabaseHelper.getInstance(context).setConfigValue(TAILSCALE_CONFIG_TOKEN_KEY, token);
+            return new SimpleHttpServer.HttpResponse(200, "application/json", "{\"success\":true,\"apiTokenConfigured\":" + (!token.isEmpty()) + "}");
+        } catch (Exception e) {
+            Log.e(TAG, "Tailscale config PUT fehlgeschlagen", e);
+            return new SimpleHttpServer.HttpResponse(500, "application/json", "{\"error\":\"" + jsonEsc(e.getMessage()) + "\"}");
+        }
+    }
+
+    /** GET /api/tailscale/share-status – Tailscale-IP, Device-ID (wenn Token gesetzt), Fehler. */
+    private SimpleHttpServer.HttpResponse handleGetTailscaleShareStatus() {
+        String tailscaleIp = getTailscaleIp();
+        if (tailscaleIp == null) tailscaleIp = "";
+        try {
+            String token = PlatinenDatabaseHelper.getInstance(context).getConfigValue(TAILSCALE_CONFIG_TOKEN_KEY);
+            boolean tokenConfigured = token != null && !token.trim().isEmpty();
+            String deviceId = "";
+            if (tokenConfigured && !tailscaleIp.isEmpty()) {
+                deviceId = tailscaleApiFindDeviceIdByIp(token.trim(), tailscaleIp);
+                if (deviceId == null) deviceId = "";
+            }
+            StringBuilder json = new StringBuilder();
+            json.append("{\"tailscaleIp\":\"").append(jsonEsc(tailscaleIp)).append("\",\"apiTokenConfigured\":").append(tokenConfigured);
+            json.append(",\"deviceId\":\"").append(jsonEsc(deviceId)).append("\"");
+            if (tailscaleIp.isEmpty()) json.append(",\"error\":\"Keine Tailscale-Verbindung (100.x.x.x)\"");
+            json.append("}");
+            return new SimpleHttpServer.HttpResponse(200, "application/json", json.toString());
+        } catch (Exception e) {
+            Log.e(TAG, "Tailscale share-status fehlgeschlagen", e);
+            return new SimpleHttpServer.HttpResponse(500, "application/json", "{\"tailscaleIp\":\"" + jsonEsc(tailscaleIp != null ? tailscaleIp : "") + "\",\"error\":\"" + jsonEsc(e.getMessage()) + "\"}");
+        }
+    }
+
+    /** POST /api/tailscale/create-share – Freigabe-Link per Tailscale-API erzeugen. Body: { "reusable": true/false }. */
+    private SimpleHttpServer.HttpResponse handlePostTailscaleCreateShare(SimpleHttpServer.HttpRequest request) {
+        try {
+            String token = PlatinenDatabaseHelper.getInstance(context).getConfigValue(TAILSCALE_CONFIG_TOKEN_KEY);
+            if (token == null || token.trim().isEmpty()) {
+                return new SimpleHttpServer.HttpResponse(400, "application/json", "{\"error\":\"Tailscale API-Token nicht konfiguriert. Bitte unter Anlagendaten oder hier eintragen.\"}");
+            }
+            String tailscaleIp = getTailscaleIp();
+            if (tailscaleIp == null || tailscaleIp.isEmpty()) {
+                return new SimpleHttpServer.HttpResponse(400, "application/json", "{\"error\":\"Keine Tailscale-IP. Bitte Tailscale auf diesem Gerät verbinden.\"}");
+            }
+            String deviceId = tailscaleApiFindDeviceIdByIp(token.trim(), tailscaleIp);
+            if (deviceId == null || deviceId.isEmpty()) {
+                return new SimpleHttpServer.HttpResponse(400, "application/json", "{\"error\":\"Dieses Gerät in der Tailscale-API nicht gefunden. Token oder Tailnet prüfen.\"}");
+            }
+            boolean reusable = true;
+            if (request.body != null && !request.body.trim().isEmpty()) {
+                try {
+                    @SuppressWarnings("unchecked")
+                    Map<String, Object> body = gson.fromJson(request.body, Map.class);
+                    if (body != null && body.containsKey("reusable")) {
+                        reusable = Boolean.TRUE.equals(body.get("reusable"));
+                    }
+                } catch (Exception ignored) {}
+            }
+            String inviteUrl = tailscaleApiCreateDeviceInvite(token.trim(), deviceId, reusable);
+            if (inviteUrl != null && !inviteUrl.isEmpty()) {
+                return new SimpleHttpServer.HttpResponse(200, "application/json", "{\"success\":true,\"inviteUrl\":\"" + jsonEsc(inviteUrl) + "\"}");
+            }
+            return new SimpleHttpServer.HttpResponse(502, "application/json", "{\"error\":\"Tailscale-API hat keinen Freigabe-Link zurückgegeben. API möglicherweise geändert – siehe tailscale.com/kb/1084/sharing.\"}");
+        } catch (Exception e) {
+            Log.e(TAG, "Tailscale create-share fehlgeschlagen", e);
+            return new SimpleHttpServer.HttpResponse(500, "application/json", "{\"error\":\"" + jsonEsc(e.getMessage()) + "\"}");
+        }
+    }
+
+    private static String jsonEsc(String s) {
+        if (s == null) return "";
+        return s.replace("\\", "\\\\").replace("\"", "\\\"").replace("\n", "\\n").replace("\r", "\\r");
+    }
+
+    /** Ruft Tailscale API GET tailnet/-/devices auf und liefert die Device-ID des Geräts mit der angegebenen IP. */
+    private String tailscaleApiFindDeviceIdByIp(String apiToken, String tailscaleIp) {
+        HttpURLConnection conn = null;
+        try {
+            URL url = new URL(TAILSCALE_API_BASE + "/tailnet/-/devices");
+            conn = (HttpURLConnection) url.openConnection();
+            conn.setRequestMethod("GET");
+            conn.setRequestProperty("Authorization", "Bearer " + apiToken);
+            conn.setConnectTimeout(15000);
+            conn.setReadTimeout(15000);
+            int code = conn.getResponseCode();
+            if (code != 200) {
+                Log.w(TAG, "Tailscale API devices: " + code);
+                return null;
+            }
+            String response = readFully(conn.getInputStream());
+            conn.disconnect();
+            conn = null;
+            @SuppressWarnings("unchecked")
+            Map<String, Object> root = gson.fromJson(response, Map.class);
+            if (root == null) return null;
+            Object devicesObj = root.get("devices");
+            if (!(devicesObj instanceof List)) return null;
+            for (Object o : (List<?>) devicesObj) {
+                if (!(o instanceof Map)) continue;
+                @SuppressWarnings("unchecked")
+                Map<String, Object> dev = (Map<String, Object>) o;
+                Object addrsObj = dev.get("addresses");
+                if (addrsObj instanceof List) {
+                    for (Object a : (List<?>) addrsObj) {
+                        String addr = String.valueOf(a);
+                        if (tailscaleIp.equals(addr) || addr.startsWith(tailscaleIp + "/")) {
+                            Object id = dev.get("id");
+                            return id != null ? id.toString() : null;
+                        }
+                    }
+                }
+            }
+            return null;
+        } catch (Exception e) {
+            Log.w(TAG, "Tailscale API devices fehlgeschlagen", e);
+            return null;
+        } finally {
+            if (conn != null) try { conn.disconnect(); } catch (Exception ignored) {}
+        }
+    }
+
+    /** Erstellt einen Device-Invite über die Tailscale-API und liefert die Invite-URL. Probiert ggf. mehrere API-Varianten. */
+    private String tailscaleApiCreateDeviceInvite(String apiToken, String deviceId, boolean reusable) {
+        String url1 = TAILSCALE_API_BASE + "/device/" + deviceId + "/share";
+        String body1 = "{\"reusable\":" + reusable + "}";
+        String result = tailscaleApiPost(apiToken, url1, body1);
+        if (result != null) return result;
+        String url2 = TAILSCALE_API_BASE + "/device-invites";
+        String body2 = "{\"deviceId\":\"" + jsonEsc(deviceId) + "\",\"reusable\":" + reusable + "}";
+        return tailscaleApiPost(apiToken, url2, body2);
+    }
+
+    private String tailscaleApiPost(String apiToken, String urlString, String jsonBody) {
+        HttpURLConnection conn = null;
+        try {
+            URL url = new URL(urlString);
+            conn = (HttpURLConnection) url.openConnection();
+            conn.setRequestMethod("POST");
+            conn.setRequestProperty("Authorization", "Bearer " + apiToken);
+            conn.setRequestProperty("Content-Type", "application/json");
+            conn.setDoOutput(true);
+            conn.setConnectTimeout(15000);
+            conn.setReadTimeout(15000);
+            try (OutputStream os = conn.getOutputStream()) {
+                os.write(jsonBody.getBytes(StandardCharsets.UTF_8));
+            }
+            int code = conn.getResponseCode();
+            java.io.InputStream stream = code >= 200 && code < 300 ? conn.getInputStream() : conn.getErrorStream();
+            String response = readFully(stream != null ? stream : new java.io.ByteArrayInputStream(new byte[0]));
+            conn.disconnect();
+            conn = null;
+            if (code >= 200 && code < 300 && response != null && !response.isEmpty()) {
+                @SuppressWarnings("unchecked")
+                Map<String, Object> root = gson.fromJson(response, Map.class);
+                if (root != null && root.containsKey("inviteUrl")) return String.valueOf(root.get("inviteUrl"));
+                if (root != null && root.containsKey("url")) return String.valueOf(root.get("url"));
+                if (root != null && root.containsKey("link")) return String.valueOf(root.get("link"));
+            }
+            if (code == 404) return null;
+            Log.w(TAG, "Tailscale API " + urlString + ": " + code + " " + response);
+            return null;
+        } catch (Exception e) {
+            Log.w(TAG, "Tailscale API POST fehlgeschlagen: " + urlString, e);
+            return null;
+        } finally {
+            if (conn != null) try { conn.disconnect(); } catch (Exception ignored) {}
+        }
+    }
+
+    private static String readFully(java.io.InputStream is) throws IOException {
+        if (is == null) return "";
+        StringBuilder sb = new StringBuilder();
+        try (BufferedReader r = new BufferedReader(new InputStreamReader(is, StandardCharsets.UTF_8))) {
+            String line;
+            while ((line = r.readLine()) != null) sb.append(line).append("\n");
+        }
+        return sb.toString().trim();
     }
 
     /** GET /api/mondphase-aktuell – aktuelle astronomische Mondphase als Impulswert im konfigurierten Mondzyklus. */
@@ -4144,7 +4373,8 @@ public class ConfigWebServer {
         }
     }
     
-    private SimpleHttpServer.HttpResponse serveIndexPage() {
+    /** Config-Menü (nur mit Passwort erreichbar unter /config.html). */
+    private SimpleHttpServer.HttpResponse serveConfigIndexPage() {
         String html = "<!DOCTYPE html>\n" +
                 "<html lang=\"de\">\n" +
                 "<head>\n" +
@@ -4216,6 +4446,7 @@ public class ConfigWebServer {
                 "        <div class=\"container\">\n" +
                 "            <h1>Turmtechnik</h1>\n" +
                 "            <div class=\"sub\">Konfiguration &amp; Steuerung</div>\n" +
+                "            <p style=\"margin-top:0.5rem;\"><a href=\"/\" style=\"color:var(--tt-accent);\">← Zur Hauptseite (App)</a></p>\n" +
                 "        </div>\n" +
                 "    </header>\n" +
                 "    <main class=\"container py-4\">\n" +
@@ -4266,6 +4497,18 @@ public class ConfigWebServer {
                 "            </div>\n" +
                 "        </section>\n" +
                 "        <section class=\"tt-section\">\n" +
+                "            <div class=\"tt-section-title\">Fernsteuerung</div>\n" +
+                "            <div class=\"tt-grid\">\n" +
+                "                <a href=\"#\" id=\"linkFernsteuerung\" class=\"tt-card\"><span class=\"arrow\">→</span><div class=\"title\">Fernsteuerung (alle Geräte)</div><div class=\"desc\">Layout 1/2, Programm eingeben, Programm abfragen, Nebenuhr stellen – für iPhone, Android, PC unter Port 8081. Ein Link, ein Browser.</div></a>\n" +
+                "            </div>\n" +
+                "        </section>\n" +
+                "        <section class=\"tt-section\">\n" +
+                "            <div class=\"tt-section-title\">Tailscale</div>\n" +
+                "            <div class=\"tt-grid\">\n" +
+                "                <div class=\"tt-card\"><div class=\"title\">Node Sharing (Gerät freigeben)</div><div class=\"desc\">Dieses Tablet können Sie für andere Nutzer freigeben (nur dieses Gerät, nicht das ganze Netz). Öffnen Sie die Tailscale-App auf diesem Gerät oder im <a href=\"https://login.tailscale.com/admin/machines\" target=\"_blank\" rel=\"noopener\">Tailscale-Dashboard</a> (Admin → Machines → Gerät → Share).</div><p style=\"margin-top:0.75rem;\"><a href=\"#\" id=\"btnTailscaleOpen\" class=\"tt-btn tt-btn-primary\" style=\"display:inline-block;padding:0.4rem 0.8rem;border-radius:6px;text-decoration:none;color:#0a0a0a;background:var(--tt-accent);\">Tailscale-App öffnen</a> <a href=\"https://tailscale.com/kb/1084/sharing\" target=\"_blank\" rel=\"noopener\" style=\"margin-left:0.5rem;color:var(--tt-muted);\">Anleitung</a></p><div style=\"margin-top:1rem;padding-top:0.75rem;border-top:1px solid var(--tt-border);\"><div class=\"tt-section-title\" style=\"margin-bottom:0.5rem;\">Automatisch (API)</div><p style=\"font-size:0.8rem;color:var(--tt-muted);margin-bottom:0.5rem;\">Mit API-Token aus <a href=\"https://login.tailscale.com/admin/settings/keys\" target=\"_blank\" rel=\"noopener\">Tailscale Admin → Keys</a> kann ein Freigabe-Link hier erzeugt werden.</p><p style=\"margin-bottom:0.5rem;\"><input type=\"password\" id=\"tailscaleApiToken\" placeholder=\"API-Token (optional)\" style=\"width:100%;max-width:20rem;padding:0.4rem;border:1px solid var(--tt-border);border-radius:6px;background:var(--tt-card);color:var(--tt-text);\"> <button type=\"button\" id=\"btnTailscaleSaveToken\" class=\"tt-btn tt-btn-primary\" style=\"margin-left:0.25rem;padding:0.4rem 0.8rem;\">Speichern</button></p><p><button type=\"button\" id=\"btnTailscaleCreateShare\" class=\"tt-btn tt-btn-primary\" style=\"padding:0.4rem 0.8rem;\">Freigabe-Link erstellen (automatisch)</button> <span id=\"tailscaleShareResult\" style=\"font-size:0.85rem;margin-left:0.5rem;color:var(--tt-muted);\"></span></p><p id=\"tailscaleShareLink\" style=\"margin-top:0.5rem;word-break:break-all;font-size:0.8rem;display:none;\"></p></div></div>\n" +
+                "            </div>\n" +
+                "        </section>\n" +
+                "        <section class=\"tt-section\">\n" +
                 "            <div class=\"tt-section-title\">App</div>\n" +
                 "            <div class=\"tt-grid\">\n" +
                 "                <button type=\"button\" class=\"tt-card\" id=\"btnAppRestart\" style=\"border:none;cursor:pointer;text-align:left;font:inherit;color:inherit;\"><span class=\"arrow\">↻</span><div class=\"title\">App neu starten</div><div class=\"desc\">Turmtechnik-App beenden und neu starten (z. B. nach Config-Änderungen)</div></button>\n" +
@@ -4276,6 +4519,30 @@ public class ConfigWebServer {
                 "        </section>\n" +
                 "    </main>\n" +
                 "    <script>\n" +
+                "        (function() {\n" +
+                "            var linkFern = document.getElementById('linkFernsteuerung');\n" +
+                "            if (linkFern) { var host = window.location.hostname || 'localhost'; linkFern.href = window.location.protocol + '//' + host + ':8081/'; linkFern.target = '_blank'; }\n" +
+                "            var btn = document.getElementById('btnTailscaleOpen');\n" +
+                "            if (btn) btn.onclick = function(e) { e.preventDefault(); window.location.href = 'intent://#Intent;package=com.tailscale.ipn;action=android.intent.action.MAIN;category=android.intent.category.LAUNCHER;S.browser_fallback_url=https://play.google.com/store/apps/details?id=com.tailscale.ipn;end'; };\n" +
+                "            var saveToken = document.getElementById('btnTailscaleSaveToken');\n" +
+                "            if (saveToken) saveToken.onclick = function() {\n" +
+                "                var token = document.getElementById('tailscaleApiToken');\n" +
+                "                var result = document.getElementById('tailscaleShareResult');\n" +
+                "                if (result) result.textContent = 'Speichere…';\n" +
+                "                fetch('/api/tailscale/config', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ apiToken: (token && token.value) ? token.value.trim() : '' }) }).then(function(r){ return r.json(); }).then(function(d){ if (result) result.textContent = d.error || (d.success ? 'Token gespeichert.' : ''); }).catch(function(){ if (result) result.textContent = 'Fehler.'; });\n" +
+                "            };\n" +
+                "            var createShare = document.getElementById('btnTailscaleCreateShare');\n" +
+                "            if (createShare) createShare.onclick = function() {\n" +
+                "                var result = document.getElementById('tailscaleShareResult');\n" +
+                "                var linkEl = document.getElementById('tailscaleShareLink');\n" +
+                "                if (result) result.textContent = 'Erstelle Link…';\n" +
+                "                if (linkEl) { linkEl.style.display = 'none'; linkEl.innerHTML = ''; }\n" +
+                "                fetch('/api/tailscale/create-share', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ reusable: true }) }).then(function(r){ return r.json(); }).then(function(d){\n" +
+                "                    if (result) result.textContent = d.error || '';\n" +
+                "                    if (d.success && d.inviteUrl && linkEl) { linkEl.innerHTML = 'Link: <a href=\"' + d.inviteUrl + '\" target=\"_blank\" rel=\"noopener\">' + d.inviteUrl + '</a>'; linkEl.style.display = 'block'; }\n" +
+                "                }).catch(function(){ if (result) result.textContent = 'Fehler beim Erstellen.'; });\n" +
+                "            };\n" +
+                "        })();\n" +
                 "        document.getElementById('btnAppRestart').onclick = function() {\n" +
                 "            if (!confirm('App wirklich neu starten? Die App wird kurz beendet und vom System wieder geöffnet.')) return;\n" +
                 "            var btn = this; btn.disabled = true; btn.style.opacity = '0.7';\n" +
@@ -4360,6 +4627,7 @@ public class ConfigWebServer {
                 "        .app-header-ip { font-size: clamp(0.7rem, 1.8vh, 0.85rem); color: var(--tt-muted); font-family: ui-monospace, monospace; }\n" +
                 "        .app-header-tailscale { font-size: clamp(0.65rem, 1.5vh, 0.75rem); color: var(--tt-muted); opacity: 0.9; font-family: ui-monospace, monospace; }\n" +
                 "        .app-header-firmware { font-size: clamp(0.65rem, 1.5vh, 0.75rem); color: var(--tt-muted); font-family: ui-monospace, monospace; }\n" +
+                "        .app-header-rustdesk { font-size: clamp(0.65rem, 1.5vh, 0.75rem); color: var(--tt-muted); font-family: ui-monospace, monospace; }\n" +
                 "        .app-nav-link { font-size: 0.75rem; color: var(--tt-muted); text-decoration: none; margin-right: 0.5rem; }\n" +
                 "        .app-nav-link:hover { color: var(--tt-accent); }\n" +
                 "        .app-page-main { flex: 1; display: flex; flex-direction: column; min-height: 0; padding: 3.5rem 1rem 0.5rem 1rem; overflow: hidden; }\n" +
@@ -4422,7 +4690,7 @@ public class ConfigWebServer {
                 "        <div class=\"container-fluid\">\n" +
                 "            <a class=\"navbar-brand\" href=\"/\">Turmtechnik</a>\n" +
                 "            <div class=\"navbar-nav\">\n" +
-                "                <a class=\"nav-link\" href=\"/\">Config System</a>\n" +
+                "                <a class=\"nav-link\" href=\"/config.html\">Config</a>\n" +
                 "                <a class=\"nav-link\" href=\"/app-seite1.html\">App Seite 1</a>\n" +
                 "                <a class=\"nav-link\" href=\"/app-seite2.html\">App Seite 2</a>\n" +
                 "                <a class=\"nav-link\" href=\"/benutzerprogramme.html\">Benutzerprogramme</a>\n" +
@@ -4459,6 +4727,7 @@ public class ConfigWebServer {
                 "            <div class=\"app-wochentag\" id=\"wochentag\">--</div>\n" +
                 "            <div class=\"app-header-ip\" id=\"appHeaderIp\"></div>\n" +
                 "            <div class=\"app-header-tailscale\" id=\"appHeaderTailscale\" style=\"display:none;\"></div>\n" +
+                "            <div class=\"app-header-rustdesk\" id=\"appHeaderRustdesk\" style=\"display:none;\"><span id=\"appHeaderRustdeskLabel\"></span> <a id=\"appHeaderRustdeskLink\" href=\"#\" class=\"app-nav-link\" target=\"_blank\">Mit RustDesk verbinden</a></div>\n" +
                 "            <div class=\"app-header-firmware\" id=\"appHeaderFirmware\"></div>\n" +
                 "        </div>\n" +
                 "    </header>\n" +
@@ -4477,10 +4746,10 @@ public class ConfigWebServer {
                 "        function infoTextAktualisieren(){ fetch('/api/info-text').then(function(r){ return r.json(); }).then(function(d){ var el=document.getElementById('appInfoText'); if(el&&d.text!==undefined) el.textContent=d.text||''; var dauerEl=document.getElementById('appDauer'); if(dauerEl) dauerEl.textContent=(d.currentMelodieZeileDauer!=null)?String(d.currentMelodieZeileDauer).trim()||'\u2013':'\u2013'; var relaisEl=document.getElementById('appRelaisAnzeige'); if(relaisEl){ var n=Math.max(0,parseInt(d.anzahlGlocken,10)||16); n=Math.min(16,n); var relais=Array.isArray(d.currentMelodieZeileRelais)?d.currentMelodieZeileRelais:[]; var vorschwing=Array.isArray(d.currentMelodieZeileVorschwing)?d.currentMelodieZeileVorschwing:[]; var cols=''; for(var c=0;c<n;c++) cols+=(c?' ':'')+'1.5em'; relaisEl.style.gridTemplateColumns=cols; relaisEl.style.gridTemplateRows='0.95em 0.95em 0.95em'; relaisEl.innerHTML=''; for(var i=0;i<n;i++){ var cell=document.createElement('div'); cell.className='relais-cell'; var dot=document.createElement('span'); dot.className='relais-dot '+(vorschwing[i]==1?'ein':'aus'); cell.appendChild(dot); relaisEl.appendChild(cell); } for(var j=0;j<n;j++){ var cell2=document.createElement('div'); cell2.className='relais-cell'; var lbl=document.createElement('span'); lbl.className='relais-label'; lbl.textContent='G'+(j+1); cell2.appendChild(lbl); relaisEl.appendChild(cell2); } for(var k=0;k<n;k++){ var cell3=document.createElement('div'); cell3.className='relais-cell'; var dot3=document.createElement('span'); dot3.className='relais-dot '+(relais[k]==1?'ein':'aus'); cell3.appendChild(dot3); relaisEl.appendChild(cell3); } } }).catch(function(){}); }\n" +
                 "        function drawMoonAppHeader(canvasId, impulse){ var c=document.getElementById(canvasId); if(!c||!c.getContext) return; impulse=Math.max(0,Math.min(59,parseInt(impulse,10)||0)); var w=c.width,h=c.height,cx=w/2,cy=h/2,r=Math.min(w,h)/2-3; var ctx=c.getContext('2d'); var phase=(impulse<=30)?impulse/30:1-(impulse-30)/30; if(phase<0) phase=0; ctx.fillStyle='#222222'; ctx.beginPath(); ctx.arc(cx,cy,r,0,Math.PI*2); ctx.fill(); ctx.fillStyle='#FFF1C1'; for(var i=-r;i<=r;i++){ var y=Math.sqrt(r*r-i*i); if(isNaN(y)) continue; var xL=cx-y,xR=cx+y; if(impulse<=30){ var xEdge=xR-(xR-xL)*phase; ctx.fillRect(xEdge,cy+i,xR-xEdge,1); } else { var xEdge=xL+(xR-xL)*phase; ctx.fillRect(xL,cy+i,xEdge-xL,1); } } ctx.strokeStyle='#555555'; ctx.lineWidth=2; ctx.beginPath(); ctx.arc(cx,cy,r,0,Math.PI*2); ctx.stroke(); }\n" +
                 "        function loadMoonPhase(){ fetch('/api/nebenuhren').then(function(r){ return r.json(); }).then(function(d){ var list=d.nebenuhren||[]; var useAktuell=true; for(var i=0;i<list.length;i++){ var relaisA=parseInt(list[i].relaisA,10)||0; var relaisB=parseInt(list[i].relaisB,10)||0; if(list[i].zeile===6&&list[i].aktiv&&(relaisA>0||relaisB>0)){ var ph=list[i].mondphaseIst; drawMoonAppHeader('appHeaderMoon',ph!=null?ph:0); useAktuell=false; break; } } if(useAktuell){ fetch('/api/mondphase-aktuell').then(function(r2){ return r2.json(); }).then(function(d2){ var ph=d2.mondphase!=null?d2.mondphase:0; drawMoonAppHeader('appHeaderMoon',ph); }).catch(function(){ drawMoonAppHeader('appHeaderMoon',0); }); } }).catch(function(){ fetch('/api/mondphase-aktuell').then(function(r){ return r.json(); }).then(function(d){ drawMoonAppHeader('appHeaderMoon',d.mondphase!=null?d.mondphase:0); }).catch(function(){ drawMoonAppHeader('appHeaderMoon',0); }); }); }\n" +
-                "        function loadDeviceIp(){ fetch('/api/device-ip').then(function(r){ return r.json(); }).then(function(d){ var el=document.getElementById('appHeaderIp'); if(el) el.textContent=d.ip||''; var tsEl=document.getElementById('appHeaderTailscale'); if(tsEl){ var ts=d.tailscale||''; if(ts){ tsEl.textContent='Tailscale: '+ts; tsEl.style.display='block'; } else { tsEl.textContent=''; tsEl.style.display='none'; } } var fwEl=document.getElementById('appHeaderFirmware'); if(fwEl) fwEl.textContent=(d.version?'Firmware '+d.version:''); }).catch(function(){}); }\n" +
+                "        function loadDeviceIp(){ fetch('/api/device-ip').then(function(r){ return r.json(); }).then(function(d){ var el=document.getElementById('appHeaderIp'); if(el) el.textContent=d.ip||''; var tsEl=document.getElementById('appHeaderTailscale'); if(tsEl){ var ts=d.tailscale||''; if(ts){ tsEl.textContent='Tailscale: '+ts; tsEl.style.display='block'; } else { tsEl.textContent=''; tsEl.style.display='none'; } } var rdEl=document.getElementById('appHeaderRustdesk'); var rdLabel=document.getElementById('appHeaderRustdeskLabel'); var rdLink=document.getElementById('appHeaderRustdeskLink'); if(rdEl&&rdLabel&&rdLink){ var rd=d.rustdesk_direct||''; if(rd){ rdLabel.textContent='RustDesk: '+rd; rdLink.href='rustdesk://'+rd; rdEl.style.display='block'; } else { rdEl.style.display='none'; } } var fwEl=document.getElementById('appHeaderFirmware'); if(fwEl) fwEl.textContent=(d.version?'Firmware '+d.version:''); }).catch(function(){}); }\n" +
                 "        function openConfigGate(){ document.getElementById('configGatePw').value=''; document.getElementById('configGateErr').style.display='none'; document.getElementById('configGateModal').classList.add('show'); document.getElementById('configGatePw').focus(); }\n" +
                 "        function closeConfigGate(){ document.getElementById('configGateModal').classList.remove('show'); }\n" +
-                "        function checkConfigGate(){ var pw=document.getElementById('configGatePw').value; var err=document.getElementById('configGateErr'); if(pw==='5644'){ try{ localStorage.setItem('config-system-auth','1'); }catch(e){} closeConfigGate(); window.location.href='/'; } else { err.style.display='block'; } }\n" +
+                "        function checkConfigGate(){ var pw=document.getElementById('configGatePw').value; var err=document.getElementById('configGateErr'); if(pw==='5644'){ try{ localStorage.setItem('config-system-auth','1'); }catch(e){} closeConfigGate(); window.location.href='/config.html'; } else { err.style.display='block'; } }\n" +
                 "        (function(){ var sek=document.getElementById('uhrSekunden'); if(sek) sek.onclick=openConfigGate; var cfgBtn=document.getElementById('configGateBtn'); if(cfgBtn) cfgBtn.onclick=checkConfigGate; var cfgPw=document.getElementById('configGatePw'); if(cfgPw) cfgPw.onkeydown=function(e){ if(e.key==='Enter') checkConfigGate(); }; })();\n" +
                 "        setInterval(uhrAktualisieren, 500); uhrAktualisieren(); setInterval(infoTextAktualisieren, 400); infoTextAktualisieren(); loadMoonPhase(); setInterval(loadMoonPhase, 10000); loadDeviceIp(); setInterval(loadDeviceIp, 30000);\n" +
                 "        function programmAbfrage(){ fetch('/api/control/programm-abfrage', { method:'POST', headers:{'Content-Type':'application/json'}, body:'{}' }).then(function(r){ return r.json(); }).then(function(d){ if(d.success) { setTimeout(infoTextAktualisieren, 800); setTimeout(infoTextAktualisieren, 2000); } }); }\n" +
@@ -5176,7 +5445,7 @@ public class ConfigWebServer {
                 "        <div class=\"container-fluid\">\n" +
                 "            <a class=\"navbar-brand\" href=\"/\">Turmtechnik</a>\n" +
                 "            <div class=\"navbar-nav\">\n" +
-                "                <a class=\"nav-link\" href=\"/\">Config System</a>\n" +
+                "                <a class=\"nav-link\" href=\"/config.html\">Config</a>\n" +
                 "                <a class=\"nav-link\" href=\"/anlagendaten.html\">Anlagendaten</a>\n" +
                 "                <a class=\"nav-link active\" href=\"/daten-sicherung.html\">Daten sichern &amp; Import</a>\n" +
                 "            </div>\n" +
@@ -5351,7 +5620,7 @@ public class ConfigWebServer {
                 "        <div class=\"container-fluid\">\n" +
                 "            <a class=\"navbar-brand\" href=\"/\">Turmtechnik</a>\n" +
                 "            <div class=\"navbar-nav\">\n" +
-                "                <a class=\"nav-link\" href=\"/\">Config System</a>\n" +
+                "                <a class=\"nav-link\" href=\"/config.html\">Config</a>\n" +
                 "                <a class=\"nav-link\" href=\"/daten-sicherung.html\">Daten sichern</a>\n" +
                 "                <a class=\"nav-link active\" href=\"/file-transfer.html\">Datei-Transfer</a>\n" +
                 "            </div>\n" +
@@ -5622,7 +5891,7 @@ public class ConfigWebServer {
                 "        <div class=\"container-fluid\">\n" +
                 "            <a class=\"navbar-brand\" href=\"/\">Turmtechnik</a>\n" +
                 "            <div class=\"navbar-nav\">\n" +
-                "                <a class=\"nav-link\" href=\"/\">Config System</a>\n" +
+                "                <a class=\"nav-link\" href=\"/config.html\">Config</a>\n" +
                 "                <a class=\"nav-link\" href=\"/daten-sicherung.html\">Daten sichern</a>\n" +
                 "                <a class=\"nav-link active\" href=\"/import-alter-anlagen.html\">Import alter Anlagen</a>\n" +
                 "            </div>\n" +
@@ -6060,7 +6329,7 @@ public class ConfigWebServer {
                 "        <div class=\"container-fluid\">\n" +
                 "            <a class=\"navbar-brand\" href=\"/\">Turmtechnik</a>\n" +
                 "            <div class=\"navbar-nav\">\n" +
-                "                <a class=\"nav-link\" href=\"/\">Config System</a>\n" +
+                "                <a class=\"nav-link\" href=\"/config.html\">Config</a>\n" +
                 "                <a class=\"nav-link\" href=\"/programm-editor.html\">Programm-Editor</a>\n" +
                 "                <a class=\"nav-link\" href=\"/platinen-config.html\">Platinen-Konfiguration</a>\n" +
                 "                <a class=\"nav-link active\" href=\"/nebenuhr-config.html\">Nebenuhr Config</a>\n" +
@@ -6555,7 +6824,7 @@ public class ConfigWebServer {
                 "        <div class=\"container-fluid\">\n" +
                 "            <a class=\"navbar-brand\" href=\"/\">Turmtechnik</a>\n" +
                 "            <div class=\"navbar-nav\">\n" +
-                "                <a class=\"nav-link\" href=\"/\">Config System</a>\n" +
+                "                <a class=\"nav-link\" href=\"/config.html\">Config</a>\n" +
                 "                <a class=\"nav-link\" href=\"/nebenuhr-config.html\">Nebenuhr Config</a>\n" +
                 "                <a class=\"nav-link\" href=\"/vorschwingen-config.html\">Vorschwingen</a>\n" +
                 "                <a class=\"nav-link active\" href=\"/schlagwerk-config.html\">Schlagwerk</a>\n" +
@@ -6854,7 +7123,7 @@ public class ConfigWebServer {
                 "        <div class=\"container-fluid\">\n" +
                 "            <a class=\"navbar-brand\" href=\"/\">Turmtechnik</a>\n" +
                 "            <div class=\"navbar-nav\">\n" +
-                "                <a class=\"nav-link\" href=\"/\">Config System</a>\n" +
+                "                <a class=\"nav-link\" href=\"/config.html\">Config</a>\n" +
                 "                <a class=\"nav-link\" href=\"/programm-editor.html\">Programm-Editor</a>\n" +
                 "                <a class=\"nav-link\" href=\"/platinen-config.html\">Platinen-Konfiguration</a>\n" +
                 "                <a class=\"nav-link\" href=\"/nebenuhr-config.html\">Nebenuhr Config</a>\n" +
@@ -7511,7 +7780,7 @@ public class ConfigWebServer {
                 "        <div class=\"container-fluid\">\n" +
                 "            <a class=\"navbar-brand\" href=\"/\">Turmtechnik</a>\n" +
                 "            <div class=\"navbar-nav\">\n" +
-                "                <a class=\"nav-link\" href=\"/\">Config System</a>\n" +
+                "                <a class=\"nav-link\" href=\"/config.html\">Config</a>\n" +
                 "                <a class=\"nav-link active\" href=\"/programm-editor.html\">Programm-Editor</a>\n" +
                 "                <a class=\"nav-link\" href=\"/platinen-config.html\">Platinen-Konfiguration</a>\n" +
                 "                <a class=\"nav-link\" href=\"/nebenuhr-config.html\">Nebenuhr Config</a>\n" +
@@ -11251,7 +11520,7 @@ public class ConfigWebServer {
                 "            </button>\n" +
                 "            <div class=\"collapse navbar-collapse\" id=\"platinenConfigNavbar\">\n" +
                 "                <div class=\"navbar-nav\">\n" +
-                "                    <a class=\"nav-link\" href=\"/\">Config System</a>\n" +
+                "                    <a class=\"nav-link\" href=\"/config.html\">Config</a>\n" +
                 "                    <a class=\"nav-link\" href=\"/programm-editor.html\">Programm-Editor</a>\n" +
                 "                    <a class=\"nav-link active\" href=\"/platinen-config.html\">Platinen-Konfiguration</a>\n" +
                 "                </div>\n" +
@@ -11408,6 +11677,18 @@ public class ConfigWebServer {
                 "            } catch (error) {\n" +
                 "                console.error('Fehler beim Laden des Scan-Relais-Werts:', error);\n" +
                 "            }\n" +
+                "        }\n" +
+                "        \n" +
+                "        // Nur Antwortzeit-Anzeige aktualisieren (ohne Scan-Relais-Eingabe zu überschreiben)\n" +
+                "        async function refreshAntwortZeitOnly() {\n" +
+                "            try {\n" +
+                "                const response = await fetch('/api/platinen/scan-relais');\n" +
+                "                if (!response.ok) return;\n" +
+                "                const data = await response.json();\n" +
+                "                const antwortZeit = data.antwortZeitMS != null ? data.antwortZeitMS : (data.scanRelaisMS / 20);\n" +
+                "                const antwortInput = document.getElementById('antwortZeitInput');\n" +
+                "                if (antwortInput) antwortInput.value = antwortZeit + ' ms';\n" +
+                "            } catch (e) {}\n" +
                 "        }\n" +
                 "        \n" +
                 "        // Speichere Scan-Relais-Wert\n" +
@@ -12212,11 +12493,9 @@ public class ConfigWebServer {
                 "                });\n" +
                 "            }\n" +
                 "            \n" +
-                "            // Auto-Refresh für Antwortzeit bei Bluetooth-Modus\n" +
+                "            // Auto-Refresh nur für Antwortzeit-Anzeige bei Bluetooth (Scan-Relais-Eingabe nicht überschreiben)\n" +
                 "            if (currentModus === 'bluetooth') {\n" +
-                "                setInterval(async () => {\n" +
-                "                    await loadScanRelais();\n" +
-                "                }, 2000); // Alle 2 Sekunden aktualisieren\n" +
+                "                setInterval(refreshAntwortZeitOnly, 2000);\n" +
                 "            }\n" +
                 "        });\n" +
                 "        \n" +
@@ -12500,7 +12779,7 @@ public class ConfigWebServer {
                 "        <div class=\"container-fluid\">\n" +
                 "            <a class=\"navbar-brand\" href=\"/\">Turmtechnik</a>\n" +
                 "            <div class=\"navbar-nav\">\n" +
-                "                <a class=\"nav-link\" href=\"/\">Config System</a>\n" +
+                "                <a class=\"nav-link\" href=\"/config.html\">Config</a>\n" +
                 "                <a class=\"nav-link\" href=\"/programm-editor.html\">Programm-Editor</a>\n" +
                 "                <a class=\"nav-link active\" href=\"/benutzerprogramme.html\">Benutzerprogramme</a>\n" +
                 "            </div>\n" +
@@ -14298,7 +14577,7 @@ public class ConfigWebServer {
                 "        <div class=\"container-fluid\">\n" +
                 "            <a class=\"navbar-brand\" href=\"/\">Turmtechnik</a>\n" +
                 "            <div class=\"navbar-nav\">\n" +
-                "                <a class=\"nav-link\" href=\"/\">Config System</a>\n" +
+                "                <a class=\"nav-link\" href=\"/config.html\">Config</a>\n" +
                 "                <a class=\"nav-link\" href=\"/programm-editor.html\">Programm-Editor</a>\n" +
                 "                <a class=\"nav-link\" href=\"/platinen-config.html\">Platinen-Konfiguration</a>\n" +
                 "                <a class=\"nav-link active\" href=\"/midi-config.html\">MIDI Config</a>\n" +
@@ -15965,7 +16244,7 @@ public class ConfigWebServer {
                 "        <div class=\"container-fluid\">\n" +
                 "            <a class=\"navbar-brand\" href=\"/\">Turmtechnik</a>\n" +
                 "            <div class=\"navbar-nav\">\n" +
-                "                <a class=\"nav-link\" href=\"/\">Config System</a>\n" +
+                "                <a class=\"nav-link\" href=\"/config.html\">Config</a>\n" +
                 "                <a class=\"nav-link\" href=\"/programm-editor.html\">Programm-Editor</a>\n" +
                 "                <a class=\"nav-link active\" href=\"/melodien-editor.html\">Melodien-Editor</a>\n" +
                 "            </div>\n" +

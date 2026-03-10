@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Turmtechnik Fernbedienung</string>
+    <string name="bottom_menu_title">Menü</string>
+    <string name="btn_change_address">Adresse ändern</string>
+    <string name="btn_logout">Abmelden</string>
+    <string name="btn_menu">Menü</string>
+    <string name="btn_page2">App Seite 2</string>
+    <string name="btn_rustdesk">Bildschirm steuern (RustDesk)</string>
+    <string name="btn_save">Speichern und öffnen</string>
+    <string name="btn_startpage">Startseite</string>
+    <string name="hint_enter_address">Bitte Adresse eingeben.</string>
+    <string name="hint_host">IP oder Hostname (ohne http:// und :8080)</string>
+    <string name="login_btn">Anmelden</string>
+    <string name="login_error">Falsches Passwort.</string>
+    <string name="login_hint">Passwort</string>
+    <string name="login_title">Anmelden</string>
+    <string name="rustdesk_no_address">Bitte zuerst Adresse eingeben und speichern.</string>
+    <string name="set_password_btn">Speichern</string>
+    <string name="set_password_hint">Neues Passwort</string>
+    <string name="set_password_mismatch">Passwörter stimmen nicht überein.</string>
+    <string name="set_password_repeat">Passwort wiederholen</string>
+    <string name="set_password_title">Passwort festlegen</string>
+    <string name="set_password_too_short">Passwort mindestens 4 Zeichen.</string>
+    <string name="setup_hint">Tailscale-IP oder Hostname des Turmtechnik-Geräts (z. B. 100.101.102.103 oder turmtechnik-tablet). Einmal speichern, danach startet die App direkt mit App Seite 1.</string>
+    <string name="setup_title">Adresse eingeben</string>
+    <string name="top_bar_connected">Verbunden: %1$s</string>
+    <style name="Theme.Fernbedienung" parent="Theme.AppCompat.Light.NoActionBar">
+        <item name="colorPrimary">#1976D2</item>
+        <item name="colorPrimaryDark">#0D47A1</item>
+        <item name="colorAccent">#FF9800</item>
+    </style>
+</resources>

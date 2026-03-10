@@ -1,0 +1,10 @@
+[
+    {
+        "merged": "C:\\Users\\ThinkStation P920\\.gradle\\daemon\\9.0-milestone-1\\tom.turmtechnik.fernbedienung.app-mergeDebugResources-19:\\layout\\activity_main.xml",
+        "source": "C:\\Users\\ThinkStation P920\\.gradle\\daemon\\9.0-milestone-1\\tom.turmtechnik.fernbedienung.app-main-22:\\layout\\activity_main.xml"
+    },
+    {
+        "merged": "tom.turmtechnik.fernbedienung.app-mergeDebugResources-19:/layout/activity_main.xml",
+        "source": "tom.turmtechnik.fernbedienung.app-main-22:/layout/activity_main.xml"
+    }
+]

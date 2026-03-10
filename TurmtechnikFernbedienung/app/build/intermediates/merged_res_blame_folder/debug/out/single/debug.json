@@ -1,0 +1,14 @@
+[
+    {
+        "merged": "C:\\Users\\ThinkStation P920\\.gradle\\daemon\\9.0-milestone-1\\tom.turmtechnik.fernbedienung.app-merged_res-20:\\layout_activity_main.xml.flat",
+        "source": "C:\\Users\\ThinkStation P920\\.gradle\\daemon\\9.0-milestone-1\\tom.turmtechnik.fernbedienung.app-main-22:\\layout\\activity_main.xml"
+    },
+    {
+        "merged": "tom.turmtechnik.fernbedienung.app-merged_res-20:/layout_activity_main.xml.flat",
+        "source": "tom.turmtechnik.fernbedienung.app-main-22:/layout/activity_main.xml"
+    },
+    {
+        "merged": "C:\\Users\\ThinkStation P920\\.gradle\\daemon\\9.0-milestone-1\\tom.turmtechnik.fernbedienung.app-merged_res-20:\\drawable_ic_launcher_fernbedienung.xml.flat",
+        "source": "C:\\Users\\ThinkStation P920\\.gradle\\daemon\\9.0-milestone-1\\tom.turmtechnik.fernbedienung.app-main-22:\\drawable\\ic_launcher_fernbedienung.xml"
+    }
+]

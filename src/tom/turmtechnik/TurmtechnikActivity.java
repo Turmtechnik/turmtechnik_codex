@@ -182,6 +182,7 @@ public class TurmtechnikActivity extends Activity {
     
     // Web-Server für Konfiguration
     private static ConfigWebServer configWebServer;
+    private static FernsteuerungServer fernsteuerungServer;
     private static String webServerIpAddress = null; // IP-Adresse des Web-Servers
 
     private int batteryLevel;
@@ -3469,12 +3470,22 @@ public class TurmtechnikActivity extends Activity {
                 configWebServer = new ConfigWebServer(8080, getApplicationContext());
                 configWebServer.start();
                 Log.i("ConfigWebServer", "Web-Server gestartet auf Port 8080");
+                if (fernsteuerungServer == null) {
+                    try {
+                        fernsteuerungServer = new FernsteuerungServer(FernsteuerungServer.DEFAULT_PORT, getApplicationContext(), "127.0.0.1:8080");
+                        fernsteuerungServer.start();
+                        Log.i("ConfigWebServer", "Fernsteuerung-Server gestartet auf Port " + FernsteuerungServer.DEFAULT_PORT);
+                    } catch (java.io.IOException e) {
+                        Log.e("ConfigWebServer", "Fernsteuerung-Server konnte nicht gestartet werden", e);
+                    }
+                }
                 // IP wie beim Server-Bind (WLAN zuerst), für Anzeige und Erreichbarkeit
                 String ipAddress = getWifiIpAddressStatic(this);
                 if (ipAddress == null) ipAddress = getLocalIpAddress();
                 webServerIpAddress = ipAddress;
                 if (ipAddress != null) {
                     Log.i("ConfigWebServer", "Web-UI erreichbar unter: http://" + ipAddress + ":8080");
+                    Log.i("ConfigWebServer", "Fernsteuerung: http://" + ipAddress + ":" + FernsteuerungServer.DEFAULT_PORT);
                     Log.i("ConfigWebServer", "Oder lokal: http://localhost:8080");
                 } else {
                     Log.w("ConfigWebServer", "IP-Adresse konnte nicht ermittelt werden (WLAN später prüfen)");
@@ -3572,11 +3583,21 @@ public class TurmtechnikActivity extends Activity {
                 configWebServer = new ConfigWebServer(8080, context.getApplicationContext());
                 configWebServer.start();
                 Log.i("ConfigWebServer", "Web-Server gestartet auf Port 8080");
+                if (fernsteuerungServer == null) {
+                    try {
+                        fernsteuerungServer = new FernsteuerungServer(FernsteuerungServer.DEFAULT_PORT, context.getApplicationContext(), "127.0.0.1:8080");
+                        fernsteuerungServer.start();
+                        Log.i("ConfigWebServer", "Fernsteuerung-Server gestartet auf Port " + FernsteuerungServer.DEFAULT_PORT);
+                    } catch (java.io.IOException e) {
+                        Log.e("ConfigWebServer", "Fernsteuerung-Server konnte nicht gestartet werden", e);
+                    }
+                }
                 String ipAddress = getWifiIpAddressStatic(context);
                 if (ipAddress == null) ipAddress = getLocalIpAddressStatic();
                 if (ipAddress != null) {
                     webServerIpAddress = ipAddress;
                     Log.i("ConfigWebServer", "Web-UI erreichbar unter: http://" + ipAddress + ":8080");
+                    Log.i("ConfigWebServer", "Fernsteuerung: http://" + ipAddress + ":" + FernsteuerungServer.DEFAULT_PORT);
                 }
             }
         } catch (Exception e) {
@@ -3667,6 +3688,14 @@ public class TurmtechnikActivity extends Activity {
 
             TimeSyncThread.stopInstance();
 
+            if (fernsteuerungServer != null) {
+                try {
+                    fernsteuerungServer.stop();
+                } catch (Exception e) {
+                    Log.w("ConfigWebServer", "Fernsteuerung-Server konnte beim Runtime-Neustart nicht sauber gestoppt werden", e);
+                }
+                fernsteuerungServer = null;
+            }
             if (configWebServer != null) {
                 try {
                     configWebServer.stop();
@@ -3719,10 +3748,42 @@ public class TurmtechnikActivity extends Activity {
         return turmtechnikContext;
     }
 
+    /** Mindestabstand zwischen Versuchen, WLAN einzuschalten (ms). */
+    private static final long WIFI_ENABLE_THROTTLE_MS = 15000L;
+    private static volatile long lastWifiEnableAttemptMs = 0;
+
+    /**
+     * Schaltet WLAN ein, wenn es aus ist und wir im WLAN-Modus sind (z. B. bei „Keine Verbindung“).
+     * Wird von Nebenuhr-Threads aufgerufen; nur bei Bedarf und gedrosselt.
+     */
+    public static void tryEnableWifiIfDisabled() {
+        if (StaticVariable.bluetoothMode) return;
+        Context ctx = getRuntimeContext();
+        if (ctx == null) return;
+        long now = SystemClock.elapsedRealtime();
+        if (now - lastWifiEnableAttemptMs < WIFI_ENABLE_THROTTLE_MS) return;
+        lastWifiEnableAttemptMs = now;
+        try {
+            WifiManager wm = (WifiManager) ctx.getApplicationContext().getSystemService(Context.WIFI_SERVICE);
+            if (wm == null) return;
+            int state = wm.getWifiState();
+            if (state == WifiManager.WIFI_STATE_ENABLED) return;
+            wm.setWifiEnabled(true);
+            Log.w("TurmtechnikActivity", "WLAN war aus – wurde eingeschaltet (Keine Verbindung).");
+        } catch (Exception e) {
+            Log.e("TurmtechnikActivity", "WLAN einschalten fehlgeschlagen: " + (e.getMessage() != null ? e.getMessage() : e.toString()));
+        }
+    }
+
     /**
      * Stoppt den Web-Server.
      */
     private void stopConfigWebServer() {
+        if (fernsteuerungServer != null) {
+            fernsteuerungServer.stop();
+            fernsteuerungServer = null;
+            Log.i("ConfigWebServer", "Fernsteuerung-Server gestoppt");
+        }
         if (configWebServer != null) {
             configWebServer.stop();
             configWebServer = null;

@@ -1,0 +1,23 @@
+tom.turmtechnik.fernbedienung.app-emoji2-1.2.0-0 C:\Users\ThinkStation P920\.gradle\caches\9.0-milestone-1\transforms\0271f5f8dc0c5c9c0195dbb93654523d\transformed\emoji2-1.2.0\res
+tom.turmtechnik.fernbedienung.app-fragment-1.3.6-1 C:\Users\ThinkStation P920\.gradle\caches\9.0-milestone-1\transforms\070a9fb82295fa5296f06e07c66c0cc0\transformed\fragment-1.3.6\res
+tom.turmtechnik.fernbedienung.app-appcompat-resources-1.6.1-2 C:\Users\ThinkStation P920\.gradle\caches\9.0-milestone-1\transforms\0f64a3d7e6bb16e6513fde61cc09a8c4\transformed\appcompat-resources-1.6.1\res
+tom.turmtechnik.fernbedienung.app-lifecycle-viewmodel-2.5.1-3 C:\Users\ThinkStation P920\.gradle\caches\9.0-milestone-1\transforms\17e638ac85fe18132742c4a99f7cbd67\transformed\lifecycle-viewmodel-2.5.1\res
+tom.turmtechnik.fernbedienung.app-lifecycle-process-2.4.1-4 C:\Users\ThinkStation P920\.gradle\caches\9.0-milestone-1\transforms\19534682b146748a0026c3db6d8472e6\transformed\lifecycle-process-2.4.1\res
+tom.turmtechnik.fernbedienung.app-savedstate-1.2.0-5 C:\Users\ThinkStation P920\.gradle\caches\9.0-milestone-1\transforms\2184b369cbb1bb4252d2d71c87ff1101\transformed\savedstate-1.2.0\res
+tom.turmtechnik.fernbedienung.app-activity-1.6.0-6 C:\Users\ThinkStation P920\.gradle\caches\9.0-milestone-1\transforms\5563dfb3a2f9fb2f03c89d0b1efb0c5c\transformed\activity-1.6.0\res
+tom.turmtechnik.fernbedienung.app-lifecycle-livedata-core-2.5.1-7 C:\Users\ThinkStation P920\.gradle\caches\9.0-milestone-1\transforms\5f0e5f51ebe0fe30b76ea6868d31811e\transformed\lifecycle-livedata-core-2.5.1\res
+tom.turmtechnik.fernbedienung.app-annotation-experimental-1.3.0-8 C:\Users\ThinkStation P920\.gradle\caches\9.0-milestone-1\transforms\75cfcfa3c8cf2fbec4ea3d8ec4e3e85c\transformed\annotation-experimental-1.3.0\res
+tom.turmtechnik.fernbedienung.app-lifecycle-viewmodel-savedstate-2.5.1-9 C:\Users\ThinkStation P920\.gradle\caches\9.0-milestone-1\transforms\93e0300dc38bf01a3a8da78476b7c522\transformed\lifecycle-viewmodel-savedstate-2.5.1\res
+tom.turmtechnik.fernbedienung.app-emoji2-views-helper-1.2.0-10 C:\Users\ThinkStation P920\.gradle\caches\9.0-milestone-1\transforms\a70538629c11be428c24c2b1029c2a08\transformed\emoji2-views-helper-1.2.0\res
+tom.turmtechnik.fernbedienung.app-core-ktx-1.9.0-11 C:\Users\ThinkStation P920\.gradle\caches\9.0-milestone-1\transforms\a846efefff3ae8de84c07f8a09ddf4a4\transformed\core-ktx-1.9.0\res
+tom.turmtechnik.fernbedienung.app-core-1.9.0-12 C:\Users\ThinkStation P920\.gradle\caches\9.0-milestone-1\transforms\b3329962f4aa65c16b5c26083ff650ae\transformed\core-1.9.0\res
+tom.turmtechnik.fernbedienung.app-lifecycle-runtime-2.5.1-13 C:\Users\ThinkStation P920\.gradle\caches\9.0-milestone-1\transforms\cb08f8895e4d94fcebff50d92a0fc691\transformed\lifecycle-runtime-2.5.1\res
+tom.turmtechnik.fernbedienung.app-appcompat-1.6.1-14 C:\Users\ThinkStation P920\.gradle\caches\9.0-milestone-1\transforms\d7521f5749408ce1888060f746428074\transformed\appcompat-1.6.1\res
+tom.turmtechnik.fernbedienung.app-startup-runtime-1.1.1-15 C:\Users\ThinkStation P920\.gradle\caches\9.0-milestone-1\transforms\dac125e7f4cd63c15fc7093419b42d6e\transformed\startup-runtime-1.1.1\res
+tom.turmtechnik.fernbedienung.app-pngs-16 C:\Users\ThinkStation P920\Documents\Turmtechnik-studio3 - mit codex überarbeiten\TurmtechnikFernbedienung\app\build\generated\res\pngs\debug
+tom.turmtechnik.fernbedienung.app-resValues-17 C:\Users\ThinkStation P920\Documents\Turmtechnik-studio3 - mit codex überarbeiten\TurmtechnikFernbedienung\app\build\generated\res\resValues\debug
+tom.turmtechnik.fernbedienung.app-packageDebugResources-18 C:\Users\ThinkStation P920\Documents\Turmtechnik-studio3 - mit codex überarbeiten\TurmtechnikFernbedienung\app\build\intermediates\incremental\debug\packageDebugResources\merged.dir
+tom.turmtechnik.fernbedienung.app-packageDebugResources-19 C:\Users\ThinkStation P920\Documents\Turmtechnik-studio3 - mit codex überarbeiten\TurmtechnikFernbedienung\app\build\intermediates\incremental\debug\packageDebugResources\stripped.dir
+tom.turmtechnik.fernbedienung.app-merged_res-20 C:\Users\ThinkStation P920\Documents\Turmtechnik-studio3 - mit codex überarbeiten\TurmtechnikFernbedienung\app\build\intermediates\merged_res\debug
+tom.turmtechnik.fernbedienung.app-debug-21 C:\Users\ThinkStation P920\Documents\Turmtechnik-studio3 - mit codex überarbeiten\TurmtechnikFernbedienung\app\src\debug\res
+tom.turmtechnik.fernbedienung.app-main-22 C:\Users\ThinkStation P920\Documents\Turmtechnik-studio3 - mit codex überarbeiten\TurmtechnikFernbedienung\app\src\main\res
