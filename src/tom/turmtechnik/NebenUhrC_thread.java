@@ -125,7 +125,10 @@ public class NebenUhrC_thread extends Thread {
         // WICHTIG: uhrC_lastRelaisA erst NACH erfolgreichem Impuls setzen – sonst wechselt die Anzeige/Relaiswahl mitten im Impuls!
         int relaisNumberToUse = 0;
         final boolean nextLastRelaisA;
-        if (StaticVariable.uhrC_lastRelaisA) {
+        if (StaticVariable.uhrC_pendingImpuls) {
+            relaisNumberToUse = StaticVariable.uhrC_pendingRelaisA ? nebenuhrConfig.relaisA : nebenuhrConfig.relaisB;
+            nextLastRelaisA = StaticVariable.uhrC_pendingRelaisA;
+        } else if (StaticVariable.uhrC_lastRelaisA) {
             relaisNumberToUse = nebenuhrConfig.relaisB;
             nextLastRelaisA = false;
         } else {
@@ -190,13 +193,15 @@ public class NebenUhrC_thread extends Thread {
                 LogTurmtechnik2.appendNebenuhrRelaisLogWiederholung("C", relaisNumber, StaticVariable.uhrC_calendarZeit, StaticVariable.uhrC_angezeigteZeit, StaticVariable.uhrC_lastRelaisA);
                 lastAbortC = false;
             }
+            StaticVariable.uhrC_pendingImpuls = true;
+            StaticVariable.uhrC_pendingRelaisA = (relaisNumberToUse == nebenuhrConfig.relaisA);
             if (Serial_IoThread.getSerialIoStatus2()) {
                 try {
                     PlatinenDatabaseHelper dbHelper = PlatinenDatabaseHelper.getInstance(TurmtechnikActivity.getRuntimeContext());
                     PlatinenDatabaseHelper.NebenuhrConfig saveConfig = dbHelper.getNebenuhrByZeile(5);
                     if (saveConfig != null) {
-                        saveConfig.lastRelaisA = nextLastRelaisA;
                         saveConfig.impulsAusstehend = true;
+                        saveConfig.pendingRelaisA = (relaisNumberToUse == nebenuhrConfig.relaisA);
                         dbHelper.saveNebenuhr(saveConfig);
                     }
                 } catch (Exception e) {
@@ -278,6 +283,8 @@ public class NebenUhrC_thread extends Thread {
             if (Serial_IoThread.getSerialIoStatus2() && StaticVariable.uhrC_angezeigteZeit != StaticVariable.uhrC_calendarZeit) {
                 incrementAngezeigteZeit_C();
                 StaticVariable.uhrC_lastRelaisA = nextLastRelaisA;
+                StaticVariable.uhrC_pendingImpuls = false;
+                StaticVariable.uhrC_pendingRelaisA = false;
                 try {
                     PlatinenDatabaseHelper dbHelper = PlatinenDatabaseHelper.getInstance(TurmtechnikActivity.getRuntimeContext());
                     PlatinenDatabaseHelper.NebenuhrConfig c = dbHelper.getNebenuhrByZeile(5);
@@ -285,6 +292,7 @@ public class NebenUhrC_thread extends Thread {
                         c.angezeigteZeit = StaticVariable.uhrC_angezeigteZeit;
                         c.lastRelaisA = StaticVariable.uhrC_lastRelaisA;
                         c.impulsAusstehend = false;
+                        c.pendingRelaisA = null;
                         dbHelper.saveNebenuhr(c);
                     }
                 } catch (Exception e) {

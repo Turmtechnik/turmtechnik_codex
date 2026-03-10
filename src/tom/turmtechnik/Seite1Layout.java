@@ -478,7 +478,7 @@ public class Seite1Layout {
             java.util.List<PlatinenDatabaseHelper.NebenuhrConfig> list = PlatinenDatabaseHelper.getInstance(staticContext).getAllNebenuhren();
             if (list == null) return false;
             for (PlatinenDatabaseHelper.NebenuhrConfig n : list) {
-                if (n.zeile == 6 && n.aktiv) return true;
+                if (n.zeile == 6 && n.aktiv && (n.relaisA > 0 || n.relaisB > 0)) return true;
             }
             return false;
         } catch (Exception e) {

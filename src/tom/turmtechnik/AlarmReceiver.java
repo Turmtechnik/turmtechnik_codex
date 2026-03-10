@@ -88,7 +88,7 @@ public class AlarmReceiver extends BroadcastReceiver
                 return;
             }
             // Keinen Doppelstart: Activity bereits im Vordergrund → nicht erneut starten (verhindert Absturz)
-            if (TurmtechnikActivity.isInForeground) {
+            if (StartTurmtechnikService.isTurmtechnikUiVisible(context)) {
                 android.util.Log.d(sourceFileName, "TurmtechnikActivity bereits im Vordergrund, Alarm-Start übersprungen");
                 StartTurmtechnikService.setTimeTurmtechnik(60);
                 return;
@@ -116,5 +116,4 @@ public class AlarmReceiver extends BroadcastReceiver
     }
 
 }
-
 

@@ -740,7 +740,9 @@ public class Seite2Activity extends Activity {
         System.gc();
 
         //finish();
-        Intent returnActivity = new Intent(Seite2Activity.this, TurmtechnikActivity.class);
+        Intent returnActivity = new Intent(Seite2Activity.this, WebUiActivity.class);
+        returnActivity.putExtra(WebUiActivity.EXTRA_PATH, "/app-seite1.html");
+        returnActivity.putExtra(WebUiActivity.EXTRA_USE_LOCALHOST, true);
         Seite2Activity.this.startActivity(returnActivity);
     }
 

@@ -32,6 +32,69 @@ const unsigned long PORTAL_TIMEOUT_S = 120;
 unsigned long lastWifiOk = 0;
 bool portalWasShown = false;
 WiFiManager wm;
+uint8_t currentRelayBytes[3] = {0, 0, 0};
+
+void printHexByte(uint8_t value) {
+  if (value < 0x10) Serial.print('0');
+  Serial.print(value, HEX);
+}
+
+void logRelayState(const char* prefix, const uint8_t relayBytes[3]) {
+  Serial.print(prefix);
+  Serial.print(" DEC[");
+  Serial.print((int) relayBytes[0]);
+  Serial.print(' ');
+  Serial.print((int) relayBytes[1]);
+  Serial.print(' ');
+  Serial.print((int) relayBytes[2]);
+  Serial.print("] HEX[");
+  printHexByte(relayBytes[0]);
+  Serial.print(' ');
+  printHexByte(relayBytes[1]);
+  Serial.print(' ');
+  printHexByte(relayBytes[2]);
+  Serial.println(']');
+}
+
+void logRelayChannels(const char* prefix, const uint8_t relayBytes[3]) {
+  Serial.print(prefix);
+  Serial.print(" Kanaele[");
+  bool any = false;
+  for (int byteIndex = 0; byteIndex < 3; byteIndex++) {
+    for (int bitIndex = 0; bitIndex < 8; bitIndex++) {
+      if ((relayBytes[byteIndex] & (1 << bitIndex)) != 0) {
+        if (any) Serial.print(' ');
+        Serial.print(byteIndex * 8 + bitIndex + 1);
+        any = true;
+      }
+    }
+  }
+  if (!any) Serial.print('-');
+  Serial.println(']');
+}
+
+void logCommandFrame(const char* source) {
+  Serial.print("[CMD ");
+  Serial.print(source);
+  Serial.print("] Bytes HEX[");
+  for (int i = 0; i < 8; i++) {
+    printHexByte(data[i]);
+    if (i < 7) Serial.print(' ');
+  }
+  Serial.print("] DEC[");
+  for (int i = 0; i < 8; i++) {
+    Serial.print((int) data[i]);
+    if (i < 7) Serial.print(' ');
+  }
+  Serial.println(']');
+}
+
+bool isAllZeroFrame() {
+  for (int i = 0; i < 8; i++) {
+    if (data[i] != 0) return false;
+  }
+  return true;
+}
 
 static uint8_t reverseByte(uint8_t b) {
   uint8_t r = 0;
@@ -45,12 +108,16 @@ void setAllRelaysLow() {
   shiftOut(DATA, CLOCK, LSBFIRST, 0);
   shiftOut(DATA, CLOCK, LSBFIRST, 0);
   digitalWrite(LATCH, HIGH);
+  currentRelayBytes[0] = 0;
+  currentRelayBytes[1] = 0;
+  currentRelayBytes[2] = 0;
 }
 
-void schaltenFromBuffer() {
+void schaltenFromBuffer(const char* source) {
   uint8_t b0 = data[3];
   uint8_t b1 = data[4];
   uint8_t b2 = data[5];
+  uint8_t previousBytes[3] = { currentRelayBytes[0], currentRelayBytes[1], currentRelayBytes[2] };
   digitalWrite(PIN_LED, LOW);
   digitalWrite(LATCH, LOW);
   shiftOut(DATA, CLOCK, LSBFIRST, reverseByte(b0));
@@ -58,6 +125,17 @@ void schaltenFromBuffer() {
   shiftOut(DATA, CLOCK, LSBFIRST, reverseByte(b2));
   digitalWrite(LATCH, HIGH);
   digitalWrite(PIN_LED, HIGH);
+  currentRelayBytes[0] = b0;
+  currentRelayBytes[1] = b1;
+  currentRelayBytes[2] = b2;
+
+  Serial.print("[Schalten ");
+  Serial.print(source);
+  Serial.println("] Relaiswechsel");
+  logRelayState("  ALT ", previousBytes);
+  logRelayChannels("  ALT ", previousBytes);
+  logRelayState("  NEU ", currentRelayBytes);
+  logRelayChannels("  NEU ", currentRelayBytes);
 }
 
 void printWifiStatus() {
@@ -102,13 +180,40 @@ void setup() {
   Serial.printf("24-Kanal Relais-Server Port %u bereit (TCP + Serial).\n", serverPort);
 }
 
-void processCommand() {
+void processCommand(const char* source) {
+  if (isAllZeroFrame()) return;
+
+  logCommandFrame(source);
   Datensumme = (int)data[0] + (int)data[1] + (int)data[2] + (int)data[3] + (int)data[4] + (int)data[5];
   Pruf = (int)data[6] * 256 + (int)data[7];
-  if (Datensumme != Pruf) return;
+  if (Datensumme != Pruf) {
+    Serial.print("[CMD ");
+    Serial.print(source);
+    Serial.print("] Pruefsumme FEHLER erwartet=");
+    Serial.print(Datensumme);
+    Serial.print(" empfangen=");
+    Serial.println(Pruf);
+    return;
+  }
+
+  Serial.print("[CMD ");
+  Serial.print(source);
+  Serial.print("] Pruefsumme OK ");
+  Serial.println(Pruf);
 
   Timer = 0;
   byte cmd = data[0];
+
+  if (cmd != 97 && cmd != 65 && cmd != 98) {
+    Serial.print("[CMD ");
+    Serial.print(source);
+    Serial.print("] Unbekannter Befehl ");
+    Serial.println((int) cmd);
+    for (int i = 0; i < 8; i++) data[i] = 0;
+    Datensumme = 0;
+    Pruf = 0;
+    return;
+  }
 
   if (cmd == 97) {
     uint8_t mac[6];
@@ -123,8 +228,7 @@ void processCommand() {
     Serial.print("OK 24relais ");
     Serial.println(macStr);
   } else if (cmd == 65) {
-    Serial.printf("[Schalten] Relais-Bytes: %d %d %d\n", (int)data[3], (int)data[4], (int)data[5]);
-    schaltenFromBuffer();
+    schaltenFromBuffer(source);
     if (client && client.connected()) {
       client.write("impulsok");
       client.flush();
@@ -147,7 +251,7 @@ void loop() {
   if (client.connected() && client.available() >= 8) {
     for (int i = 0; i < 8; i++)
       data[i] = (byte) client.read();
-    processCommand();
+    processCommand("TCP");
   }
 
   if (server.hasClient()) {
@@ -190,7 +294,7 @@ void loop() {
   while (Serial.available()) {
     for (int i = 0; i < 7; i++) data[i] = data[i + 1];
     data[7] = (byte) Serial.read();
-    processCommand();
+    processCommand("SER");
   }
 
   delay(1);

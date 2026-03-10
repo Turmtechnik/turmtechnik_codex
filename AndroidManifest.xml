@@ -71,18 +71,9 @@
             android:screenOrientation="landscape"
             android:theme="@android:style/Theme.NoTitleBar.Fullscreen"
             android:windowSoftInputMode="adjustResize"
-            android:exported="true"
+            android:exported="false"
             android:showWhenLocked="true"
             android:turnScreenOn="true">
-
-            <!-- android:launchMode="singleTask" -->
-
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN"/>
-
-                <category android:name="android.intent.category.LAUNCHER"/>
-                <category android:name="android.intent.category.DEFAULT"/>
-            </intent-filter>
         </activity>
         <activity
             android:name=".Seite2Activity"
@@ -143,9 +134,28 @@
             android:label="@string/anlage_menue_webui"
             android:screenOrientation="landscape"
             android:windowSoftInputMode="adjustResize"
-            android:exported="false"
+            android:exported="true"
+            android:launchMode="singleTask"
             android:theme="@android:style/Theme.NoTitleBar.Fullscreen">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
+                <category android:name="android.intent.category.LAUNCHER"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+            </intent-filter>
         </activity>
+        <activity-alias
+            android:name=".TurmtechnikHomeActivity"
+            android:enabled="true"
+            android:exported="true"
+            android:icon="@drawable/ic_launcher"
+            android:label="@string/app_name"
+            android:targetActivity=".WebUiActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
+                <category android:name="android.intent.category.HOME"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+            </intent-filter>
+        </activity-alias>
         <activity
             android:name=".DebloatHelperActivity"
             android:label="@string/debloat_titel"

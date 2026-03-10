@@ -2433,6 +2433,7 @@ public class ConfigWebServer {
         try {
             PlatinenDatabaseHelper dbHelper = PlatinenDatabaseHelper.getInstance(context);
             dbHelper.resetToFactoryState();
+            TurmtechnikActivity.restartCoreRuntime(context.getApplicationContext());
             java.util.Map<String, Object> result = new java.util.HashMap<>();
             result.put("success", true);
             result.put("message", "Anlage auf Werkszustand zurückgesetzt. Alle Konfigurationsdaten wurden gelöscht. App ggf. neu starten.");
@@ -2559,6 +2560,14 @@ public class ConfigWebServer {
             }
             List<?> rawList = gson.fromJson(request.body, List.class);
             if (rawList == null) rawList = new java.util.ArrayList<>();
+            PlatinenDatabaseHelper dbHelper = PlatinenDatabaseHelper.getInstance(context);
+            java.util.List<String> oldVerknuepftNames = new java.util.ArrayList<>();
+            for (PlatinenDatabaseHelper.BeschriftungTastenRow oldRow : dbHelper.getBeschriftungTasten()) {
+                String oldType = oldRow.c1 != null ? oldRow.c1.trim() : "";
+                if ("verknuepft".equalsIgnoreCase(oldType) || "VerknÃ¼pft".equals(oldType)) {
+                    oldVerknuepftNames.add(oldRow.c2 != null ? oldRow.c2.trim() : "");
+                }
+            }
             java.util.List<PlatinenDatabaseHelper.BeschriftungTastenRow> rows = new java.util.ArrayList<>();
             java.util.List<String> sofortMelodien = new java.util.ArrayList<>();
             for (int i = 0; i < rawList.size(); i++) {
@@ -2595,12 +2604,13 @@ public class ConfigWebServer {
             final int SOFORT_BASE = 3001;
             int verknuepftCount = 0;
             int sofortCount = 0;
-            PlatinenDatabaseHelper dbHelper = PlatinenDatabaseHelper.getInstance(context);
+            java.util.List<String> newVerknuepftNames = new java.util.ArrayList<>();
             for (int i = 0; i < rows.size(); i++) {
                 PlatinenDatabaseHelper.BeschriftungTastenRow r = rows.get(i);
                 String c1 = r.c1 != null ? r.c1.trim() : "";
                 if ("verknuepft".equalsIgnoreCase(c1) || "Verknüpft".equals(c1)) {
                     r.c3 = String.valueOf(VERKNUEPFT_BASE + verknuepftCount++);
+                    newVerknuepftNames.add(r.c2 != null ? r.c2.trim() : "");
                 } else if ("Sofort Start".equalsIgnoreCase(c1)) {
                     r.c3 = String.valueOf(SOFORT_BASE + sofortCount);
                     String melodie = (i < sofortMelodien.size() && sofortMelodien.get(i) != null) ? sofortMelodien.get(i).trim() : "";
@@ -2612,6 +2622,14 @@ public class ConfigWebServer {
                 }
             }
             dbHelper.replaceBeschriftungTasten(rows);
+            int renamePairs = Math.min(oldVerknuepftNames.size(), newVerknuepftNames.size());
+            for (int i = 0; i < renamePairs; i++) {
+                String oldName = oldVerknuepftNames.get(i) != null ? oldVerknuepftNames.get(i).trim() : "";
+                String newName = newVerknuepftNames.get(i) != null ? newVerknuepftNames.get(i).trim() : "";
+                if (!oldName.isEmpty() && !newName.isEmpty() && !oldName.equals(newName)) {
+                    dbHelper.renameVerknuepfteTasteInProgrammen(oldName, newName);
+                }
+            }
             Map<String, Object> resp = new HashMap<>();
             resp.put("success", true);
             resp.put("count", rows.size());
@@ -2886,6 +2904,7 @@ public class ConfigWebServer {
             if (ctx == null) {
                 return new SimpleHttpServer.HttpResponse(503, "application/json", "{\"success\":false,\"error\":\"Kontext nicht verfügbar\"}");
             }
+            TurmtechnikActivity.ensureCoreRuntimeStarted(ctx);
             PlatinenDatabaseHelper dbHelper = PlatinenDatabaseHelper.getInstance(ctx);
             String melodieName = dbHelper.getConfigValue("sofort_melodie_" + index);
             java.util.Calendar now = java.util.Calendar.getInstance();
@@ -3690,11 +3709,10 @@ public class ConfigWebServer {
             if (on == null) {
                 return new SimpleHttpServer.HttpResponse(400, "application/json", "{\"success\":false,\"error\":\"Body muss { \\\"on\\\": true oder false } enthalten\"}");
             }
-            if (TurmtechnikActivity.turmtechnikActivityInstance == null) {
-                return new SimpleHttpServer.HttpResponse(503, "application/json", "{\"success\":false,\"error\":\"App-Activity nicht aktiv (Web kann Automatik erst \u00fcbergeben, wenn die App ge\u00f6ffnet ist)\"}");
-            }
             touchUserInteractionTimers();
-            TurmtechnikActivity.setAutomaticFromWeb(null, on);
+            android.content.Context ctx = TurmtechnikActivity.turmtechnikContext != null ? TurmtechnikActivity.turmtechnikContext : context;
+            TurmtechnikActivity.ensureCoreRuntimeStarted(ctx);
+            TurmtechnikActivity.setAutomaticFromWeb(ctx, on);
             return new SimpleHttpServer.HttpResponse(200, "application/json", "{\"success\":true,\"on\":" + on + "}");
         } catch (Exception e) {
             Log.e(TAG, "Fehler bei PUT /api/control/automatic", e);
@@ -3710,11 +3728,10 @@ public class ConfigWebServer {
             if (gridIndex == null || gridIndex < 0 || gridIndex >= TurmtechnikActivity.RELAIS_COUNT) {
                 return new SimpleHttpServer.HttpResponse(400, "application/json", "{\"success\":false,\"error\":\"Body muss { \\\"gridIndex\\\": 0..47 } oder eine gueltige \\\"buttonId\\\" enthalten\"}");
             }
-            if (TurmtechnikActivity.turmtechnikActivityInstance == null) {
-                return new SimpleHttpServer.HttpResponse(503, "application/json", "{\"success\":false,\"error\":\"App-Activity nicht aktiv\"}");
-            }
             touchUserInteractionTimers();
-            TurmtechnikActivity.triggerKeyFromWeb(null, gridIndex);
+            android.content.Context ctx = TurmtechnikActivity.turmtechnikContext != null ? TurmtechnikActivity.turmtechnikContext : context;
+            TurmtechnikActivity.ensureCoreRuntimeStarted(ctx);
+            TurmtechnikActivity.triggerKeyFromWeb(ctx, gridIndex);
             return new SimpleHttpServer.HttpResponse(200, "application/json", "{\"success\":true,\"gridIndex\":" + gridIndex + "}");
         } catch (Exception e) {
             Log.e(TAG, "Fehler bei POST /api/control/key", e);
@@ -4345,15 +4362,16 @@ public class ConfigWebServer {
                 "        .app-header-firmware { font-size: clamp(0.65rem, 1.5vh, 0.75rem); color: var(--tt-muted); font-family: ui-monospace, monospace; }\n" +
                 "        .app-nav-link { font-size: 0.75rem; color: var(--tt-muted); text-decoration: none; margin-right: 0.5rem; }\n" +
                 "        .app-nav-link:hover { color: var(--tt-accent); }\n" +
-                "        .app-page-main { flex: 1; display: flex; flex-direction: column; min-height: 0; padding: 3.5rem 1rem 0.5rem 1rem; }\n" +
-                "        .app-grid { display: grid; gap: 0.5rem; width: 100%; height: 55vh; min-height: 200px; cursor: pointer; touch-action: manipulation; box-sizing: border-box; grid-auto-flow: dense; }\n" +
-                "        .app-cell { background: var(--tt-card); border: 2px solid var(--tt-border); border-radius: 8px; padding: 0.4rem; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; box-sizing: border-box; min-height: 44px; transition: box-shadow 0.1s, outline 0.1s; -webkit-tap-highlight-color: rgba(201,162,39,0.25); touch-action: manipulation; }\n" +
+                "        .app-page-main { flex: 1; display: flex; flex-direction: column; min-height: 0; padding: 3.5rem 1rem 0.5rem 1rem; overflow: hidden; }\n" +
+                "        .app-grid-wrap { flex: 1; min-height: 0; display: flex; overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling: touch; overscroll-behavior-y: contain; touch-action: pan-y; padding: 0 0.15rem 1rem 0.15rem; }\n" +
+                "        .app-grid { display: grid; gap: 0.7rem; width: 100%; height: auto; min-height: 100%; cursor: pointer; touch-action: pan-y manipulation; box-sizing: border-box; grid-auto-flow: dense; align-content: start; }\n" +
+                "        .app-cell { background: var(--tt-card); border: 2px solid var(--tt-border); border-radius: 8px; padding: 0.35rem; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; box-sizing: border-box; min-height: 72px; transition: box-shadow 0.1s, outline 0.1s; -webkit-tap-highlight-color: rgba(201,162,39,0.25); touch-action: pan-y manipulation; }\n" +
                 "        .app-cell:hover { outline: 2px solid var(--tt-accent); outline-offset: 2px; box-shadow: 0 0 0 1px var(--tt-accent); }\n" +
                 "        .app-cell.leer { background: var(--tt-bg); border: none; color: var(--tt-bg); }\n" +
                 "        .app-cell.leer:hover { outline: none; box-shadow: none; }\n" +
                 "        .app-cell.leer .label, .app-cell.leer .typ { color: var(--tt-bg); }\n" +
                 "        .app-cell .label { font-size: clamp(0.65rem, 1.8vh, 1rem); font-weight: 500; line-height: 1.2; color: var(--tt-text); }\n" +
-                "        .app-cell .typ { font-size: clamp(0.55rem, 1.4vh, 0.75rem); color: var(--tt-muted); margin-top: 0.15rem; }\n" +
+                "        .app-cell .typ { display: none !important; }\n" +
                 "        .app-cell.btn-action { cursor: pointer; transition: box-shadow 0.1s, outline 0.1s; }\n" +
                 "        .app-cell.cell-funktion-sofort { border-color: #17a2b8; }\n" +
                 "        .app-cell.cell-funktion-verknuepft { border-color: #152a45; background: var(--tt-card) !important; }\n" +
@@ -4395,8 +4413,8 @@ public class ConfigWebServer {
                 "        .tt-modal .btn-outline-secondary { background: transparent; color: var(--tt-muted); border: 1px solid var(--tt-border); }\n" +
                 "        .tt-modal .btn-outline-secondary:hover { color: var(--tt-text); border-color: var(--tt-accent); }\n" +
                 "        .tt-modal .tt-modal-berechnung { font-size: 0.8rem; color: var(--tt-muted); margin-top: 0.6rem; padding: 0.4rem; background: var(--tt-surface); border-radius: 4px; white-space: normal; word-break: break-word; }\n" +
-                "        @media (max-width: 767px) { .tt-header { height: 22vh; min-height: 22vh; } .app-header-moon { width: clamp(2.5rem, 10vh, 5rem); height: clamp(2.5rem, 10vh, 5rem); } .app-uhr { font-size: clamp(3rem, 14vh, 8rem); } .app-info-text { font-size: clamp(0.75rem, 2vh, 1rem); } .app-datum { font-size: clamp(0.8rem, 2vh, 1rem); } .app-wochentag { font-size: clamp(0.9rem, 2.5vh, 1.1rem); } .app-grid { height: 55vh; } .app-cell .label { font-size: clamp(0.6rem, 1.8vh, 0.95rem); } .app-cell .typ { font-size: clamp(0.5rem, 1.4vh, 0.7rem); } .app-cell .verknuepft-state, .app-cell .sofort-time-display { font-size: clamp(0.75rem, 2.2vh, 1rem); } }\n" +
-                "        @media (min-width: 768px) and (min-height: 500px) { .tt-header { height: min(25vh, 160px); min-height: min(25vh, 160px); } .app-header-moon { width: min(12vh, 5rem); height: min(12vh, 5rem); } .app-uhr { font-size: min(20vh, 5.5rem); } .app-info-text { font-size: min(2.2vh, 1rem); } .app-datum, .app-wochentag { font-size: min(2.2vh, 1rem); } .app-wochentag { font-size: min(2.8vh, 1.15rem); } .app-grid { height: min(55vh, 380px); } .app-cell .label { font-size: min(1.8vh, 0.9rem); } .app-cell .typ { font-size: min(1.4vh, 0.7rem); } .app-cell .verknuepft-state, .app-cell .sofort-time-display { font-size: min(2.5vh, 1rem); } }\n" +
+                "        @media (max-width: 767px) { .tt-header { height: 22vh; min-height: 22vh; } .app-header-moon { width: clamp(2.5rem, 10vh, 5rem); height: clamp(2.5rem, 10vh, 5rem); } .app-uhr { font-size: clamp(3rem, 14vh, 8rem); } .app-info-text { font-size: clamp(0.75rem, 2vh, 1rem); } .app-datum { font-size: clamp(0.8rem, 2vh, 1rem); } .app-wochentag { font-size: clamp(0.9rem, 2.5vh, 1.1rem); } .app-cell { min-height: 68px; } .app-cell .label { font-size: clamp(0.6rem, 1.8vh, 0.95rem); } .app-cell .typ { font-size: clamp(0.5rem, 1.4vh, 0.7rem); } .app-cell .verknuepft-state, .app-cell .sofort-time-display { font-size: clamp(0.75rem, 2.2vh, 1rem); } }\n" +
+                "        @media (min-width: 768px) and (min-height: 500px) { .tt-header { height: min(25vh, 160px); min-height: min(25vh, 160px); } .app-header-moon { width: min(12vh, 5rem); height: min(12vh, 5rem); } .app-uhr { font-size: min(20vh, 5.5rem); } .app-info-text { font-size: min(2.2vh, 1rem); } .app-datum, .app-wochentag { font-size: min(2.2vh, 1rem); } .app-wochentag { font-size: min(2.8vh, 1.15rem); } .app-cell { min-height: 82px; } .app-cell .label { font-size: min(1.8vh, 0.9rem); } .app-cell .typ { font-size: min(1.4vh, 0.7rem); } .app-cell .verknuepft-state, .app-cell .sofort-time-display { font-size: min(2.5vh, 1rem); } }\n" +
                 "    </style>\n" +
                 "</head>\n" +
                 "<body class=\"app-seite-page\" data-app-page=\"" + page + "\">\n" +
@@ -4446,7 +4464,7 @@ public class ConfigWebServer {
                 "    </header>\n" +
                 "    <main class=\"app-page-main\">\n" +
                 "        <div id=\"statusMessage\" class=\"alert\" style=\"display:none;\" aria-live=\"polite\"></div>\n" +
-                "        <div class=\"app-grid-wrap\" style=\"flex:1; min-height:0; display:flex;\">\n" +
+                "        <div class=\"app-grid-wrap\">\n" +
                 "        <div id=\"tastenGrid\" class=\"app-grid\">Lade Tasten…</div>\n" +
                 "        </div>\n" +
                 "    </main>\n" +
@@ -4458,7 +4476,7 @@ public class ConfigWebServer {
                 "        function uhrAktualisieren(){ var n=new Date(); var t=n.toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit',second:'2-digit'}); var p=t.split(':'); var hms=document.getElementById('uhrHMS'); var sek=document.getElementById('uhrSekunden'); if(hms) hms.textContent=(p[0]||'--')+':'+(p[1]||'--'); if(sek) sek.textContent=':'+(p[2]||'--'); var datumEl=document.getElementById('datum'); if(datumEl) datumEl.textContent=n.toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit',year:'numeric'}); var wtEl=document.getElementById('wochentag'); if(wtEl) wtEl.textContent=n.toLocaleDateString('de-DE',{weekday:'long'}); }\n" +
                 "        function infoTextAktualisieren(){ fetch('/api/info-text').then(function(r){ return r.json(); }).then(function(d){ var el=document.getElementById('appInfoText'); if(el&&d.text!==undefined) el.textContent=d.text||''; var dauerEl=document.getElementById('appDauer'); if(dauerEl) dauerEl.textContent=(d.currentMelodieZeileDauer!=null)?String(d.currentMelodieZeileDauer).trim()||'\u2013':'\u2013'; var relaisEl=document.getElementById('appRelaisAnzeige'); if(relaisEl){ var n=Math.max(0,parseInt(d.anzahlGlocken,10)||16); n=Math.min(16,n); var relais=Array.isArray(d.currentMelodieZeileRelais)?d.currentMelodieZeileRelais:[]; var vorschwing=Array.isArray(d.currentMelodieZeileVorschwing)?d.currentMelodieZeileVorschwing:[]; var cols=''; for(var c=0;c<n;c++) cols+=(c?' ':'')+'1.5em'; relaisEl.style.gridTemplateColumns=cols; relaisEl.style.gridTemplateRows='0.95em 0.95em 0.95em'; relaisEl.innerHTML=''; for(var i=0;i<n;i++){ var cell=document.createElement('div'); cell.className='relais-cell'; var dot=document.createElement('span'); dot.className='relais-dot '+(vorschwing[i]==1?'ein':'aus'); cell.appendChild(dot); relaisEl.appendChild(cell); } for(var j=0;j<n;j++){ var cell2=document.createElement('div'); cell2.className='relais-cell'; var lbl=document.createElement('span'); lbl.className='relais-label'; lbl.textContent='G'+(j+1); cell2.appendChild(lbl); relaisEl.appendChild(cell2); } for(var k=0;k<n;k++){ var cell3=document.createElement('div'); cell3.className='relais-cell'; var dot3=document.createElement('span'); dot3.className='relais-dot '+(relais[k]==1?'ein':'aus'); cell3.appendChild(dot3); relaisEl.appendChild(cell3); } } }).catch(function(){}); }\n" +
                 "        function drawMoonAppHeader(canvasId, impulse){ var c=document.getElementById(canvasId); if(!c||!c.getContext) return; impulse=Math.max(0,Math.min(59,parseInt(impulse,10)||0)); var w=c.width,h=c.height,cx=w/2,cy=h/2,r=Math.min(w,h)/2-3; var ctx=c.getContext('2d'); var phase=(impulse<=30)?impulse/30:1-(impulse-30)/30; if(phase<0) phase=0; ctx.fillStyle='#222222'; ctx.beginPath(); ctx.arc(cx,cy,r,0,Math.PI*2); ctx.fill(); ctx.fillStyle='#FFF1C1'; for(var i=-r;i<=r;i++){ var y=Math.sqrt(r*r-i*i); if(isNaN(y)) continue; var xL=cx-y,xR=cx+y; if(impulse<=30){ var xEdge=xR-(xR-xL)*phase; ctx.fillRect(xEdge,cy+i,xR-xEdge,1); } else { var xEdge=xL+(xR-xL)*phase; ctx.fillRect(xL,cy+i,xEdge-xL,1); } } ctx.strokeStyle='#555555'; ctx.lineWidth=2; ctx.beginPath(); ctx.arc(cx,cy,r,0,Math.PI*2); ctx.stroke(); }\n" +
-                "        function loadMoonPhase(){ fetch('/api/nebenuhren').then(function(r){ return r.json(); }).then(function(d){ var list=d.nebenuhren||[]; var useAktuell=true; for(var i=0;i<list.length;i++){ if(list[i].zeile===6&&list[i].aktiv){ var ph=list[i].mondphaseIst; drawMoonAppHeader('appHeaderMoon',ph!=null?ph:0); useAktuell=false; break; } } if(useAktuell){ fetch('/api/mondphase-aktuell').then(function(r2){ return r2.json(); }).then(function(d2){ var ph=d2.mondphase!=null?d2.mondphase:0; drawMoonAppHeader('appHeaderMoon',ph); }).catch(function(){ drawMoonAppHeader('appHeaderMoon',0); }); } }).catch(function(){ fetch('/api/mondphase-aktuell').then(function(r){ return r.json(); }).then(function(d){ drawMoonAppHeader('appHeaderMoon',d.mondphase!=null?d.mondphase:0); }).catch(function(){ drawMoonAppHeader('appHeaderMoon',0); }); }); }\n" +
+                "        function loadMoonPhase(){ fetch('/api/nebenuhren').then(function(r){ return r.json(); }).then(function(d){ var list=d.nebenuhren||[]; var useAktuell=true; for(var i=0;i<list.length;i++){ var relaisA=parseInt(list[i].relaisA,10)||0; var relaisB=parseInt(list[i].relaisB,10)||0; if(list[i].zeile===6&&list[i].aktiv&&(relaisA>0||relaisB>0)){ var ph=list[i].mondphaseIst; drawMoonAppHeader('appHeaderMoon',ph!=null?ph:0); useAktuell=false; break; } } if(useAktuell){ fetch('/api/mondphase-aktuell').then(function(r2){ return r2.json(); }).then(function(d2){ var ph=d2.mondphase!=null?d2.mondphase:0; drawMoonAppHeader('appHeaderMoon',ph); }).catch(function(){ drawMoonAppHeader('appHeaderMoon',0); }); } }).catch(function(){ fetch('/api/mondphase-aktuell').then(function(r){ return r.json(); }).then(function(d){ drawMoonAppHeader('appHeaderMoon',d.mondphase!=null?d.mondphase:0); }).catch(function(){ drawMoonAppHeader('appHeaderMoon',0); }); }); }\n" +
                 "        function loadDeviceIp(){ fetch('/api/device-ip').then(function(r){ return r.json(); }).then(function(d){ var el=document.getElementById('appHeaderIp'); if(el) el.textContent=d.ip||''; var tsEl=document.getElementById('appHeaderTailscale'); if(tsEl){ var ts=d.tailscale||''; if(ts){ tsEl.textContent='Tailscale: '+ts; tsEl.style.display='block'; } else { tsEl.textContent=''; tsEl.style.display='none'; } } var fwEl=document.getElementById('appHeaderFirmware'); if(fwEl) fwEl.textContent=(d.version?'Firmware '+d.version:''); }).catch(function(){}); }\n" +
                 "        function openConfigGate(){ document.getElementById('configGatePw').value=''; document.getElementById('configGateErr').style.display='none'; document.getElementById('configGateModal').classList.add('show'); document.getElementById('configGatePw').focus(); }\n" +
                 "        function closeConfigGate(){ document.getElementById('configGateModal').classList.remove('show'); }\n" +
@@ -4491,7 +4509,7 @@ public class ConfigWebServer {
                 "        var soforttastenList = [];\n" +
                 "        function getPageLayoutMap(layoutItems){ var map={}; (Array.isArray(layoutItems)?layoutItems:[]).forEach(function(item){ var page=item&&item.pageNummer!=null?item.pageNummer:item&&item.page_nummer; var slot=item&&item.slotIndex!=null?item.slotIndex:item&&item.slot_index; if(parseInt(page,10)===PAGE_NUM && slot!=null){ map[parseInt(slot,10)||0]=item; } }); return map; }\n" +
                 "        function getLayoutValue(item, camelKey, snakeKey, fallback){ if(!item) return fallback; var value=item[camelKey]; if(value==null && snakeKey) value=item[snakeKey]; return value==null?fallback:value; }\n" +
-                "        function applyGridGeometry(g, layoutMap, layoutSettings){ var cols=Math.max(2, parseInt(layoutSettings&&layoutSettings.cols,10)||6); var maxCol=cols; var maxRow=0; for(var pageSlot=0; pageSlot<(PAGE_END-PAGE_START); pageSlot++){ var item=layoutMap[pageSlot]||null; var col=Math.max(0, parseInt(getLayoutValue(item,'gridCol','grid_col', pageSlot % cols),10)||0); var row=Math.max(0, parseInt(getLayoutValue(item,'gridRow','grid_row', Math.floor(pageSlot / cols)),10)||0); var width=Math.max(1, parseInt(getLayoutValue(item,'gridWidth','grid_width',1),10)||1); var height=Math.max(1, parseInt(getLayoutValue(item,'gridHeight','grid_height',1),10)||1); if(col + width > maxCol) maxCol = col + width; if(row + height > maxRow) maxRow = row + height; } if(maxRow < 1) maxRow = Math.max(1, Math.ceil((PAGE_END - PAGE_START) / Math.max(1, maxCol))); g.style.gridTemplateColumns='repeat('+maxCol+', minmax(0, 1fr))'; g.style.gridTemplateRows='repeat('+maxRow+', minmax(0, 1fr))'; }\n" +
+                "        function applyGridGeometry(g, layoutMap, layoutSettings){ var cols=Math.max(2, parseInt(layoutSettings&&layoutSettings.cols,10)||6); var maxCol=cols; var maxRow=0; for(var pageSlot=0; pageSlot<(PAGE_END-PAGE_START); pageSlot++){ var item=layoutMap[pageSlot]||null; var col=Math.max(0, parseInt(getLayoutValue(item,'gridCol','grid_col', pageSlot % cols),10)||0); var row=Math.max(0, parseInt(getLayoutValue(item,'gridRow','grid_row', Math.floor(pageSlot / cols)),10)||0); var width=Math.max(1, parseInt(getLayoutValue(item,'gridWidth','grid_width',1),10)||1); var height=Math.max(1, parseInt(getLayoutValue(item,'gridHeight','grid_height',1),10)||1); if(col + width > maxCol) maxCol = col + width; if(row + height > maxRow) maxRow = row + height; } if(maxRow < 1) maxRow = Math.max(1, Math.ceil((PAGE_END - PAGE_START) / Math.max(1, maxCol))); var wrap=document.querySelector('.app-grid-wrap'); var wrapHeight=wrap&&wrap.clientHeight?wrap.clientHeight:0; var rowMinPx=Math.max(72, Math.floor(wrapHeight / 4)); g.style.gridTemplateColumns='repeat('+maxCol+', minmax(0, 1fr))'; g.style.gridTemplateRows='repeat('+maxRow+', minmax('+rowMinPx+'px, auto))'; }\n" +
                 "        function loadGrid(){ Promise.all([ fetch('/api/beschriftung-tasten').then(function(r){ return r.json(); }), fetch('/api/verknuepfte-tasten').then(function(r){ return r.json(); }), fetch('/api/control/keys-state').then(function(r){ return r.json(); }).catch(function(){ return {on:[]}; }), fetch('/api/soforttasten').then(function(r){ return r.json(); }).catch(function(){ return []; }), fetch('/api/control/automatic').then(function(r){ return r.json(); }).catch(function(){ return {}; }), fetch('/api/layout-items').then(function(r){ return r.json(); }).catch(function(){ return []; }), fetch('/api/layout-grid-settings').then(function(r){ return r.json(); }).catch(function(){ return { cols:6, rows:8 }; }) ]).then(function(arr){\n" +
                 "            var grid = Array.isArray(arr[0]) ? arr[0] : []; verknuepfteTastenList = Array.isArray(arr[1]) ? arr[1] : []; keysOnList = Array.isArray(arr[2] && arr[2].on) ? arr[2].on : []; soforttastenList = Array.isArray(arr[3]) ? arr[3] : []; var autoState = arr[4] || {}; var layoutItems = Array.isArray(arr[5]) ? arr[5] : []; var layoutSettings = arr[6] || {}; automatikOn = !!(autoState && (autoState.on === true || autoState.on === 'true' || autoState.on === 1));\n" +
                 "            renderGrid(grid, layoutItems, layoutSettings);\n" +
@@ -4511,7 +4529,8 @@ public class ConfigWebServer {
                 "                if (c1 === 'Sofort Start') {\n" +
                 "                    cell.classList.add('cell-funktion-sofort');\n" +
                 "                    var sofortIdx = sofortIndexVor(grid, i);\n" +
-                "                    var hasMel = (slot.sofort_melodie || '').trim().length > 0;\n" +
+                "                    var sofortMelodieName = ((slot.sofort_melodie || '').trim()) || ((soforttastenList[sofortIdx] && soforttastenList[sofortIdx].melodieName) ? String(soforttastenList[sofortIdx].melodieName).trim() : '');\n" +
+                "                    var hasMel = sofortMelodieName.length > 0;\n" +
                 "                    var startzeit = (slot.sofort_startzeit && slot.sofort_startzeit.trim()) ? slot.sofort_startzeit.trim() : ((soforttastenList[sofortIdx] && soforttastenList[sofortIdx].startzeit) ? (soforttastenList[sofortIdx].startzeit || '').trim() : '');\n" +
                 "                    if (startzeit) savedStartzeiten[sofortIdx] = startzeit;\n" +
                 "                    var disp = startzeit || savedStartzeiten[sofortIdx] || '';\n" +
@@ -4582,7 +4601,7 @@ public class ConfigWebServer {
                 "                if (act === 'stop') { stopAlle(); return; }\n" +
                 "                if (act === 'automatik') { toggleAutomatik(cell); return; }\n" +
                 "                if (act === 'verknuepft') { var vidx = parseInt(cell.getAttribute('data-verknuepft-idx'), 10); if (!isNaN(vidx)) toggleVerknuepft(vidx, cell); return; }\n" +
-                "                if (act === 'sofort') { var sidx = parseInt(cell.getAttribute('data-sofort-idx'), 10); var canOpen = cell.getAttribute('data-sofort-canopen') === '1'; if (!isNaN(sidx) && canOpen) openTimepicker(sidx); return; }\n" +
+                "                if (act === 'sofort') { var sidx = parseInt(cell.getAttribute('data-sofort-idx'), 10); var canOpen = cell.getAttribute('data-sofort-canopen') === '1'; if (!isNaN(sidx) && canOpen) { openTimepicker(sidx); } else { showStatus('Soforttaste hat noch keine Melodie', 'danger'); } return; }\n" +
                 "                if (act === 'goto-page1') { window.location.href='/app-seite1.html'; return; }\n" +
                 "                if (act === 'goto-page2') { window.location.href='/app-seite2.html'; return; }\n" +
                 "                if (act === 'programm-abfrage') { window.location.href='/programm-abfrage.html'; return; }\n" +
@@ -5067,9 +5086,93 @@ public class ConfigWebServer {
                 "    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n" +
                 "    <title>Daten sichern &amp; Import - Turmtechnik</title>\n" +
                 "    <link href=\"https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css\" rel=\"stylesheet\">\n" +
+                "    <style>\n" +
+                "        :root {\n" +
+                "            --tt-bg: #0f1115;\n" +
+                "            --tt-surface: #171b22;\n" +
+                "            --tt-surface-2: #1f2530;\n" +
+                "            --tt-border: #313949;\n" +
+                "            --tt-text: #edf2f7;\n" +
+                "            --tt-muted: #aab4c3;\n" +
+                "            --tt-accent: #3ea6ff;\n" +
+                "            --tt-warning: #ffb84d;\n" +
+                "            --tt-danger: #ff6b6b;\n" +
+                "            --tt-success: #5fd18c;\n" +
+                "        }\n" +
+                "        body {\n" +
+                "            background: radial-gradient(circle at top, #1b2230 0%, var(--tt-bg) 42%);\n" +
+                "            color: var(--tt-text);\n" +
+                "            min-height: 100vh;\n" +
+                "        }\n" +
+                "        .navbar {\n" +
+                "            background: rgba(12, 15, 21, 0.94) !important;\n" +
+                "            border-bottom: 1px solid rgba(255, 255, 255, 0.08);\n" +
+                "            backdrop-filter: blur(10px);\n" +
+                "        }\n" +
+                "        .card {\n" +
+                "            background: linear-gradient(180deg, rgba(27, 33, 43, 0.96), rgba(20, 24, 32, 0.96));\n" +
+                "            border: 1px solid var(--tt-border);\n" +
+                "            box-shadow: 0 18px 36px rgba(0, 0, 0, 0.22);\n" +
+                "        }\n" +
+                "        .card-header {\n" +
+                "            background: rgba(255, 255, 255, 0.04);\n" +
+                "            color: var(--tt-text);\n" +
+                "            border-bottom: 1px solid var(--tt-border);\n" +
+                "            font-weight: 600;\n" +
+                "        }\n" +
+                "        .text-muted {\n" +
+                "            color: var(--tt-muted) !important;\n" +
+                "        }\n" +
+                "        a {\n" +
+                "            color: var(--tt-accent);\n" +
+                "        }\n" +
+                "        .form-control {\n" +
+                "            background: rgba(255, 255, 255, 0.05);\n" +
+                "            border: 1px solid var(--tt-border);\n" +
+                "            color: var(--tt-text);\n" +
+                "        }\n" +
+                "        .form-control:focus {\n" +
+                "            background: rgba(255, 255, 255, 0.08);\n" +
+                "            color: var(--tt-text);\n" +
+                "            border-color: var(--tt-accent);\n" +
+                "            box-shadow: 0 0 0 0.2rem rgba(62, 166, 255, 0.2);\n" +
+                "        }\n" +
+                "        .form-control::file-selector-button {\n" +
+                "            background: rgba(255, 255, 255, 0.08);\n" +
+                "            color: var(--tt-text);\n" +
+                "            border: none;\n" +
+                "            margin-right: 0.75rem;\n" +
+                "        }\n" +
+                "        code {\n" +
+                "            background: rgba(255, 255, 255, 0.08);\n" +
+                "            color: #ffd479;\n" +
+                "            padding: 0.1rem 0.35rem;\n" +
+                "            border-radius: 0.35rem;\n" +
+                "        }\n" +
+                "        .btn-primary {\n" +
+                "            background: linear-gradient(135deg, #2b7fd0, #3ea6ff);\n" +
+                "            border-color: transparent;\n" +
+                "        }\n" +
+                "        .btn-outline-primary,\n" +
+                "        .btn-outline-secondary,\n" +
+                "        .btn-outline-danger {\n" +
+                "            border-width: 1px;\n" +
+                "        }\n" +
+                "        #turmtechnikFilesList ul {\n" +
+                "            padding-left: 0;\n" +
+                "        }\n" +
+                "        #turmtechnikFilesList li {\n" +
+                "            list-style: none;\n" +
+                "            padding: 0.35rem 0;\n" +
+                "            border-bottom: 1px solid rgba(255, 255, 255, 0.06);\n" +
+                "        }\n" +
+                "        #turmtechnikFilesList li:last-child {\n" +
+                "            border-bottom: none;\n" +
+                "        }\n" +
+                "    </style>\n" +
                 "</head>\n" +
                 "<body>\n" +
-                "    <nav class=\"navbar navbar-expand-lg navbar-dark bg-dark\">\n" +
+                "    <nav class=\"navbar navbar-expand-lg navbar-dark\">\n" +
                 "        <div class=\"container-fluid\">\n" +
                 "            <a class=\"navbar-brand\" href=\"/\">Turmtechnik</a>\n" +
                 "            <div class=\"navbar-nav\">\n" +
@@ -5629,6 +5732,15 @@ public class ConfigWebServer {
                 "        .export-section { margin-bottom: 2rem; page-break-inside: avoid; }\n" +
                 "        .export-section h2 { border-bottom: 1px solid #dee2e6; padding-bottom: 0.25rem; }\n" +
                 "        table.export-table { font-size: 0.9rem; }\n" +
+                "        .relay-badge { display:inline-block; min-width:2.2rem; padding:0.08rem 0.45rem; border-radius:999px; font-weight:600; text-align:center; color:#111; border:1px solid rgba(0,0,0,0.14); }\n" +
+                "        .relay-nebenuhr { background:#7dd3fc; }\n" +
+                "        .relay-mond { background:#c4b5fd; }\n" +
+                "        .relay-vorschwingen { background:#86efac; }\n" +
+                "        .relay-laeuten { background:#fca5a5; }\n" +
+                "        .relay-schlagwerk { background:#fcd34d; }\n" +
+                "        .relay-melodie { background:#fdba74; }\n" +
+                "        .relay-sofort { background:#f9a8d4; }\n" +
+                "        .relay-default { background:#d1d5db; }\n" +
                 "    </style>\n" +
                 "</head>\n" +
                 "<body>\n" +
@@ -5645,6 +5757,30 @@ public class ConfigWebServer {
                 "    </div>\n" +
                 "    <script>\n" +
                 "        function esc(s) { if (s == null || s === undefined) return ''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\"/g,'&quot;'); }\n" +
+                "        function relayClass(kind) {\n" +
+                "            var k = String(kind || '').toLowerCase();\n" +
+                "            if (k.indexOf('mond') >= 0) return 'relay-mond';\n" +
+                "            if (k.indexOf('nebenuhr') >= 0) return 'relay-nebenuhr';\n" +
+                "            if (k.indexOf('vorschwingen') >= 0 || k.indexOf('schwingen') >= 0) return 'relay-vorschwingen';\n" +
+                "            if (k.indexOf('läuten') >= 0 || k.indexOf('laeuten') >= 0 || k.indexOf('klöppel') >= 0 || k.indexOf('kloeppel') >= 0) return 'relay-laeuten';\n" +
+                "            if (k.indexOf('schlag') >= 0 || k.indexOf('hammer') >= 0) return 'relay-schlagwerk';\n" +
+                "            if (k.indexOf('melodie') >= 0 || k.indexOf('midi') >= 0) return 'relay-melodie';\n" +
+                "            if (k.indexOf('sofort') >= 0) return 'relay-sofort';\n" +
+                "            return 'relay-default';\n" +
+                "        }\n" +
+                "        function relayBadge(value, kind) {\n" +
+                "            if (value == null || value === undefined || value === '' || value === 0 || value === '0') return '–';\n" +
+                "            return '<span class=\"relay-badge ' + relayClass(kind) + '\">' + esc(value) + '</span>';\n" +
+                "        }\n" +
+                "        function buttonRelayType(row) {\n" +
+                "            var fn = String(row && row.c1 || '');\n" +
+                "            if (fn === 'Sofort Start') return 'Sofort';\n" +
+                "            if (fn === 'Melodie') return 'Melodie';\n" +
+                "            if (fn === 'Schwingen') return 'Vorschwingen';\n" +
+                "            if (fn === 'Läuten' || fn === 'Laeuten' || fn === 'Klöppel' || fn === 'Kloeppel') return 'Läuten';\n" +
+                "            if (fn === 'Hammer') return 'Schlagwerk';\n" +
+                "            return fn || 'Relais';\n" +
+                "        }\n" +
                 "        function dayFlags(p) {\n" +
                 "            var a = [];\n" +
                 "            if (p.montag) a.push('Mo'); if (p.dienstag) a.push('Di'); if (p.mittwoch) a.push('Mi'); if (p.donnerstag) a.push('Do');\n" +
@@ -5710,7 +5846,7 @@ public class ConfigWebServer {
                 "                html += '<div class=\"export-section\"><h2>Beschriftung Tasten</h2>';\n" +
                 "                if (Array.isArray(bt) && bt.length) {\n" +
                 "                    html += '<table class=\"table table-sm export-table\"><thead><tr><th>Index</th><th>Funktion</th><th>Beschriftung</th><th>Zusatz</th><th>Sound</th></tr></thead><tbody>';\n" +
-                "                    bt.forEach(function(r, i){ html += '<tr><td>' + i + '</td><td>' + esc(r.c1) + '</td><td>' + esc(r.c2) + '</td><td>' + esc(r.c3) + '</td><td>' + esc(r.sound) + '</td></tr>'; });\n" +
+                "                    bt.forEach(function(r, i){ var extra = esc(r.c3); if (/^\\d+$/.test(String(r.c3 || '')) && parseInt(r.c3, 10) > 0) { extra = relayBadge(r.c3, buttonRelayType(r)); } html += '<tr><td>' + i + '</td><td>' + esc(r.c1) + '</td><td>' + esc(r.c2) + '</td><td>' + extra + '</td><td>' + esc(r.sound) + '</td></tr>'; });\n" +
                 "                    html += '</tbody></table>';\n" +
                 "                } else { html += '<p>Keine Tasten konfiguriert.</p>'; }\n" +
                 "                html += '</div>';\n" +
@@ -5720,8 +5856,8 @@ public class ConfigWebServer {
                 "                var nebenuhren = nb.nebenuhren || [];\n" +
                 "                html += '<div class=\"export-section\"><h2>Nebenuhr-Konfiguration</h2>';\n" +
                 "                if (nebenuhren.length) {\n" +
-                "                    html += '<table class=\"table table-sm export-table\"><thead><tr><th>Uhr</th><th>Zeile</th><th>Modus</th><th>Relais A</th><th>Relais B</th><th>Impuls</th><th>Pause</th><th>Aktiv</th></tr></thead><tbody>';\n" +
-                "                    nebenuhren.forEach(function(n){ html += '<tr><td>' + esc(n.uhrName) + '</td><td>' + esc(n.zeile) + '</td><td>' + esc(n.modus) + '</td><td>' + esc(n.relaisA) + '</td><td>' + esc(n.relaisB) + '</td><td>' + esc(n.impulsDauer1) + '</td><td>' + esc(n.impulsDauer2) + '</td><td>' + (n.aktiv ? 'Ja' : 'Nein') + '</td></tr>'; });\n" +
+                "                    html += '<table class=\"table table-sm export-table\"><thead><tr><th>Uhr</th><th>Zeile</th><th>Relais A</th><th>Relais B</th><th>Impuls</th><th>Pause</th><th>Aktiv</th></tr></thead><tbody>';\n" +
+                "                    nebenuhren.forEach(function(n){ var kind = String(n.uhrName || '').toUpperCase() === 'D' ? 'Mond' : 'Nebenuhr'; html += '<tr><td>' + esc(n.uhrName) + '</td><td>' + esc(n.zeile) + '</td><td>' + relayBadge(n.relaisA, kind) + '</td><td>' + relayBadge(n.relaisB, kind) + '</td><td>' + esc(n.impulsDauer1) + '</td><td>' + esc(n.impulsDauer2) + '</td><td>' + (n.aktiv ? 'Ja' : 'Nein') + '</td></tr>'; });\n" +
                 "                    html += '</tbody></table>';\n" +
                 "                } else { html += '<p>Keine Nebenuhren konfiguriert.</p>'; }\n" +
                 "                html += '</div>';\n" +
@@ -5732,7 +5868,7 @@ public class ConfigWebServer {
                 "                html += '<div class=\"export-section\"><h2>Vorschwingen-Konfiguration</h2>';\n" +
                 "                if (vorschwingen.length) {\n" +
                 "                    html += '<table class=\"table table-sm export-table\"><thead><tr><th>Vorschwingen Relais</th><th>Läuten Relais</th><th>Zeit (s)</th><th>Vorschwingen Platine</th><th>Läuten Platine</th><th>Aktiv</th><th>Sortierung</th></tr></thead><tbody>';\n" +
-                "                    vorschwingen.forEach(function(v){ html += '<tr><td>' + esc(v.vorschwingenRelais) + '</td><td>' + esc(v.laeutenRelais) + '</td><td>' + esc(v.zeitSekunden) + '</td><td>' + esc(v.vorschwingenPlatine) + '</td><td>' + esc(v.laeutenPlatine) + '</td><td>' + (v.aktiv ? 'Ja' : 'Nein') + '</td><td>' + esc(v.sortierung) + '</td></tr>'; });\n" +
+                "                    vorschwingen.forEach(function(v){ html += '<tr><td>' + relayBadge(v.vorschwingenRelais, 'Vorschwingen') + '</td><td>' + relayBadge(v.laeutenRelais, 'Läuten') + '</td><td>' + esc(v.zeitSekunden) + '</td><td>' + esc(v.vorschwingenPlatine) + '</td><td>' + esc(v.laeutenPlatine) + '</td><td>' + (v.aktiv ? 'Ja' : 'Nein') + '</td><td>' + esc(v.sortierung) + '</td></tr>'; });\n" +
                 "                    html += '</tbody></table>';\n" +
                 "                } else { html += '<p>Keine Vorschwingen konfiguriert.</p>'; }\n" +
                 "                html += '</div>';\n" +
@@ -5996,30 +6132,24 @@ public class ConfigWebServer {
                 "        \n" +
                 "        function renderNebenuhren() {\n" +
                 "            const container = document.getElementById('nebenuhrenContainer');\n" +
+                "            container.className = 'row g-3';\n" +
                 "            container.innerHTML = '';\n" +
                 "            \n" +
                 "            nebenuhren.forEach((nebenuhr, index) => {\n" +
                 "                const relaisASel = relaisSelectHtml('relaisA', index, nebenuhr.relaisA);\n" +
                 "                const relaisBSel = relaisSelectHtml('relaisB', index, nebenuhr.relaisB);\n" +
                 "                const card = document.createElement('div');\n" +
-                "                card.className = 'card nebenuhr-card';\n" +
+                "                card.className = 'col-12 col-xl-6';\n" +
                 "                card.innerHTML = `\n" +
-                "                    <div class=\"card-header bg-primary text-white\">\n" +
-                "                        <h5 class=\"mb-0\">Nebenuhr ${nebenuhr.uhrName || '?'} (Zeile ${nebenuhr.zeile})</h5>\n" +
+                "                    <div class=\"card nebenuhr-card h-100\">\n" +
+                "                    <div class=\"card-header bg-primary text-white py-2\">\n" +
+                "                        <h5 class=\"mb-0 fs-6\">Nebenuhr ${nebenuhr.uhrName || '?'}</h5>\n" +
                 "                    </div>\n" +
-                "                    <div class=\"card-body\">\n" +
+                "                    <div class=\"card-body p-3\">\n" +
                 "                        <div class=\"row\">\n" +
                 "                            <div class=\"col-md-6 mb-3\">\n" +
                 "                                <label class=\"form-label\">Uhr-Name:</label>\n" +
                 "                                <input type=\"text\" class=\"form-control\" id=\"uhrName_${index}\" value=\"${nebenuhr.uhrName || ''}\" placeholder=\"A, B, C, D...\">\n" +
-                "                            </div>\n" +
-                "                            <div class=\"col-md-3 mb-3\">\n" +
-                "                                <label class=\"form-label\">Modus:</label>\n" +
-                "                                ${(nebenuhr.zeile === 6) ? `<select class=\"form-select\" id=\"modus_${index}\"><option value=\"12\" ${nebenuhr.modus === '12' ? 'selected' : ''}>12 Stunden</option><option value=\"MOND\" ${nebenuhr.modus === 'MOND' ? 'selected' : ''}>Monduhr</option></select>` : `<input type=\"text\" class=\"form-control\" id=\"modus_${index}\" value=\"12 Stunden\" readonly><input type=\"hidden\" id=\"modus_${index}_val\" value=\"12\">`}\n" +
-                "                            </div>\n" +
-                "                            <div class=\"col-md-3 mb-3\">\n" +
-                "                                <label class=\"form-label\">Aktiv:</label>\n" +
-                "                                <input type=\"checkbox\" class=\"form-check-input\" id=\"aktiv_${index}\" ${nebenuhr.aktiv ? 'checked' : ''}>\n" +
                 "                            </div>\n" +
                 "                        </div>\n" +
                 "                        <div class=\"row\">\n" +
@@ -6040,7 +6170,7 @@ public class ConfigWebServer {
                 "                                ${relaisBSel}\n" +
                 "                            </div>\n" +
                 "                        </div>\n" +
-                        "                        ${(nebenuhr.modus === 'MOND' || nebenuhr.zeile === 6) ? `\n" +
+                        "                        ${(nebenuhr.zeile === 6) ? `\n" +
                         "                        <div class=\"row\">\n" +
                         "                            <div class=\"col-md-6 mb-3\">\n" +
                         "                                <label class=\"form-label\">Aktueller Impulswert:</label>\n" +
@@ -6054,7 +6184,8 @@ public class ConfigWebServer {
                         "                            </div>\n" +
                         "                        </div>\n" +
                         "                        ` : ''}\n" +
-                "                        <button class=\"btn btn-success\" onclick=\"saveNebenuhr(${index})\">Speichern</button>\n" +
+                "                        <button class=\"btn btn-success btn-sm\" onclick=\"saveNebenuhr(${index})\">Speichern</button>\n" +
+                "                    </div>\n" +
                 "                    </div>\n" +
                 "                `;\n" +
                 "                container.appendChild(card);\n" +
@@ -6085,12 +6216,11 @@ public class ConfigWebServer {
                 "            nebenuhr.relaisB = parseInt(document.getElementById(`relaisB_${index}`).value) || 0;\n" +
                 "            nebenuhr.impulsDauer1 = parseInt(document.getElementById(`impulsDauer1_${index}`).value) || 1;\n" +
                 "            nebenuhr.impulsDauer2 = parseInt(document.getElementById(`impulsDauer2_${index}`).value) || 1;\n" +
-                "            const modusEl = document.getElementById(`modus_${index}_val`);\n" +
-                "            nebenuhr.modus = (modusEl ? modusEl.value : document.getElementById(`modus_${index}`).value) || '12';\n" +
-                "            nebenuhr.aktiv = document.getElementById(`aktiv_${index}`).checked;\n" +
+                "            nebenuhr.modus = (nebenuhr.zeile === 6) ? 'MOND' : '12';\n" +
+                "            nebenuhr.aktiv = (nebenuhr.relaisA > 0 || nebenuhr.relaisB > 0);\n" +
                 "            \n" +
                 "            // Für Monduhr D: aktueller Impulswert und Zykluslänge\n" +
-                "            if ((nebenuhr.modus === 'MOND' || nebenuhr.zeile === 6) && document.getElementById(`mondphaseIst_${index}`)) {\n" +
+                "            if (nebenuhr.zeile === 6 && document.getElementById(`mondphaseIst_${index}`)) {\n" +
                 "                nebenuhr.mondphaseIst = parseInt(document.getElementById(`mondphaseIst_${index}`).value) || 0;\n" +
                 "                nebenuhr.mondImpulseProPhase = parseInt(document.getElementById(`mondImpulseProPhase_${index}`).value) || 60;\n" +
                 "            }\n" +
@@ -6114,7 +6244,7 @@ public class ConfigWebServer {
                 "                showMessage('Relais B muss zwischen 0 und ' + maxRelais + ' sein', 'danger');\n" +
                 "                return;\n" +
                 "            }\n" +
-                "            if ((nebenuhr.modus === 'MOND' || nebenuhr.zeile === 6) && (nebenuhr.mondImpulseProPhase < 4 || nebenuhr.mondImpulseProPhase > 360)) {\n" +
+                "            if (nebenuhr.zeile === 6 && (nebenuhr.mondImpulseProPhase < 4 || nebenuhr.mondImpulseProPhase > 360)) {\n" +
                 "                showMessage('Impulse pro Mondphase müssen zwischen 4 und 360 liegen', 'danger');\n" +
                 "                return;\n" +
                 "            }\n" +
@@ -6161,12 +6291,11 @@ public class ConfigWebServer {
                 "                nebenuhr.relaisB = parseInt(document.getElementById(`relaisB_${i}`).value) || 0;\n" +
                 "                nebenuhr.impulsDauer1 = parseInt(document.getElementById(`impulsDauer1_${i}`).value) || 1;\n" +
                 "                nebenuhr.impulsDauer2 = parseInt(document.getElementById(`impulsDauer2_${i}`).value) || 1;\n" +
-                "                const modusElI = document.getElementById(`modus_${i}_val`);\n" +
-                "                nebenuhr.modus = (modusElI ? modusElI.value : document.getElementById(`modus_${i}`).value) || '12';\n" +
-                "                nebenuhr.aktiv = document.getElementById(`aktiv_${i}`).checked;\n" +
+                "                nebenuhr.modus = (nebenuhr.zeile === 6) ? 'MOND' : '12';\n" +
+                "                nebenuhr.aktiv = (nebenuhr.relaisA > 0 || nebenuhr.relaisB > 0);\n" +
                 "                \n" +
                 "                // Für Monduhr D: aktueller Impulswert und Zykluslänge\n" +
-                "                if ((nebenuhr.modus === 'MOND' || nebenuhr.zeile === 6) && document.getElementById(`mondphaseIst_${i}`)) {\n" +
+                "                if (nebenuhr.zeile === 6 && document.getElementById(`mondphaseIst_${i}`)) {\n" +
                 "                    nebenuhr.mondphaseIst = parseInt(document.getElementById(`mondphaseIst_${i}`).value) || 0;\n" +
                 "                    nebenuhr.mondImpulseProPhase = parseInt(document.getElementById(`mondImpulseProPhase_${i}`).value) || 60;\n" +
                 "                }\n" +
@@ -9318,6 +9447,9 @@ public class ConfigWebServer {
         try {
             int platineNummer = 1;
             int relaisNr = 1;
+            String overrideIp = null;
+            Integer overridePort = null;
+            Integer overrideRelaisAnzahl = null;
             if (request.body != null && !request.body.trim().isEmpty()) {
                 Map<String, Object> body = gson.fromJson(request.body, Map.class);
                 if (body != null) {
@@ -9329,10 +9461,69 @@ public class ConfigWebServer {
                         Object o = body.get("relaisNr");
                         relaisNr = o instanceof Number ? ((Number) o).intValue() : Integer.parseInt(String.valueOf(o));
                     }
+                    if (body.get("ip") != null) {
+                        String s = String.valueOf(body.get("ip")).trim();
+                        overrideIp = s.isEmpty() ? null : s;
+                    }
+                    if (body.get("port") != null) {
+                        Object o = body.get("port");
+                        overridePort = o instanceof Number ? ((Number) o).intValue() : Integer.parseInt(String.valueOf(o));
+                    }
+                    if (body.get("relaisAnzahl") != null) {
+                        Object o = body.get("relaisAnzahl");
+                        overrideRelaisAnzahl = o instanceof Number ? ((Number) o).intValue() : Integer.parseInt(String.valueOf(o));
+                    }
                 }
             }
-            if (platineNummer < 1 || platineNummer > 4 || relaisNr < 1 || relaisNr > 32) {
+            if (platineNummer < 1 || platineNummer > 4 || relaisNr < 1 || relaisNr > 256) {
                 return new SimpleHttpServer.HttpResponse(400, "application/json", "{\"success\":false,\"error\":\"platineNummer 1–4, relaisNr 1–32\"}");
+            }
+            PlatinenDatabaseHelper dbHelper = PlatinenDatabaseHelper.getInstance(context);
+            Platine platine = dbHelper.getPlatine(platineNummer);
+            if (platine == null) {
+                return new SimpleHttpServer.HttpResponse(404, "application/json", "{\"success\":false,\"error\":\"Platine nicht gefunden\"}");
+            }
+            if (overrideIp != null) {
+                platine.ipAdresse = overrideIp;
+            }
+            if (overridePort != null && overridePort >= 1 && overridePort <= 65535) {
+                platine.port = overridePort;
+            }
+            if (overrideRelaisAnzahl != null && overrideRelaisAnzahl >= 1 && overrideRelaisAnzahl <= 256) {
+                platine.relaisAnzahl = overrideRelaisAnzahl;
+            }
+            int erlaubteRelais = platine.relaisAnzahl > 0 ? platine.relaisAnzahl : 32;
+            Log.d(TAG, "Platinen-Test: platine=" + platineNummer
+                    + ", ip=" + platine.ipAdresse
+                    + ", port=" + platine.port
+                    + ", relaisAnzahl=" + erlaubteRelais
+                    + ", modus=" + dbHelper.getModus());
+            if (relaisNr > erlaubteRelais) {
+                return new SimpleHttpServer.HttpResponse(400, "application/json", "{\"success\":false,\"error\":\"Relais außerhalb der konfigurierten Relais-Anzahl\"}");
+            }
+            String modus = dbHelper.getModus();
+            if ("wifi".equals(modus) && platine.ipAdresse != null && !platine.ipAdresse.trim().isEmpty() && !platine.ipAdresse.trim().equals("0")) {
+                String ip = platine.ipAdresse.trim();
+                int port = (platine.port >= 1 && platine.port <= 65535) ? platine.port : 23;
+                ReentrantLock lock = Carambola_io.getLockFor(ip, port);
+                lock.lock();
+                try {
+                    Carambola_io io = new Carambola_io();
+                    if (!io.connect(ip, port)) {
+                        return new SimpleHttpServer.HttpResponse(500, "application/json", "{\"success\":false,\"error\":\"Verbindung zur Platine fehlgeschlagen\"}");
+                    }
+                    io.sendLauflichtBefehl();
+                    try {
+                        Thread.sleep(Math.max(1500, (erlaubteRelais * 200) + 500));
+                    } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                    }
+                    io.disconnect();
+                } finally {
+                    lock.unlock();
+                }
+                String json = "{\"success\":true,\"message\":\"Lauflicht auf Platine " + platineNummer + " gestartet\",\"relaisAnzahl\":" + erlaubteRelais + ",\"ip\":\"" + escapeJsonString(ip) + "\",\"port\":" + port + "}";
+                return new SimpleHttpServer.HttpResponse(200, "application/json", json);
             }
             int index = (platineNummer - 1) * 32 + (relaisNr - 1);
             if (index >= TurmtechnikActivity.RELAIS_COUNT) {
@@ -9349,7 +9540,7 @@ public class ConfigWebServer {
                     }
                 }
             }, 1500);
-            String json = "{\"success\":true,\"message\":\"Relais " + relaisNr + " (Platine " + platineNummer + ") für 1,5 s eingeschaltet\"}";
+            String json = "{\"success\":true,\"message\":\"Relais " + relaisNr + " (Platine " + platineNummer + ") für 1,5 s eingeschaltet\",\"relaisAnzahl\":" + erlaubteRelais + "}";
             return new SimpleHttpServer.HttpResponse(200, "application/json", json);
         } catch (Exception e) {
             Log.e(TAG, "Fehler bei POST /api/platinen/test-relay", e);
@@ -9632,6 +9823,11 @@ public class ConfigWebServer {
             
             Platine platine = gson.fromJson(body, Platine.class);
             platine.platineNummer = platineNummer;
+            Log.d(TAG, "PUT Platine empfangen: nr=" + platineNummer
+                    + ", ip=" + platine.ipAdresse
+                    + ", port=" + platine.port
+                    + ", relaisAnzahl=" + platine.relaisAnzahl
+                    + ", mac=" + platine.macAdresse);
             
             // Modus-abhängige Validierung
             PlatinenDatabaseHelper dbHelper = PlatinenDatabaseHelper.getInstance(context);
@@ -9692,6 +9888,12 @@ public class ConfigWebServer {
             }
             
             dbHelper.savePlatine(platine);
+            Platine gespeichert = dbHelper.getPlatine(platineNummer);
+            Log.d(TAG, "PUT Platine gespeichert: nr=" + platineNummer
+                    + ", ip=" + gespeichert.ipAdresse
+                    + ", port=" + gespeichert.port
+                    + ", relaisAnzahl=" + gespeichert.relaisAnzahl
+                    + ", aktiv=" + gespeichert.aktiv);
 
             // ipList/portList aus DB laden und Serial_IoThread neu starten, damit WLAN sofort an die geänderte Platine sendet
             TurmtechnikActivity.onPlatinenConfigSaved();
@@ -11179,6 +11381,18 @@ public class ConfigWebServer {
                 "        let scanRelaisMS = 1000;\n" +
                 "        let antwortZeitMS = 50;\n" +
                 "        \n" +
+                "        function updateAntwortZeitPreview() {\n" +
+                "            const input = document.getElementById('scanRelaisInput');\n" +
+                "            const antwortInput = document.getElementById('antwortZeitInput');\n" +
+                "            if (!input || !antwortInput) return;\n" +
+                "            const value = parseInt(input.value, 10);\n" +
+                "            if (isNaN(value) || value < 100) {\n" +
+                "                antwortInput.value = '';\n" +
+                "                return;\n" +
+                "            }\n" +
+                "            antwortInput.value = Math.floor(value / 20) + ' ms';\n" +
+                "        }\n" +
+                "        \n" +
                 "        // Lade Scan-Relais-Wert\n" +
                 "        async function loadScanRelais() {\n" +
                 "            try {\n" +
@@ -11222,6 +11436,7 @@ public class ConfigWebServer {
                 "                scanRelaisMS = data.scanRelaisMS;\n" +
                 "                antwortZeitMS = data.antwortZeitMS;\n" +
                 "                \n" +
+                "                document.getElementById('scanRelaisInput').value = scanRelaisMS;\n" +
                 "                document.getElementById('antwortZeitInput').value = antwortZeitMS + ' ms';\n" +
                 "                showStatus('Scan-Relais-Wert erfolgreich gespeichert: ' + scanRelaisMS + ' ms', 'success');\n" +
                 "            } catch (error) {\n" +
@@ -11240,7 +11455,17 @@ public class ConfigWebServer {
                 "                currentModus = config.modus || 'wifi';\n" +
                 "                platinen = (config.platinen || []).map((p, i) => {\n" +
                 "                    const nr = p.platineNummer != null ? p.platineNummer : (p.platine_nummer != null ? p.platine_nummer : (i + 1));\n" +
-                "                    return Object.assign({}, p, { platineNummer: nr });\n" +
+                "                    const relais = p.relaisAnzahl != null ? p.relaisAnzahl : (p.relais_anzahl != null ? p.relais_anzahl : 32);\n" +
+                "                    const ip = p.ipAdresse != null ? p.ipAdresse : (p.ip_adresse != null ? p.ip_adresse : null);\n" +
+                "                    const mac = p.macAdresse != null ? p.macAdresse : (p.mac_adresse != null ? p.mac_adresse : null);\n" +
+                "                    const impuls = p.impulsAntwortErwartet != null ? p.impulsAntwortErwartet : (p.impuls_antwort_erwartet != null ? p.impuls_antwort_erwartet : null);\n" +
+                "                    return Object.assign({}, p, {\n" +
+                "                        platineNummer: nr,\n" +
+                "                        relaisAnzahl: relais,\n" +
+                "                        ipAdresse: ip,\n" +
+                "                        macAdresse: mac,\n" +
+                "                        impulsAntwortErwartet: impuls\n" +
+                "                    });\n" +
                 "                });\n" +
                 "                \n" +
                 "                // Lade auch Scan-Relais-Wert\n" +
@@ -11251,6 +11476,8 @@ public class ConfigWebServer {
                 "                if (config.antwortZeitMS !== undefined) {\n" +
                 "                    antwortZeitMS = config.antwortZeitMS;\n" +
                 "                    document.getElementById('antwortZeitInput').value = antwortZeitMS + ' ms';\n" +
+                "                } else {\n" +
+                "                    updateAntwortZeitPreview();\n" +
                 "                }\n" +
                 "                if (config.powerOffAkkuProzent !== undefined) {\n" +
                 "                    powerOffAkkuProzent = config.powerOffAkkuProzent;\n" +
@@ -11699,7 +11926,7 @@ public class ConfigWebServer {
                 "                        </td>\n" +
                 "                        <td>\n" +
                 "                            <button class=\"btn btn-sm btn-primary\" onclick=\"savePlatine(${nr})\">Speichern</button>\n" +
-                "                            <button class=\"btn btn-sm btn-outline-warning\" onclick=\"testRelay(${nr})\" title=\"Relais 1 kurz einschalten\">Relais 1 testen</button>\n" +
+                "                            <button class=\"btn btn-sm btn-outline-warning\" onclick=\"testRelay(${nr})\" title=\"Lauflicht mit 0,2 s pro Relais starten\">Lauflicht testen</button>\n" +
                 "                            <button class=\"btn btn-sm btn-danger\" onclick=\"deletePlatine(${nr})\">Löschen</button>\n" +
                 "                        </td>\n" +
                 "                    `;\n" +
@@ -11746,7 +11973,7 @@ public class ConfigWebServer {
                 "        \n" +
                 "        async function savePlatine(platineNummer) {\n" +
                 "            // Finde die aktuelle Platine aus dem Array\n" +
-                "            let platine = platinen.find(p => p.platineNummer === platineNummer);\n" +
+                "            let platine = platinen.find(p => Number(p.platineNummer) === Number(platineNummer));\n" +
                 "            if (!platine) {\n" +
                 "                platine = { platineNummer: platineNummer };\n" +
                 "            }\n" +
@@ -11823,9 +12050,11 @@ public class ConfigWebServer {
                 "                \n" +
                 "                showStatus('Platine ' + platineNummer + ' erfolgreich gespeichert', 'success');\n" +
                 "                await loadConfig();\n" +
+                "                return true;\n" +
                 "            } catch (error) {\n" +
                 "                console.error('Fehler:', error);\n" +
                 "                showStatus('Fehler beim Speichern: ' + error.message, 'danger');\n" +
+                "                throw error;\n" +
                 "            }\n" +
                 "        }\n" +
                 "        \n" +
@@ -11860,9 +12089,30 @@ public class ConfigWebServer {
                 "        \n" +
                 "        async function testRelay(platineNummer) {\n" +
                 "            try {\n" +
-                "                const res = await fetch('/api/platinen/test-relay', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ platineNummer: platineNummer, relaisNr: 1 }) });\n" +
+                "                const ipInput = document.getElementById(`ip-${platineNummer}`);\n" +
+                "                const portInput = document.getElementById(`port-${platineNummer}`);\n" +
+                "                const relaisInput = document.getElementById(`relais-anzahl-${platineNummer}`);\n" +
+                "                const body = { platineNummer: platineNummer, relaisNr: 1 };\n" +
+                "                if (ipInput) body.ip = ipInput.value.trim();\n" +
+                "                if (portInput) body.port = parseInt(portInput.value) || 23;\n" +
+                "                if (relaisInput) body.relaisAnzahl = parseInt(relaisInput.value) || 32;\n" +
+                "                const res = await fetch('/api/platinen/test-relay', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });\n" +
                 "                const d = await res.json();\n" +
-                "                if (d.success) showStatus('Relais 1 für 1,5 s eingeschaltet (Platine ' + platineNummer + ')', 'success');\n" +
+                "                if (d.success) {\n" +
+                "                    if (d.relaisAnzahl) {\n" +
+                "                        const relaisInput = document.getElementById(`relais-anzahl-${platineNummer}`);\n" +
+                "                        if (relaisInput) relaisInput.value = d.relaisAnzahl;\n" +
+                "                    }\n" +
+                "                    if (d.ip) {\n" +
+                "                        const ipInput = document.getElementById(`ip-${platineNummer}`);\n" +
+                "                        if (ipInput && !ipInput.value.trim()) ipInput.value = d.ip;\n" +
+                "                    }\n" +
+                "                    if (d.port) {\n" +
+                "                        const portInput = document.getElementById(`port-${platineNummer}`);\n" +
+                "                        if (portInput && (!portInput.value || portInput.value === '0')) portInput.value = d.port;\n" +
+                "                    }\n" +
+                "                    showStatus(d.message || ('Lauflicht auf Platine ' + platineNummer + ' gestartet'), 'success');\n" +
+                "                }\n" +
                 "                else showStatus(d.error || 'Fehler', 'danger');\n" +
                 "            } catch (e) { showStatus('Fehler: ' + (e.message || e), 'danger'); }\n" +
                 "        }\n" +
@@ -11950,6 +12200,17 @@ public class ConfigWebServer {
                 "            loadConfig();\n" +
                 "            loadScanRelais();\n" +
                 "            loadPowerOffAkku();\n" +
+                "            const scanInput = document.getElementById('scanRelaisInput');\n" +
+                "            if (scanInput) {\n" +
+                "                scanInput.addEventListener('input', updateAntwortZeitPreview);\n" +
+                "                scanInput.addEventListener('change', updateAntwortZeitPreview);\n" +
+                "                scanInput.addEventListener('keydown', (event) => {\n" +
+                "                    if (event.key === 'Enter') {\n" +
+                "                        event.preventDefault();\n" +
+                "                        saveScanRelais();\n" +
+                "                    }\n" +
+                "                });\n" +
+                "            }\n" +
                 "            \n" +
                 "            // Auto-Refresh für Antwortzeit bei Bluetooth-Modus\n" +
                 "            if (currentModus === 'bluetooth') {\n" +
@@ -11986,17 +12247,19 @@ public class ConfigWebServer {
         sb.append("        .bt-nav a{color:var(--tt-muted);text-decoration:none;margin-right:1rem;font-size:0.9rem}\n");
         sb.append("        .bt-nav a:hover{color:var(--tt-accent)}\n");
         sb.append("        .bt-nav a.active{color:var(--tt-text)}\n");
-        sb.append("        .bt-title{font-size:1.5rem;font-weight:600;margin-bottom:.35rem;color:var(--tt-text)}\n");
-        sb.append("        .bt-lead{font-size:1rem;color:var(--tt-muted);margin-bottom:1.25rem;max-width:52em}\n");
+        sb.append("        .bt-title{font-size:1.3rem;font-weight:600;margin-bottom:.15rem;color:var(--tt-text);line-height:1.15}\n");
+        sb.append("        .bt-lead{display:none}\n");
         sb.append("        .bt-palette-title{font-size:1rem;font-weight:600;margin-bottom:.25rem;color:var(--tt-text)}\n");
-        sb.append("        .bt-palette-hint{font-size:.9rem;color:var(--tt-muted);margin-bottom:.75rem}\n");
-        sb.append("        .bt-palette-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:.5rem}\n");
-        sb.append("        .bt-palette-item{font-size:.92rem!important;padding:.65rem .7rem!important;min-height:3.4rem;display:flex;align-items:center;justify-content:center;text-align:center;border-radius:10px;background:var(--tt-card)!important;border:2px solid var(--tt-border)!important;color:var(--tt-text)!important;cursor:grab}\n");
-        sb.append("        #tastenGrid.bt-grid{display:grid;gap:.55rem;align-items:stretch}\n");
+        sb.append("        .bt-palette-hint{display:none}\n");
+        sb.append("        .bt-palette-grid{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:.5rem;overflow-x:auto;padding-bottom:.2rem;align-items:stretch}\n");
+        sb.append("        .bt-palette-item{font-size:.92rem!important;padding:.65rem .35rem!important;min-height:3.4rem;min-width:0;display:flex;align-items:center;justify-content:center;text-align:center;border-radius:10px;background:var(--tt-card)!important;border:2px solid var(--tt-border)!important;color:var(--tt-text)!important;cursor:grab}\n");
+        sb.append("        #tastenGrid.bt-grid{display:grid;gap:.55rem;align-items:stretch;padding-bottom:2rem}\n");
+        sb.append("        #gridContainer{padding-bottom:1.5rem}\n");
         sb.append("        .bt-cell{min-height:74px;font-size:.9rem;line-height:1.3;padding:.4rem .35rem!important;cursor:pointer;word-break:break-word;display:flex;flex-direction:column;align-items:center;justify-content:center;border-radius:10px;border:2px solid var(--tt-border);background:var(--tt-card)!important;transition:box-shadow .2s,outline .2s;position:relative}\n");
         sb.append("        .bt-cell:hover{outline:2px solid var(--tt-accent);outline-offset:2px;box-shadow:0 0 0 1px var(--tt-accent)}\n");
         sb.append("        .bt-cell .bt-cell-label{font-weight:600;font-size:.95em;color:var(--tt-text)}\n");
         sb.append("        .bt-cell .bt-cell-typ{font-size:.78em;margin-top:.15em;color:var(--tt-muted)}\n");
+        sb.append("        .bt-cell .bt-cell-extra{font-size:.74em;margin-top:.18em;color:#8fc7ff;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}\n");
         sb.append("        .bt-cell .bt-cell-leer{font-size:.9em;color:var(--tt-muted)}\n");
         sb.append("        .bt-cell.bt-typ-sofort{border-color:#17a2b8}.bt-cell.bt-typ-verknuepft{border-color:#152a45;background:var(--tt-card)!important}.bt-cell.bt-typ-hammer{border-color:#c9a86c}.bt-cell.bt-typ-stop{border:4px solid #c0392b;background:var(--tt-card)!important}.bt-cell.bt-typ-automatik{border-color:#6f42c1}.bt-cell.bt-typ-melodie,.bt-cell.bt-typ-schwingen{border-color:#a78ec9}.bt-cell.bt-typ-zweite-seite{border-color:#28a745}.bt-cell.bt-typ-programmeingeben{border-color:#5a9fd4}.bt-cell.bt-typ-nebenuhr{border-color:#e6a86c}.bt-cell.bt-typ-programmabfrage{border-color:#9b8bb8}.bt-cell.bt-typ-normal,.bt-cell.bt-typ-key{border-color:#a78ec9}.bt-cell.bt-typ-leer{border-color:#252525}\n");
         sb.append("        .bt-vorlage-item[data-typ=\"Verknüpft\"]{background:var(--tt-card)!important;border-color:#152a45!important}\n");
@@ -12048,15 +12311,21 @@ public class ConfigWebServer {
         sb.append("        .relais-legend{display:flex;flex-wrap:wrap;gap:20px;margin-top:10px;font-size:12px;color:var(--tt-muted)}\n");
         sb.append("        .relais-legend-item{display:flex;align-items:center;gap:8px}\n");
         sb.append("        .relais-legend-box{width:24px;height:24px;border:1px solid var(--tt-border);border-radius:4px}\n");
-        sb.append("        .bt-overview{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-bottom:1rem}\n");
-        sb.append("        .bt-overview-card{background:var(--tt-card);border:1px solid var(--tt-border);border-radius:12px;padding:14px}\n");
-        sb.append("        .bt-overview-card h3{font-size:.95rem;margin:0 0 6px 0;color:var(--tt-muted)}\n");
+        sb.append("        .bt-overview{display:grid;grid-template-columns:1fr;gap:12px;margin-bottom:1rem}\n");
+        sb.append("        .bt-overview-card{background:var(--tt-card);border:1px solid var(--tt-border);border-radius:12px;padding:10px}\n");
+        sb.append("        .bt-overview-card h3{font-size:.88rem;margin:0 0 4px 0;color:var(--tt-muted);line-height:1.15}\n");
         sb.append("        .bt-overview-value{font-size:1.6rem;font-weight:700;color:var(--tt-text)}\n");
         sb.append("        .bt-overview-list{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}\n");
         sb.append("        .bt-overview-pill{background:var(--tt-surface);border:1px solid var(--tt-border);border-radius:999px;padding:4px 8px;font-size:.82rem;color:var(--tt-text)}\n");
-        sb.append("        .bt-grid-controls{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:.5rem}\n");
-        sb.append("        .bt-grid-controls label{font-size:.85rem;color:var(--tt-muted);display:block;margin-bottom:4px}\n");
-        sb.append("        .bt-grid-note{font-size:.85rem;color:var(--tt-muted);margin-top:8px}\n");
+        sb.append("        .bt-grid-controls{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:.25rem}\n");
+        sb.append("        .bt-grid-toolbar{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}\n");
+        sb.append("        .bt-grid-toolbar .btn{flex:0 0 auto}\n");
+        sb.append("        .bt-grid-controls label{font-size:.8rem;color:var(--tt-muted);display:block;margin-bottom:3px}\n");
+        sb.append("        .bt-grid-note{font-size:.78rem;color:var(--tt-muted);margin-top:6px;line-height:1.2}\n");
+        sb.append("        .bt-grid-actions-hint{font-size:.76rem;color:var(--tt-muted);margin-top:8px;line-height:1.25}\n");
+        sb.append("        .bt-sticky-work{position:sticky;top:0;z-index:30;background:var(--tt-bg);padding:0 0 .45rem 0;margin-bottom:.55rem;border-bottom:1px solid rgba(255,255,255,.05)}\n");
+        sb.append("        .bt-sticky-work::before{content:'';position:absolute;left:0;right:0;top:-12px;height:12px;background:linear-gradient(to bottom,var(--tt-bg),rgba(18,18,20,0))}\n");
+        sb.append("        .bt-sticky-work .bt-overview{margin-bottom:0}\n");
         sb.append("    </style>\n");
         sb.append("    <script src=\"https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js\"></script>\n");
         sb.append("</head>\n<body class=\"bt-page\">\n");
@@ -12069,8 +12338,8 @@ public class ConfigWebServer {
         sb.append("        <div id=\"statusMessage\" class=\"alert\" style=\"display:none;\"></div>\n");
         sb.append("        <div class=\"alert alert-warning\" id=\"btVerknuepftePruefungAlert\" style=\"display:none;\"></div>\n");
         sb.append("        <div class=\"bt-overview\" id=\"btOverview\">\n");
-        sb.append("            <div class=\"bt-overview-card\"><h3>Palette</h3><p class=\"bt-palette-hint\">Diese Tasten auf das Grid ziehen.</p><div class=\"bt-palette-grid\" id=\"paletteListe\"></div></div>\n");
         sb.append("            <div class=\"bt-overview-card\"><h3>Grid</h3><div class=\"bt-grid-controls\"><div><label for=\"gridColsInput\">Spalten</label><input type=\"number\" class=\"form-control\" id=\"gridColsInput\" min=\"2\" max=\"10\" value=\"6\"></div><div><label for=\"gridRowsInput\">Zeilen</label><input type=\"number\" class=\"form-control\" id=\"gridRowsInput\" min=\"1\" max=\"24\" value=\"8\"></div></div><div class=\"bt-grid-note\" id=\"gridInfoText\">48 Slots verfÃ¼gbar.</div></div>\n");
+        sb.append("            <div class=\"bt-overview-card\"><h3>Palette</h3><p class=\"bt-palette-hint\">Diese Tasten auf das Grid ziehen.</p><div class=\"bt-palette-grid\" id=\"paletteListe\"></div></div>\n");
         sb.append("        </div>\n");
         sb.append("        <div class=\"relais-balken\">\n");
         sb.append("            <h5>Relais-Status</h5>\n");
@@ -12086,14 +12355,14 @@ public class ConfigWebServer {
         sb.append("            </div>\n");
         sb.append("        </div>\n");
         sb.append("        <div class=\"row\">\n            <div class=\"col-12\">\n                <p class=\"bt-actions\"><button class=\"btn btn-primary\" id=\"btnSave\">Speichern</button> <button class=\"btn btn-outline-secondary\" id=\"btnListe\">Listenansicht</button> <button class=\"btn btn-outline-primary\" id=\"btnImportExcel\">Aus Excel importieren</button> <button class=\"btn btn-outline-secondary\" id=\"btnImportExcelUpload\">Datei hochladen</button> <input type=\"file\" id=\"btExcelFileInput\" accept=\".xls\" style=\"display:none;\"></p>\n                <p class=\"bt-actions-hint text-muted\">Aus Excel: liest <strong>Turmtechnik/Config/Beschriftung-Tasten.xls</strong> auf dem Gerät (wie bei Tagtypen). Oder „Datei hochladen“ wählen. Bestehende Tasten können per Drag auf eine andere Zelle gezogen werden (Tausch).</p>\n                <div id=\"gridContainer\">\n                    <div id=\"tastenGrid\" class=\"d-flex flex-wrap bt-grid\"></div>\n                </div>\n                <div id=\"listenContainer\" style=\"display:none;\">\n                    <div class=\"table-responsive\"><table class=\"table table-sm table-bordered\"><thead><tr><th></th><th>Typ</th><th>Beschriftung</th><th>Relais</th><th>Platine</th><th>Hammerzeit</th><th>buttonId</th><th>Sonder-ID</th><th>Sound</th><th></th></tr></thead><tbody id=\"btBody\"></tbody></table></div>\n                </div>\n            </div>\n        </div>\n    </div>\n");
-        sb.append("    <div class=\"modal fade\" id=\"editModal\" tabindex=\"-1\"><div class=\"modal-dialog\"><div class=\"modal-content\"><div class=\"modal-header\"><h5 class=\"modal-title\">Taste bearbeiten</h5><button type=\"button\" class=\"btn-close\" data-bs-dismiss=\"modal\"></button></div><div class=\"modal-body\" id=\"editModalBody\"></div><div class=\"modal-footer\"><button type=\"button\" class=\"btn btn-secondary\" data-bs-dismiss=\"modal\">Schließen</button><button type=\"button\" class=\"btn btn-primary\" id=\"editModalSave\">Speichern</button></div></div></div></div>\n");
+        sb.append("    <div class=\"modal fade\" id=\"editModal\" tabindex=\"-1\"><div class=\"modal-dialog\"><div class=\"modal-content\"><div class=\"modal-header\"><h5 class=\"modal-title\">Taste bearbeiten</h5><button type=\"button\" class=\"btn-close\" data-bs-dismiss=\"modal\"></button></div><div class=\"modal-body\" id=\"editModalBody\"></div><div class=\"modal-footer\"><button type=\"button\" class=\"btn btn-outline-danger\" id=\"editModalDelete\">Löschen</button><button type=\"button\" class=\"btn btn-secondary\" data-bs-dismiss=\"modal\">Schließen</button><button type=\"button\" class=\"btn btn-primary\" id=\"editModalSave\">Speichern</button></div></div></div></div>\n");
         sb.append("    <script src=\"https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js\"></script>\n    <script>\n");
         sb.append("        const TYPEN = '").append(BESCHRIFTUNG_TASTEN_TYPEN).append("'.split(',');\n");
         sb.append("        const GRID_ROWS = 6; const GRID_COLS = 8; const GRID_SIZE = GRID_ROWS * GRID_COLS;\n");
         sb.append("        const VERKNUEPFT_RELAIS_BASE = 2001; const SOFORT_RELAIS_BASE = 3001;\n");
         sb.append("        const SONDER_IDS = { 'Stop':1100, 'Automatik':1101, 'Home':1102, 'Help':1103, 'Schlagwerk':1104, 'Zweite Seite':1202, 'Programmeingeben':1203, 'Programmabfrage':1204, 'Nebenuhr Stellen':1205 };\n");
         sb.append("        var melodien = []; var soforttasten = []; var soundFiles = []; var uiFunktionen = []; var layoutItems = []; var displayCols = 6; var displayRows = 8;\n");
-        sb.append("        const PALETTE_TYPEN = ['Normal','VerknÃ¼pft','Sofort Start','Schwingen','Melodie','Ausgang','Hammer','Leer','NULL'];\n");
+        sb.append("        const PALETTE_TYPEN = ['VerknÃ¼pft','Sofort Start','Schwingen','Melodie','Ausgang','Hammer','Leer'];\n");
         sb.append("        function soundSelectOptions(currentVal){ var o='<option value=\"\">(kein)</option>'; (soundFiles||[]).forEach(function(f){ o+='<option value=\"'+esc(f)+'\"'+(currentVal===f?' selected':'')+'>'+esc(f)+'</option>'; }); if(currentVal&&soundFiles.indexOf(currentVal)<0) o+='<option value=\"'+esc(currentVal)+'\" selected>'+esc(currentVal)+'</option>'; return o; }\n");
         sb.append("        const TYPEN_BORDER = { 'Sofort Start':'#17a2b8', 'Verknüpft':'#6b9bd1', 'Hammer':'#c9a86c', 'Stop':'#c0392b', 'Automatik':'#6f42c1', 'Melodie':'#a78ec9', 'Schwingen':'#a78ec9', 'Zweite Seite':'#28a745', 'Programmeingeben':'#5a9fd4', 'Programmabfrage':'#9b8bb8', 'Nebenuhr Stellen':'#e6a86c', 'Leer':'#252525', 'NULL':'#252525', 'Normal':'#a78ec9' };\n");
         sb.append("        function typToSlug(typ){ var s={ 'Sofort Start':'sofort','Verknüpft':'verknuepft','Hammer':'hammer','Stop':'stop','Automatik':'automatik','Melodie':'melodie','Schwingen':'schwingen','Zweite Seite':'zweite-seite','Programmeingeben':'programmeingeben','Programmabfrage':'programmabfrage','Nebenuhr Stellen':'nebenuhr','Leer':'leer','NULL':'leer','Normal':'normal' }; return s[typ]||'key'; }\n");
@@ -12127,17 +12396,31 @@ public class ConfigWebServer {
         sb.append("        document.getElementById('btnImportExcelUpload').onclick=function(){ document.getElementById('btExcelFileInput').click(); };\n");
         sb.append("        document.getElementById('btExcelFileInput').onchange=function(e){ var f=e.target.files[0]; if(!f){ return; } var fd=new FormData(); fd.append('file',f); fetch('/api/beschriftung-tasten/import-from-excel', { method:'POST', body:fd }).then(function(r){ return r.json(); }).then(function(d){ if(d.success){ showStatus(d.message||'Import erfolgreich', 'success'); load(); } else { showStatus(d.message||d.error||'Import fehlgeschlagen', 'danger'); } e.target.value=''; }).catch(function(err){ showStatus('Fehler: '+err.message, 'danger'); e.target.value=''; }); };\n");
         sb.append("        document.getElementById('btnListe').onclick=function(){ listView=!listView; document.getElementById('gridContainer').style.display=listView?'none':'block'; document.getElementById('listenContainer').style.display=listView?'block':'none'; document.getElementById('btnListe').textContent=listView?'Grid-Ansicht':'Listenansicht'; if(listView){ var tb=document.getElementById('btBody'); tb.innerHTML=''; for(var i=0;i<GRID_SIZE;i++) addListRow(grid[i], i); initSortableList(); } };\n");
-        sb.append("        function openEdit(idx){ var slot=grid[idx]; if(!slot) slot=vorlageForTyp('Normal'); else slot=JSON.parse(JSON.stringify(slot)); if(!grid[idx]) grid[idx]=slot; var verknuepftIdx=0,sofortIdx=0; for(var j=0;j<idx;j++){ if(grid[j]&&grid[j].c1==='Verknüpft') verknuepftIdx++; if(grid[j]&&grid[j].c1==='Sofort Start') sofortIdx++; } var relaisVal=slot.c1==='Verknüpft'?String(VERKNUEPFT_RELAIS_BASE+verknuepftIdx):(slot.c1==='Sofort Start'?String(SOFORT_RELAIS_BASE+sofortIdx):(slot.c3||'')); var relaisRo=(slot.c1==='Verknüpft'||slot.c1==='Sofort Start')?' readonly':''; var melodieHtml=''; if(slot.c1==='Sofort Start'){ var curMel=(soforttasten[sofortIdx]&&soforttasten[sofortIdx].melodieName)||slot.sofort_melodie||''; var opts=melodien.map(function(m){ var n=(m.name||'').trim(); return '<option value=\"'+esc(n)+'\"'+(curMel===n?' selected':'')+'>'+esc(n||'(ohne Name)')+'</option>'; }).join(''); melodieHtml='<label class=\"form-label\">Melodie (Sofort Start)</label><select class=\"form-select mb-2\" id=\"editSofortMelodie\"><option value=\"\">-- keine --</option>'+opts+'</select>'; } var opt=TYPEN.map(function(t){ return '<option value=\"'+esc(t)+'\"'+(slot.c1===t?' selected':'')+'>'+esc(t)+'</option>'; }).join(''); var isSofort=slot.c1==='Sofort Start'; var bodyHtml='<input type=\"hidden\" id=\"editIdx\" value=\"'+idx+'\">'; if(isSofort){ bodyHtml+='<label class=\"form-label\">Beschriftung</label><input type=\"text\" class=\"form-control mb-2\" id=\"editC2\" value=\"'+esc(slot.c2)+'\">'+melodieHtml; } else { bodyHtml+='<label class=\"form-label\">Tastentyp</label><select class=\"form-select mb-2\" id=\"editC1\">'+opt+'</select><label class=\"form-label\">Beschriftung</label><input type=\"text\" class=\"form-control mb-2\" id=\"editC2\" value=\"'+esc(slot.c2)+'\"><label class=\"form-label\">Relais</label><input type=\"text\" class=\"form-control mb-2\" id=\"editC3\" value=\"'+esc(relaisVal)+'\"'+relaisRo+'><label class=\"form-label\">Platine</label><input type=\"text\" class=\"form-control mb-2\" id=\"editC5\" value=\"'+esc(slot.c5)+'\"><label class=\"form-label\">Hammerzeit</label><input type=\"text\" class=\"form-control mb-2\" id=\"editC4\" value=\"'+esc(slot.c4)+'\"><label class=\"form-label\">Sound</label><select class=\"form-select mb-2\" id=\"editSound\">'+soundSelectOptions(slot.sound||'')+'</select>'; } document.getElementById('editModalBody').innerHTML=bodyHtml; var modal=new bootstrap.Modal(document.getElementById('editModal')); modal.show(); document.getElementById('editModalSave').onclick=function(){ var i=parseInt(document.getElementById('editIdx').value,10); var ex=grid[i]; var elC1=document.getElementById('editC1'); var elC2=document.getElementById('editC2'); var elC3=document.getElementById('editC3'); var elC5=document.getElementById('editC5'); var elC4=document.getElementById('editC4'); var elMel=document.getElementById('editSofortMelodie'); var isSofort=ex&&ex.c1==='Sofort Start'; var c1Val=isSofort?'Sofort Start':(elC1?elC1.value:(ex&&ex.c1)||'Normal'); var c3Val=isSofort?(ex?ex.c3:''):(elC3?elC3.value:''); var c5Val=isSofort?(ex?ex.c5:'1'):(elC5?elC5.value:'1'); var c4Val=isSofort?(ex?ex.c4:''):(elC4?elC4.value:''); var elSound=document.getElementById('editSound'); grid[i]={ id:ex?ex.id:0, c1:c1Val, c2:elC2?elC2.value:'', c3:c3Val, c5:c5Val, c4:c4Val, c13:ex&&ex.c13?ex.c13:'', sonder_id:ex&&ex.sonder_id!=null?ex.sonder_id:null, c6:ex&&ex.c6?ex.c6:'', c7:ex&&ex.c7?ex.c7:'', c8:ex&&ex.c8?ex.c8:'', c9:ex&&ex.c9?ex.c9:'', c10:ex&&ex.c10?ex.c10:'', sound:elSound?elSound.value:(ex&&ex.sound)||'', sofort_melodie:elMel?elMel.value:undefined }; modal.hide(); renderGrid(); }; }\n");
+        sb.append("        function openEdit(idx){ var slot=grid[idx]; if(!slot) slot=vorlageForTyp('Normal'); else slot=JSON.parse(JSON.stringify(slot)); if(!grid[idx]) grid[idx]=slot; var verknuepftIdx=0,sofortIdx=0; for(var j=0;j<idx;j++){ if(grid[j]&&grid[j].c1==='Verknüpft') verknuepftIdx++; if(grid[j]&&grid[j].c1==='Sofort Start') sofortIdx++; } var relaisVal=slot.c1==='Verknüpft'?String(VERKNUEPFT_RELAIS_BASE+verknuepftIdx):(slot.c1==='Sofort Start'?String(SOFORT_RELAIS_BASE+sofortIdx):(slot.c3||'')); var relaisRo=(slot.c1==='Verknüpft'||slot.c1==='Sofort Start')?' readonly':''; var melodieHtml=''; if(slot.c1==='Sofort Start'){ var curMel=(soforttasten[sofortIdx]&&soforttasten[sofortIdx].melodieName)||slot.sofort_melodie||''; var opts=melodien.map(function(m){ var n=(m.name||'').trim(); return '<option value=\"'+esc(n)+'\"'+(curMel===n?' selected':'')+'>'+esc(n||'(ohne Name)')+'</option>'; }).join(''); melodieHtml='<label class=\"form-label\">Melodie (Sofort Start)</label><select class=\"form-select mb-2\" id=\"editSofortMelodie\"><option value=\"\">-- keine --</option>'+opts+'</select>'; } var opt=TYPEN.map(function(t){ return '<option value=\"'+esc(t)+'\"'+(slot.c1===t?' selected':'')+'>'+esc(t)+'</option>'; }).join(''); var isSofort=slot.c1==='Sofort Start'; var bodyHtml='<input type=\"hidden\" id=\"editIdx\" value=\"'+idx+'\">'; if(isSofort){ bodyHtml+='<label class=\"form-label\">Beschriftung</label><input type=\"text\" class=\"form-control mb-2\" id=\"editC2\" value=\"'+esc(slot.c2)+'\">'+melodieHtml; } else { bodyHtml+='<label class=\"form-label\">Tastentyp</label><select class=\"form-select mb-2\" id=\"editC1\">'+opt+'</select><label class=\"form-label\">Beschriftung</label><input type=\"text\" class=\"form-control mb-2\" id=\"editC2\" value=\"'+esc(slot.c2)+'\"><label class=\"form-label\">Relais</label><input type=\"text\" class=\"form-control mb-2\" id=\"editC3\" value=\"'+esc(relaisVal)+'\"'+relaisRo+'><label class=\"form-label\">Platine</label><input type=\"text\" class=\"form-control mb-2\" id=\"editC5\" value=\"'+esc(slot.c5)+'\"><label class=\"form-label\">Hammerzeit</label><input type=\"text\" class=\"form-control mb-2\" id=\"editC4\" value=\"'+esc(slot.c4)+'\"><label class=\"form-label\">Sound</label><select class=\"form-select mb-2\" id=\"editSound\">'+soundSelectOptions(slot.sound||'')+'</select>'; } document.getElementById('editModalBody').innerHTML=bodyHtml; var modal=new bootstrap.Modal(document.getElementById('editModal')); modal.show(); document.getElementById('editModalDelete').onclick=function(){ var i=parseInt(document.getElementById('editIdx').value,10); removeSlotAt(i); modal.hide(); renderGrid(); }; document.getElementById('editModalSave').onclick=function(){ var i=parseInt(document.getElementById('editIdx').value,10); var ex=grid[i]; var elC1=document.getElementById('editC1'); var elC2=document.getElementById('editC2'); var elC3=document.getElementById('editC3'); var elC5=document.getElementById('editC5'); var elC4=document.getElementById('editC4'); var elMel=document.getElementById('editSofortMelodie'); var isSofort=ex&&ex.c1==='Sofort Start'; var c1Val=isSofort?'Sofort Start':(elC1?elC1.value:(ex&&ex.c1)||'Normal'); var c3Val=isSofort?(ex?ex.c3:''):(elC3?elC3.value:''); var c5Val=isSofort?(ex?ex.c5:'1'):(elC5?elC5.value:'1'); var c4Val=isSofort?(ex?ex.c4:''):(elC4?elC4.value:''); var elSound=document.getElementById('editSound'); grid[i]={ id:ex?ex.id:0, c1:c1Val, c2:elC2?elC2.value:'', c3:c3Val, c5:c5Val, c4:c4Val, c13:ex&&ex.c13?ex.c13:'', sonder_id:ex&&ex.sonder_id!=null?ex.sonder_id:null, c6:ex&&ex.c6?ex.c6:'', c7:ex&&ex.c7?ex.c7:'', c8:ex&&ex.c8?ex.c8:'', c9:ex&&ex.c9?ex.c9:'', c10:ex&&ex.c10?ex.c10:'', sound:elSound?elSound.value:(ex&&ex.sound)||'', sofort_melodie:elMel?elMel.value:undefined }; modal.hide(); renderGrid(); }; }\n");
         sb.append("        function listRowToObj(tr){ var cells=tr.querySelectorAll('td'); if(!cells||cells.length<8) return null; var v=function(i){ return (cells[i].querySelector('input')||{}).value||''; }; var sel=function(i){ return (cells[i].querySelector('select')||{}).value||''; }; var cellVal=function(i){ var el=cells[i].querySelector('select')||cells[i].querySelector('input'); return el?el.value:''; }; var soundVal=(cells.length>=14)?cellVal(13):(cells.length>=9?cellVal(8):''); return { id:tr.dataset.id|0, c1:sel(1), c2:v(2), c3:v(3), c5:v(4), c4:v(5), c13:v(6), sonder_id:parseInt(v(7),10)||null, c6:cells.length>=14?v(8):'', c7:cells.length>=14?v(9):'', c8:cells.length>=14?v(10):'', c9:cells.length>=14?v(11):'', c10:cells.length>=14?v(12):'', sound:soundVal }; }\n");
         sb.append("        function addListRow(data, idx){ data=data||{}; var c1=data.c1||(data.c2?'Normal':'Leer'), c2=data.c2||'', c3=data.c3||'', c5=data.c5||'1', c4=data.c4||'', c13=data.c13||'', sid=data.sonder_id, sound=(data.sound!=null)?data.sound:''; var opt=TYPEN.map(function(t){ return '<option value=\"'+esc(t)+'\"'+(c1===t?' selected':'')+'>'+esc(t)+'</option>'; }).join(''); var tr=document.createElement('tr'); tr.dataset.id=data.id|0; tr.dataset.idx=idx; tr.innerHTML='<td style=\"cursor:grab\">≡</td><td><select class=\"form-select form-select-sm\">'+opt+'</select></td><td><input type=\"text\" class=\"form-control form-control-sm\" value=\"'+esc(c2)+'\" placeholder=\"Beschriftung\"></td><td><input type=\"text\" class=\"form-control form-control-sm\" value=\"'+esc(c3)+'\" placeholder=\"Relais\"></td><td><input type=\"text\" class=\"form-control form-control-sm\" value=\"'+esc(c5)+'\" placeholder=\"Platine\"></td><td><input type=\"text\" class=\"form-control form-control-sm\" value=\"'+esc(c4)+'\" placeholder=\"Hammerzeit\"></td><td><input type=\"text\" class=\"form-control form-control-sm\" value=\"'+esc(c13)+'\" placeholder=\"buttonId\"></td><td><input type=\"number\" class=\"form-control form-control-sm\" value=\"'+(sid!==undefined&&sid!==null?sid:'')+'\" placeholder=\"Sonder-ID\"></td><td><select class=\"form-select form-select-sm\">'+soundSelectOptions(sound)+'</select></td><td><button type=\"button\" class=\"btn btn-outline-danger btn-sm\" data-action=\"del\">Löschen</button></td>'; tr.querySelector('[data-action=del]').onclick=function(){ grid[parseInt(tr.dataset.idx,10)]=null; tr.remove(); }; document.getElementById('btBody').appendChild(tr); return tr; }\n");
         sb.append("        function initSortableList(){ if(sortableBt) try{ sortableBt.destroy(); }catch(e){} var tb=document.getElementById('btBody'); if(tb) sortableBt=Sortable.create(tb, { handle: 'td:first-child', animation: 150 }); }\n");
         sb.append("        function renderNeueBasisUebersicht(uiFunktionen, layoutItems){ var countEl=document.getElementById('uiFunktionenCount'); var listEl=document.getElementById('uiFunktionenList'); var layoutCountEl=document.getElementById('layoutItemsCount'); var kindsEl=document.getElementById('layoutTargetKinds'); if(countEl) countEl.textContent=Array.isArray(uiFunktionen)?String(uiFunktionen.length):'0'; if(listEl){ var top=(Array.isArray(uiFunktionen)?uiFunktionen:[]).slice(0,8); listEl.innerHTML=top.map(function(it){ return '<span class=\"bt-overview-pill\">'+esc(it.anzeigeName||it.keyName||it.codeAlt||'')+'</span>'; }).join(''); } if(layoutCountEl) layoutCountEl.textContent=Array.isArray(layoutItems)?String(layoutItems.length):'0'; if(kindsEl){ var counts={}; (Array.isArray(layoutItems)?layoutItems:[]).forEach(function(it){ var k=(it&&it.targetKind)?it.targetKind:'unbekannt'; counts[k]=(counts[k]||0)+1; }); kindsEl.innerHTML=Object.keys(counts).sort().map(function(k){ return '<span class=\"bt-overview-pill\">'+esc(k)+': '+counts[k]+'</span>'; }).join(''); } }\n");
         sb.append("        function renderNeueBasisUebersicht(uiFunktionenData, layoutItemsData, gridSettings){ uiFunktionen=Array.isArray(uiFunktionenData)?uiFunktionenData:[]; layoutItems=Array.isArray(layoutItemsData)?layoutItemsData:[]; if(gridSettings){ displayCols=Math.max(2, Math.min(10, parseInt(gridSettings.cols,10)||displayCols)); displayRows=Math.max(1, Math.min(24, parseInt(gridSettings.rows,10)||displayRows)); } renderVorlagen(); updateGridInfo(); var colsEl=document.getElementById('gridColsInput'); var rowsEl=document.getElementById('gridRowsInput'); if(colsEl){ colsEl.value=displayCols; colsEl.onchange=applyGridSettingsFromInputs; colsEl.oninput=applyGridSettingsFromInputs; } if(rowsEl){ rowsEl.value=displayRows; rowsEl.onchange=applyGridSettingsFromInputs; rowsEl.oninput=applyGridSettingsFromInputs; } }\n");
+        sb.append("        function setupBeschriftungTastenLayout(){ var overview=document.getElementById('btOverview'); var relais=document.querySelector('.relais-balken'); if(!overview||!relais) return; var lead=document.querySelector('.bt-lead'); if(lead) lead.remove(); var parent=overview.parentNode; if(parent&&parent.firstElementChild!==relais){ parent.insertBefore(relais, overview); } var sticky=overview.parentNode&&overview.parentNode.classList&&overview.parentNode.classList.contains('bt-sticky-work')?overview.parentNode:null; if(!sticky){ sticky=document.createElement('div'); sticky.className='bt-sticky-work'; overview.parentNode.insertBefore(sticky, overview); sticky.appendChild(overview); } var cards=overview.querySelectorAll('.bt-overview-card'); var gridCard=null, paletteCard=null; Array.prototype.slice.call(cards).forEach(function(card){ var title=(card.querySelector('h3')&&card.querySelector('h3').textContent||'').trim(); if(title==='Grid') gridCard=card; if(title==='Palette') paletteCard=card; }); if(gridCard&&paletteCard&&gridCard.nextElementSibling!==paletteCard){ overview.insertBefore(gridCard, paletteCard); } var save=document.getElementById('btnSave'); var liste=document.getElementById('btnListe'); var importBtn=document.getElementById('btnImportExcel'); var uploadBtn=document.getElementById('btnImportExcelUpload'); var fileInput=document.getElementById('btExcelFileInput'); var actions=document.querySelector('.bt-actions'); var hint=document.querySelector('.bt-actions-hint'); if(paletteCard){ var paletteHint=paletteCard.querySelector('.bt-palette-hint'); if(paletteHint) paletteHint.remove(); var toolbar=paletteCard.querySelector('.bt-grid-toolbar'); if(!toolbar){ toolbar=document.createElement('div'); toolbar.className='bt-grid-toolbar'; var heading=paletteCard.querySelector('h3'); if(heading&&heading.nextSibling){ paletteCard.insertBefore(toolbar, heading.nextSibling); } else { paletteCard.insertBefore(toolbar, paletteCard.firstChild); } } [save,liste,importBtn,uploadBtn,fileInput].forEach(function(el){ if(el) toolbar.appendChild(el); }); var note=paletteCard.querySelector('.bt-grid-actions-hint'); if(note) note.remove(); } if(actions) actions.remove(); if(hint) hint.remove(); if(paletteCard){ paletteCard.style.width='100%'; } if(gridCard){ gridCard.style.width='100%'; var gridNote=gridCard.querySelector('.bt-grid-actions-hint'); if(gridNote) gridNote.remove(); } var palette=document.getElementById('paletteListe'); if(palette){ Array.prototype.slice.call(palette.querySelectorAll('.bt-palette-item')).forEach(function(el){ var txt=normalizeBtTyp(el.textContent||''); if(txt==='Normal' || txt==='NULL'){ el.remove(); } }); palette.style.display='grid'; palette.style.gridTemplateColumns='repeat(8, minmax(0, 1fr))'; palette.style.gridTemplateRows='repeat(2, minmax(0, 1fr))'; palette.style.gridAutoFlow='row'; palette.style.overflowX='auto'; } }\n");
         sb.append("        function getVisibleSlotCount(){ return GRID_SIZE; }\n");
         sb.append("        function updateGridInfo(){ var el=document.getElementById('gridInfoText'); if(el){ var minRows=Math.ceil(GRID_SIZE / Math.max(1, displayCols)); el.textContent=GRID_SIZE+' Slots sichtbar. Bei '+displayCols+' Spalten werden mindestens '+minRows+' Zeilen benötigt.'; } }\n");
         sb.append("        function applyGridSettingsFromInputs(){ var colsEl=document.getElementById('gridColsInput'); var rowsEl=document.getElementById('gridRowsInput'); displayCols=Math.max(2, Math.min(10, parseInt(colsEl&&colsEl.value,10)||6)); displayRows=Math.max(1, Math.min(24, parseInt(rowsEl&&rowsEl.value,10)||8)); if(colsEl) colsEl.value=displayCols; if(rowsEl) rowsEl.value=displayRows; renderGrid(); }\n");
-        sb.append("        function renderGrid(){ var g=document.getElementById('tastenGrid'); if(!g) return; g.className='bt-grid'; if(g.classList){ g.classList.remove('d-flex'); g.classList.remove('flex-wrap'); } g.style.display='grid'; g.innerHTML=''; g.style.gridTemplateColumns='repeat('+displayCols+', minmax(0, 1fr))'; var visibleCount=getVisibleSlotCount(); for(var i=0;i<visibleCount;i++){ (function(idx){ var cell=document.createElement('div'); var slot=grid[idx]; var slug=slot?typToSlug(slot.c1):'leer'; cell.className='bt-cell bt-typ-'+slug+' border rounded text-center'; cell.dataset.idx=idx; cell.innerHTML='<span class=\"bt-slot-index\">'+(idx+1)+'</span>'+(slot&&(slot.c2||slot.c1) ? '<span class=\"bt-cell-label\">'+esc(slot.c2||slot.c1)+'</span>'+(slot.c2 ? '<span class=\"bt-cell-typ\">'+esc(slot.c1)+'</span>' : '') : '<span class=\"bt-cell-leer\">Leer</span>'); cell.onclick=function(){ openEdit(idx); }; if(slot&&slot.c1!=='leer'){ cell.draggable=true; cell.style.cursor='grab'; cell.ondragstart=function(ev){ ev.dataTransfer.setData('application/x-bt-grid-index',String(idx)); ev.dataTransfer.effectAllowed='move'; }; } else { cell.draggable=false; } cell.ondragover=function(e){ e.preventDefault(); cell.classList.add('border-primary'); }; cell.ondragleave=function(){ cell.classList.remove('border-primary'); }; cell.ondrop=function(e){ e.preventDefault(); cell.classList.remove('border-primary'); var gridIndex=e.dataTransfer.getData('application/x-bt-grid-index'); if(gridIndex!==''){ var srcIdx=parseInt(gridIndex,10); if(!isNaN(srcIdx)&&srcIdx!==idx){ var tmp=copySlot(grid[idx]); grid[idx]=copySlot(grid[srcIdx]); grid[srcIdx]=tmp; renumberVerknuepftSofort(); renderGrid(); return; } } var raw=e.dataTransfer.getData('application/x-bt-palette'); if(raw){ try{ var payload=JSON.parse(raw); grid[idx]=makeSlotFromPaletteItem(payload); if(grid[idx].c1==='VerknÃ¼pft'){ var n=0; for(var j=0;j<GRID_SIZE;j++) if(grid[j]&&grid[j].c1==='VerknÃ¼pft') n++; grid[idx].c3=String(VERKNUEPFT_RELAIS_BASE+n-1); } else if(grid[idx].c1==='Sofort Start'){ var n=0; for(var j=0;j<GRID_SIZE;j++) if(grid[j]&&grid[j].c1==='Sofort Start') n++; grid[idx].c3=String(SOFORT_RELAIS_BASE+n-1); } renderGrid(); return; } catch(err){} } var typ=e.dataTransfer.getData('text/plain'); if(typ){ grid[idx]=vorlageForTyp(typ); renderGrid(); } }; g.appendChild(cell); })(i); } updateGridInfo(); }\n");
+        sb.append("        function insertSlotAt(idx, slot){ if(idx<0||idx>=GRID_SIZE) return; for(var k=GRID_SIZE-1;k>idx;k--){ grid[k]=copySlot(grid[k-1]); } grid[idx]=copySlot(slot); renumberVerknuepftSofort(); }\n");
+        sb.append("        function removeSlotAt(idx){ if(idx<0||idx>=GRID_SIZE) return; for(var k=idx;k<GRID_SIZE-1;k++){ grid[k]=copySlot(grid[k+1]); } grid[GRID_SIZE-1]=null; renumberVerknuepftSofort(); }\n");
+        sb.append("        function moveSlotWithInsert(srcIdx, targetIdx){ if(srcIdx===targetIdx||srcIdx<0||targetIdx<0||srcIdx>=GRID_SIZE||targetIdx>=GRID_SIZE) return; var moved=copySlot(grid[srcIdx]); if(!moved) return; if(srcIdx<targetIdx){ for(var k=srcIdx;k<targetIdx;k++){ grid[k]=copySlot(grid[k+1]); } grid[targetIdx]=moved; } else { for(var k=srcIdx;k>targetIdx;k--){ grid[k]=copySlot(grid[k-1]); } grid[targetIdx]=moved; } renumberVerknuepftSofort(); }\n");
+        sb.append("        function prepareDroppedSlot(payload){ var slot=makeSlotFromPaletteItem(payload); if(!slot) return null; if(normalizeBtTyp(slot.c1)===BT_TYP_VERKNUEPFT){ slot.c1=BT_TYP_VERKNUEPFT; slot.c2=(slot.c2&&normalizeBtTyp(slot.c2)!=='Normal')?normalizeBtTyp(slot.c2):BT_TYP_VERKNUEPFT; } return slot; }\n");
+        sb.append("        function getSofortDisplayName(idx, slot){ if(!slot||slot.c1!=='Sofort Start') return ''; var local=(slot.sofort_melodie||'').trim(); if(local) return local; var count=0; for(var j=0;j<idx;j++){ if(grid[j]&&grid[j].c1==='Sofort Start') count++; } var apiItem=soforttasten[count]; return apiItem&&apiItem.melodieName?String(apiItem.melodieName).trim():''; }\n");
+        sb.append("        function renderGrid(){ var g=document.getElementById('tastenGrid'); if(!g) return; g.className='bt-grid'; if(g.classList){ g.classList.remove('d-flex'); g.classList.remove('flex-wrap'); } g.style.display='grid'; g.innerHTML=''; g.style.gridTemplateColumns='repeat('+displayCols+', minmax(0, 1fr))'; var visibleCount=getVisibleSlotCount(); for(var i=0;i<visibleCount;i++){ (function(idx){ var cell=document.createElement('div'); var slot=grid[idx]; var slug=slot?typToSlug(slot.c1):'leer'; var extra=''; if(slot&&slot.c1==='Sofort Start'){ var melName=getSofortDisplayName(idx, slot); if(melName) extra='<span class=\"bt-cell-extra\">'+esc(melName)+'</span>'; } cell.className='bt-cell bt-typ-'+slug+' border rounded text-center'; cell.dataset.idx=idx; cell.innerHTML='<span class=\"bt-slot-index\">'+(idx+1)+'</span>'+(slot&&(slot.c2||slot.c1) ? '<span class=\"bt-cell-label\">'+esc(slot.c2||slot.c1)+'</span>'+(slot.c2 ? '<span class=\"bt-cell-typ\">'+esc(slot.c1)+'</span>' : '')+extra : '<span class=\"bt-cell-leer\">Leer</span>'); cell.onclick=function(){ openEdit(idx); }; if(slot&&slot.c1!=='leer'){ cell.draggable=true; cell.style.cursor='grab'; cell.ondragstart=function(ev){ ev.dataTransfer.setData('application/x-bt-grid-index',String(idx)); ev.dataTransfer.effectAllowed='move'; }; } else { cell.draggable=false; } cell.ondragover=function(e){ e.preventDefault(); cell.classList.add('border-primary'); }; cell.ondragleave=function(){ cell.classList.remove('border-primary'); }; cell.ondrop=function(e){ e.preventDefault(); cell.classList.remove('border-primary'); var gridIndex=e.dataTransfer.getData('application/x-bt-grid-index'); if(gridIndex!==''){ var srcIdx=parseInt(gridIndex,10); if(!isNaN(srcIdx)&&srcIdx!==idx){ moveSlotWithInsert(srcIdx, idx); renderGrid(); return; } } var raw=e.dataTransfer.getData('application/x-bt-palette'); if(raw){ try{ var payload=JSON.parse(raw); var inserted=prepareDroppedSlot(payload); if(inserted){ insertSlotAt(idx, inserted); renderGrid(); return; } } catch(err){} } var typ=e.dataTransfer.getData('text/plain'); if(typ){ insertSlotAt(idx, prepareDroppedSlot({ typ:normalizeBtTyp(typ), label:normalizeBtTyp(typ), kind:'typ' })); renderGrid(); } }; g.appendChild(cell); })(i); } updateGridInfo(); }\n");
         sb.append("        function load(){ Promise.all([fetch('/api/beschriftung-tasten').then(function(r){ return r.json(); }), fetch('/api/ui-funktionen').then(function(r){ return r.json(); }).catch(function(){ return []; }), fetch('/api/layout-items').then(function(r){ return r.json(); }).catch(function(){ return []; }), fetch('/api/layout-grid-settings').then(function(r){ return r.json(); }).catch(function(){ return { cols:6, rows:8 }; })]).then(function(all){ var arr=all[0], uiFunktionen=all[1], layoutItems=all[2], gridSettings=all[3]; grid=[]; for(var i=0;i<GRID_SIZE;i++) grid[i]=null; arrayToGrid(Array.isArray(arr)?arr:[]); renderNeueBasisUebersicht(uiFunktionen, layoutItems, gridSettings); renderGrid(); loadBTRelaisData().then(function(){ renderRelaisBalkenBT(); }); fetch('/api/melodien').then(function(r){ return r.json(); }).then(function(d){ melodien=(d&&d.melodien)||[]; }); fetch('/api/soforttasten').then(function(r){ return r.json(); }).then(function(d){ soforttasten=Array.isArray(d)?d:[]; }); fetch('/api/sound-files').then(function(r){ return r.json(); }).then(function(d){ soundFiles=(d&&d.files)||[]; }); }); }\n");
+        sb.append("        var BT_TYP_VERKNUEPFT = 'Verkn' + String.fromCharCode(252) + 'pft';\n");
+        sb.append("        function normalizeBtTyp(v){ var s=(v==null?'':String(v)); if(s.indexOf('Verkn')===0) return BT_TYP_VERKNUEPFT; return s; }\n");
+        sb.append("        function paletteBorderForTyp(typ){ typ=normalizeBtTyp(typ); var map={ 'Normal':'#a78ec9','Sofort Start':'#17a2b8','Schwingen':'#a78ec9','Melodie':'#a78ec9','Ausgang':'#0dcaf0','Hammer':'#c9a86c','Leer':'#4a4a4a','NULL':'#4a4a4a','Stop':'#c0392b','Automatik':'#6f42c1','Zweite Seite':'#28a745','Programmeingeben':'#5a9fd4','Programmabfrage':'#9b8bb8','Nebenuhr Stellen':'#e6a86c' }; map[BT_TYP_VERKNUEPFT]='#6b9bd1'; return map[typ]||'#7a7a7a'; }\n");
+        sb.append("        makeSlotFromPaletteItem = function(item){ if(!item) return vorlageForTyp('Normal'); if(item.kind==='ui_funktion'){ var typ=normalizeBtTyp(mapUiFunktionToTyp(item.codeAlt)); var slot=vorlageForTyp(typ||'Normal'); slot.c1=typ||slot.c1; slot.c2=normalizeBtTyp(item.label||slot.c1); slot.sonder_id=item.codeAlt; return slot; } var typ=normalizeBtTyp(item.typ||item.label||'Normal'); var slot=vorlageForTyp(typ||'Normal'); slot.c1=typ||slot.c1; if(slot.c1===BT_TYP_VERKNUEPFT){ slot.c2=BT_TYP_VERKNUEPFT; } return slot; };\n");
+        sb.append("        renderPaletteInto = function(containerId, items){ var div=document.getElementById(containerId); if(!div) return; var clean=(items||[]).filter(function(item){ var label=normalizeBtTyp(item&&item.label||item&&item.typ||''); var typ=normalizeBtTyp(item&&item.typ||mapUiFunktionToTyp(item&&item.codeAlt)||label); return label!=='NULL' && typ!=='NULL' && label!=='Normal' && typ!=='Normal'; }); div.innerHTML=clean.map(function(item){ var label=normalizeBtTyp(item.label||item.typ||''); var typ=normalizeBtTyp(item.typ||mapUiFunktionToTyp(item.codeAlt)||label); var bc=paletteBorderForTyp(typ); return '<div class=\"bt-palette-item rounded\" draggable=\"true\" data-kind=\"'+esc(item.kind)+'\" data-code=\"'+esc(item.codeAlt||'')+'\" data-typ=\"'+esc(typ)+'\" style=\"border:2px solid '+bc+' !important; box-shadow:inset 0 0 0 1px rgba(255,255,255,.03);\">'+esc(label)+'</div>'; }).join(''); var cols=Math.max(1, Math.ceil(clean.length/2)); div.style.display='grid'; div.style.gridTemplateRows='repeat(2, minmax(0, 1fr))'; div.style.gridTemplateColumns='repeat('+cols+', minmax(120px, 1fr))'; div.style.gridAutoFlow='row'; div.style.overflowX='auto'; Array.prototype.slice.call(div.querySelectorAll('.bt-palette-item')).forEach(function(el){ el.ondragstart=function(e){ var payload={ kind:el.dataset.kind||'typ', codeAlt:parseInt(el.dataset.code||'0',10)||0, typ:normalizeBtTyp(el.dataset.typ||''), label:normalizeBtTyp(el.textContent||'') }; e.dataTransfer.setData('application/x-bt-palette', JSON.stringify(payload)); e.dataTransfer.effectAllowed='copy'; }; }); };\n");
+        sb.append("        renderVorlagen = function(){ var funktionItems=(uiFunktionen||[]).map(function(f){ return { kind:'ui_funktion', codeAlt:(f.codeAlt!=null?f.codeAlt:f.code_alt), label:normalizeBtTyp(f.anzeigeName||f.anzeige_name||f.keyName||f.key_name||'') }; }).filter(function(item){ return !!mapUiFunktionToTyp(item.codeAlt); }); var basisItems=[BT_TYP_VERKNUEPFT,'Sofort Start','Schwingen','Melodie','Ausgang','Hammer','Leer'].map(function(t){ return { kind:'typ', typ:t, label:t }; }); renderPaletteInto('paletteListe', funktionItems.concat(basisItems)); };\n");
+        sb.append("        renumberVerknuepftSofort = function(){ var v=0,s=0; for(var i=0;i<GRID_SIZE;i++){ if(grid[i]&&normalizeBtTyp(grid[i].c1)===BT_TYP_VERKNUEPFT){ grid[i].c1=BT_TYP_VERKNUEPFT; grid[i].c2=(grid[i].c2&&normalizeBtTyp(grid[i].c2)!=='Normal')?normalizeBtTyp(grid[i].c2):BT_TYP_VERKNUEPFT; grid[i].c3=String(VERKNUEPFT_RELAIS_BASE+v); v++; } if(grid[i]&&grid[i].c1==='Sofort Start'){ grid[i].c3=String(SOFORT_RELAIS_BASE+s); s++; } } };\n");
+        sb.append("        setupBeschriftungTastenLayout();\n");
         sb.append("        load();\n");
         sb.append("        fetch('/api/verknuepfte-tasten-pruefung').then(function(r){ return r.json(); }).then(function(d){ if(!d.ok&&d.fehlend&&d.fehlend.length){ var el=document.getElementById('btVerknuepftePruefungAlert'); if(el){ var esc=function(s){ return String(s).replace(/</g,'&lt;').replace(/\"/g,'&quot;'); }; var fehlendStr=d.fehlend.map(function(f){ var t=(f&&f.taste)?esc(f.taste):''; var tags=(f&&f.tagtypen&&f.tagtypen.length)?' (Tag: '+f.tagtypen.map(esc).join(', ')+')':''; return t+tags; }).join('; '); el.innerHTML='In den Programmtagen werden Tasten verwendet, die hier nicht als „Verknüpft“ vorkommen: <strong>'+fehlendStr+'</strong>. Bitte anlegen oder im <a href=\"/programm-editor.html\">Programm-Editor</a> anpassen.'; el.style.display='block'; } } });\n");
         sb.append("    </script>\n</body>\n</html>");
@@ -15627,9 +15910,37 @@ public class ConfigWebServer {
                 "    <title>Melodien-Editor - Turmtechnik</title>\n" +
                 "    <link href=\"https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css\" rel=\"stylesheet\">\n" +
                 "    <style>\n" +
-                "        .note-row:hover { background-color: #f8f9fa; }\n" +
-                "        .note-number { font-weight: bold; color: #495057; }\n" +
-                "        .note-name { color: #6c757d; font-size: 0.9em; }\n" +
+                "        :root { --tt-bg: #0a0a0a; --tt-surface: #141414; --tt-card: #1a1a1a; --tt-border: #2a2a2a; --tt-text: #e8e8e8; --tt-muted: #888; --tt-accent: #c495b0; --tt-accent-hover: #ddb2ca; }\n" +
+                "        body { background: var(--tt-bg); color: var(--tt-text); min-height: 100vh; }\n" +
+                "        .navbar { background: var(--tt-surface) !important; border-bottom: 1px solid var(--tt-border); }\n" +
+                "        .container h1, .container h5, .modal-title, .form-label { color: var(--tt-text); }\n" +
+                "        .text-muted { color: var(--tt-muted) !important; }\n" +
+                "        .alert-info { background: rgba(196,149,176,0.12); color: var(--tt-text); border-color: rgba(196,149,176,0.35); }\n" +
+                "        .table { color: var(--tt-text); }\n" +
+                "        .table > :not(caption) > * > * { border-bottom-color: var(--tt-border); }\n" +
+                "        .table-striped > tbody > tr:nth-of-type(odd) > * { color: var(--tt-text); background-color: rgba(255,255,255,0.025); }\n" +
+                "        .table-hover > tbody > tr:hover > * { color: var(--tt-text); background-color: rgba(196,149,176,0.08); }\n" +
+                "        .table-dark { --bs-table-bg: #202226; --bs-table-striped-bg: #202226; --bs-table-active-bg: #2a2d31; --bs-table-hover-bg: #2a2d31; --bs-table-border-color: var(--tt-border); color: var(--tt-text); }\n" +
+                "        .table-responsive { background: var(--tt-card); border: 1px solid var(--tt-border); border-radius: 10px; padding: 0.25rem; }\n" +
+                "        .modal-content { background: var(--tt-card); color: var(--tt-text); border: 1px solid var(--tt-border); }\n" +
+                "        .modal-header, .modal-footer { border-color: var(--tt-border); }\n" +
+                "        .btn-close { filter: invert(1); }\n" +
+                "        .form-control, .form-select { background: #303339; border-color: #4b4f57; color: var(--tt-text); }\n" +
+                "        .form-control:focus, .form-select:focus { background: #303339; border-color: var(--tt-accent); color: var(--tt-text); box-shadow: 0 0 0 0.25rem rgba(196,149,176,0.2); }\n" +
+                "        .form-check-input { background-color: #303339; border-color: #4b4f57; }\n" +
+                "        .form-check-input:checked { background-color: var(--tt-accent); border-color: var(--tt-accent); }\n" +
+                "        .btn-primary { background-color: var(--tt-accent); border-color: var(--tt-accent); color: #111; }\n" +
+                "        .btn-primary:hover, .btn-primary:focus { background-color: var(--tt-accent-hover); border-color: var(--tt-accent-hover); color: #111; }\n" +
+                "        .btn-success { background-color: #2a8f5a; border-color: #2a8f5a; }\n" +
+                "        .btn-info { background-color: #2f6f8b; border-color: #2f6f8b; color: #fff; }\n" +
+                "        .btn-outline-primary { color: var(--tt-accent); border-color: var(--tt-accent); }\n" +
+                "        .btn-outline-primary:hover { background: var(--tt-accent); border-color: var(--tt-accent); color: #111; }\n" +
+                "        .btn-outline-secondary { color: #c9ced6; border-color: #5c6168; }\n" +
+                "        .btn-outline-secondary:hover { background: #5c6168; color: #fff; }\n" +
+                "        .btn-danger { background-color: #8f3444; border-color: #8f3444; }\n" +
+                "        .note-row:hover { background-color: rgba(196,149,176,0.08); }\n" +
+                "        .note-number { font-weight: bold; color: var(--tt-text); }\n" +
+                "        .note-name { color: var(--tt-muted); font-size: 0.9em; }\n" +
                 "        .melodie-zeilen-table { font-size: 0.78em; }\n" +
                 "        .melodie-zeilen-table th { position: sticky; top: 0; background: #212529; z-index: 10; padding: 2px 4px; line-height: 1.1; }\n" +
                 "        .melodie-zeilen-table td { padding: 1px 3px; vertical-align: middle; line-height: 1.1; }\n" +
@@ -15639,6 +15950,7 @@ public class ConfigWebServer {
                 "        .zeiteinheit-cell { width: 100px; }\n" +
                 "        .melodie-zeilen-table input, .melodie-zeilen-table select { font-size: 0.95em; padding: 2px 4px; min-height: 20px; line-height: 1.1; }\n" +
                 "        .melodie-zeilen-table .beginn-cell input, .melodie-zeilen-table .dauer-cell input { font-size: 0.9em; }\n" +
+                "        .melodie-zeilen-table .beginn-cell input[readonly] { background: #0f0f10 !important; color: #ffffff !important; -webkit-text-fill-color: #ffffff !important; border-color: #5b616b; opacity: 1; font-weight: 600; }\n" +
                 "        .kloeppel-select { appearance: none; -webkit-appearance: none; -moz-appearance: none; background-image: none !important; }\n" +
                 "        .kloeppel-select.kloeppel-0 { background-color: #28a745 !important; color: #ffffff; border-color: #1e7e34; font-weight: bold; }\n" +
                 "        .kloeppel-select.kloeppel-1 { background-color: #dc3545 !important; color: #ffffff; border-color: #bd2130; font-weight: bold; }\n" +
@@ -15648,7 +15960,7 @@ public class ConfigWebServer {
                 "        input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer-spin-button { opacity: 1; }\n" +
                 "    </style>\n" +
                 "</head>\n" +
-                "<body>\n" +
+                "<body class=\"melodien-editor-page\">\n" +
                 "    <nav class=\"navbar navbar-expand-lg navbar-dark bg-dark\">\n" +
                 "        <div class=\"container-fluid\">\n" +
                 "            <a class=\"navbar-brand\" href=\"/\">Turmtechnik</a>\n" +
@@ -15915,6 +16227,23 @@ public class ConfigWebServer {
                 "            });\n" +
                 "            \n" +
             "            tbody.innerHTML = html;\n" +
+            "            tbody.querySelectorAll('tr').forEach((row, rowIndex) => {\n" +
+            "                const actionCell = row.lastElementChild;\n" +
+            "                if (!actionCell) return;\n" +
+            "                actionCell.classList.add('d-flex', 'gap-1', 'flex-nowrap');\n" +
+            "                const insertButton = document.createElement('button');\n" +
+            "                insertButton.type = 'button';\n" +
+            "                insertButton.className = 'btn btn-sm btn-secondary';\n" +
+            "                insertButton.style.whiteSpace = 'nowrap';\n" +
+            "                insertButton.textContent = 'Zeile +';\n" +
+            "                insertButton.onclick = function() { insertZeileAt(rowIndex); };\n" +
+            "                actionCell.insertBefore(insertButton, actionCell.firstChild);\n" +
+            "            });\n" +
+            "            const addButton = document.querySelector('button[onclick=\"addNewZeile()\"]');\n" +
+            "            if (addButton) {\n" +
+            "                addButton.onclick = function() { addNewZeileAmEnde(); };\n" +
+            "                addButton.removeAttribute('onclick');\n" +
+            "            }\n" +
             "            \n" +
             "            // Füge Event-Listener für Dauer-Input Spinner hinzu\n" +
             "            const dauerInputs = tbody.querySelectorAll('.dauer-input');\n" +
@@ -16084,6 +16413,55 @@ public class ConfigWebServer {
                 "            if (!zeile) return;\n" +
                 "            zeile.melodieXls = wert || null;\n" +
                 "        }\n" +
+                "        \n" +
+        "        function createEmptyZeile() {\n" +
+        "            return {\n" +
+        "                id: null,\n" +
+        "                melodieId: aktuellBearbeiteteMelodie.id,\n" +
+        "                zeileIndex: melodieZeilen.length,\n" +
+        "                beginnZeit: null,\n" +
+        "                dauerSekunden: 0.0,\n" +
+        "                zeiteinheit: 'Sec',\n" +
+        "                kloeppelA: null,\n" +
+        "                kloeppelB: null,\n" +
+        "                kloeppelC: null,\n" +
+        "                kloeppelD: null,\n" +
+        "                kloeppelE: null,\n" +
+        "                kloeppelF: null,\n" +
+        "                kloeppelG: null,\n" +
+        "                kloeppelH: null,\n" +
+        "                kloeppelI: null,\n" +
+        "                kloeppelJ: null,\n" +
+        "                kloeppelK: null,\n" +
+        "                kloeppelL: null,\n" +
+        "                kloeppelM: null,\n" +
+        "                kloeppelN: null,\n" +
+        "                kloeppelO: null,\n" +
+        "                kloeppelP: null,\n" +
+        "                soundMp3: null,\n" +
+        "                melodieXls: null\n" +
+        "            };\n" +
+        "        }\n" +
+                "        \n" +
+        "        function reindexMelodieZeilen() {\n" +
+        "            melodieZeilen.forEach((zeile, index) => {\n" +
+        "                zeile.zeileIndex = index;\n" +
+        "            });\n" +
+        "        }\n" +
+                "        \n" +
+        "        function addNewZeileAmEnde() {\n" +
+        "            const neueZeile = createEmptyZeile();\n" +
+        "            melodieZeilen.push(neueZeile);\n" +
+        "            reindexMelodieZeilen();\n" +
+        "            renderMelodieZeilen();\n" +
+        "        }\n" +
+                "        \n" +
+        "        function insertZeileAt(index) {\n" +
+        "            const neueZeile = createEmptyZeile();\n" +
+        "            melodieZeilen.splice(index, 0, neueZeile);\n" +
+        "            reindexMelodieZeilen();\n" +
+        "            renderMelodieZeilen();\n" +
+        "        }\n" +
                 "        \n" +
         "        function addNewZeile() {\n" +
         "            // Neue Zeile wird am Ende hinzugefügt\n" +

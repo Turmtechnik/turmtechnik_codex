@@ -16,7 +16,7 @@ import java.util.List;
 public class PlatinenDatabaseHelper extends SQLiteOpenHelper {
     private static final String TAG = "PlatinenDatabaseHelper";
     private static final String DATABASE_NAME = "turmtechnik_config.db";
-    private static final int DATABASE_VERSION = 29; // 29: UI-Funktionen + Layout-Items als neue Basis fuer Tasten-Layout
+    private static final int DATABASE_VERSION = 30; // 30: pending_relais_a fuer Nebenuhr-Neustart-Replay
     
     private static final String TABLE_PLATINEN = "platinen_config";
     private static final String TABLE_IO_CONFIG = "io_config";
@@ -76,7 +76,8 @@ public class PlatinenDatabaseHelper extends SQLiteOpenHelper {
         "mondphase_ist INTEGER DEFAULT 0, " +            // Aktueller Impulswert im Mondzyklus für Monduhr D
         "last_relais_a INTEGER DEFAULT 0, " +            // Letztes verwendetes Relais (1=A, 0=B) für Wechselschaltung
         "aktiv INTEGER DEFAULT 1, " +                    // Aktiv-Status (1=aktiv, 0=inaktiv)
-        "impuls_ausstehend INTEGER DEFAULT 0, " +         // 1 = Wert vor Impuls gespeichert, Impuls noch nicht durch → beim Laden 1 zurück
+        "impuls_ausstehend INTEGER DEFAULT 0, " +         // 1 = letzter Impuls ist offen und wird nach Neustart mit gleichem Relais wiederholt
+        "pending_relais_a INTEGER DEFAULT NULL, " +       // NULL = kein offener Impuls, 1 = Relais A wiederholen, 0 = Relais B wiederholen
         "created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, " +
         "updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, " +
         "UNIQUE(uhr_name, zeile_index)" +
@@ -1025,6 +1026,14 @@ public class PlatinenDatabaseHelper extends SQLiteOpenHelper {
                 Log.w(TAG, "Spalte impuls_antwort_erwartet existiert bereits oder Fehler", e);
             }
         }
+        if (oldVersion < 30) {
+            try {
+                db.execSQL("ALTER TABLE " + TABLE_NEBENUHR_CONFIG + " ADD COLUMN pending_relais_a INTEGER DEFAULT NULL");
+                Log.d(TAG, "Spalte pending_relais_a zu nebenuhr_config hinzugefügt (Version 30)");
+            } catch (Exception e) {
+                Log.w(TAG, "Spalte pending_relais_a existiert bereits oder Fehler", e);
+            }
+        }
         if (oldVersion < 26) {
             Cursor c = null;
             try {
@@ -1825,6 +1834,18 @@ public class PlatinenDatabaseHelper extends SQLiteOpenHelper {
         return DEFAULT_LAYOUT_GRID_COLS;
     }
 
+    private int getLayoutGridCols(SQLiteDatabase db) {
+        String value = getConfigValue(db, KEY_LAYOUT_GRID_COLS);
+        if (value != null && !value.trim().isEmpty()) {
+            try {
+                return normalizeLayoutGridCols(Integer.parseInt(value.trim()));
+            } catch (NumberFormatException e) {
+                Log.w(TAG, "Ungueltiger Wert fuer layout_grid_cols: " + value, e);
+            }
+        }
+        return DEFAULT_LAYOUT_GRID_COLS;
+    }
+
     public void setLayoutGridCols(int cols) {
         setConfigValue(KEY_LAYOUT_GRID_COLS, String.valueOf(normalizeLayoutGridCols(cols)));
     }
@@ -1843,6 +1864,23 @@ public class PlatinenDatabaseHelper extends SQLiteOpenHelper {
 
     public void setLayoutGridRows(int rows) {
         setConfigValue(KEY_LAYOUT_GRID_ROWS, String.valueOf(normalizeLayoutGridRows(rows)));
+    }
+
+    private String getConfigValue(SQLiteDatabase db, String key) {
+        if (db == null || key == null || key.trim().isEmpty()) return null;
+        Cursor cursor = db.query(TABLE_IO_CONFIG,
+            new String[]{"value"},
+            "key = ?",
+            new String[]{key.trim()},
+            null, null, null);
+        try {
+            if (cursor.moveToFirst()) {
+                return cursor.getString(0);
+            }
+        } finally {
+            cursor.close();
+        }
+        return null;
     }
 
     public static int normalizeMondImpulseProPhase(int impulseProPhase) {
@@ -2071,7 +2109,7 @@ public class PlatinenDatabaseHelper extends SQLiteOpenHelper {
         Cursor cursor = db.query(TABLE_NEBENUHR_CONFIG,
             new String[]{"id", "uhr_name", "zeile_index", "relais_a", "relais_b",
                         "impuls_dauer_1", "impuls_dauer_2", "uhr_name_display",
-                        "modus", "angezeigte_zeit", "mondphase_ist", "last_relais_a", "aktiv", "impuls_ausstehend"},
+                        "modus", "angezeigte_zeit", "mondphase_ist", "last_relais_a", "aktiv", "impuls_ausstehend", "pending_relais_a"},
             null, null, null, null, "zeile_index ASC");
         
         try {
@@ -2091,6 +2129,7 @@ public class PlatinenDatabaseHelper extends SQLiteOpenHelper {
                 nebenuhr.lastRelaisA = cursor.getInt(11) == 1;
                 nebenuhr.aktiv = cursor.getInt(12) == 1;
                 nebenuhr.impulsAusstehend = cursor.getColumnCount() > 13 && cursor.getInt(13) == 1;
+                nebenuhr.pendingRelaisA = cursor.getColumnCount() > 14 && !cursor.isNull(14) ? (cursor.getInt(14) == 1) : null;
                 nebenuhren.add(nebenuhr);
             }
         } finally {
@@ -2148,7 +2187,7 @@ public class PlatinenDatabaseHelper extends SQLiteOpenHelper {
         Cursor cursor = db.query(TABLE_NEBENUHR_CONFIG,
             new String[]{"id", "uhr_name", "zeile_index", "relais_a", "relais_b",
                         "impuls_dauer_1", "impuls_dauer_2", "uhr_name_display",
-                        "modus", "angezeigte_zeit", "mondphase_ist", "last_relais_a", "aktiv", "impuls_ausstehend"},
+                        "modus", "angezeigte_zeit", "mondphase_ist", "last_relais_a", "aktiv", "impuls_ausstehend", "pending_relais_a"},
             "zeile_index = ?",
             new String[]{String.valueOf(zeile)},
             null, null, null);
@@ -2170,6 +2209,7 @@ public class PlatinenDatabaseHelper extends SQLiteOpenHelper {
                 nebenuhr.lastRelaisA = cursor.getInt(11) == 1;
                 nebenuhr.aktiv = cursor.getInt(12) == 1;
                 nebenuhr.impulsAusstehend = cursor.getColumnCount() > 13 && cursor.getInt(13) == 1;
+                nebenuhr.pendingRelaisA = cursor.getColumnCount() > 14 && !cursor.isNull(14) ? (cursor.getInt(14) == 1) : null;
                 return nebenuhr;
             }
         } finally {
@@ -2228,7 +2268,7 @@ public class PlatinenDatabaseHelper extends SQLiteOpenHelper {
             // WICHTIG: Lade aktuelle Zustandswerte aus DB, damit sie nicht überschrieben werden
             // wenn sie nicht explizit gesetzt wurden (z.B. beim Speichern aus Web-UI)
             Cursor currentCursor = db.query(TABLE_NEBENUHR_CONFIG,
-                new String[]{"angezeigte_zeit", "mondphase_ist", "last_relais_a"},
+                new String[]{"angezeigte_zeit", "mondphase_ist", "last_relais_a", "pending_relais_a"},
                 "uhr_name = ? AND zeile_index = ?",
                 new String[]{nebenuhr.uhrName, String.valueOf(nebenuhr.zeile)},
                 null, null, null);
@@ -2236,6 +2276,7 @@ public class PlatinenDatabaseHelper extends SQLiteOpenHelper {
             int currentAngezeigteZeit = nebenuhr.angezeigteZeit;
             int currentMondphaseIst = nebenuhr.mondphaseIst;
             boolean currentLastRelaisA = nebenuhr.lastRelaisA;
+            Boolean currentPendingRelaisA = nebenuhr.pendingRelaisA;
             
             if (currentCursor.moveToFirst()) {
                 // Wenn Zustandswerte nicht explizit gesetzt wurden (0/false), behalte DB-Werte
@@ -2243,6 +2284,7 @@ public class PlatinenDatabaseHelper extends SQLiteOpenHelper {
                 int dbAngezeigteZeit = normalizeNebenuhrAngezeigteZeit(currentCursor.getInt(0), nebenuhr.zeile);
                 int dbMondphaseIst = currentCursor.getInt(1);
                 int dbLastRelaisA = currentCursor.getInt(2);
+                Boolean dbPendingRelaisA = currentCursor.isNull(3) ? null : (currentCursor.getInt(3) == 1);
                 
                 // Behalte DB-Werte, wenn neue Werte nicht explizit gesetzt wurden
                 // (0 könnte ein gültiger Wert sein, daher prüfen wir ob das Objekt explizit gesetzt wurde)
@@ -2259,6 +2301,7 @@ public class PlatinenDatabaseHelper extends SQLiteOpenHelper {
                 // last_relais_a: Immer den übergebenen Wert verwenden (z. B. nach manuellem Stellen
                 // der Nebenuhr in SetNebenuhrActivity wird getoggelt, damit der nächste Impuls zählt).
                 currentLastRelaisA = nebenuhr.lastRelaisA;
+                currentPendingRelaisA = nebenuhr.pendingRelaisA != null ? nebenuhr.pendingRelaisA : dbPendingRelaisA;
             }
             currentCursor.close();
             
@@ -2274,6 +2317,11 @@ public class PlatinenDatabaseHelper extends SQLiteOpenHelper {
             values.put("last_relais_a", currentLastRelaisA ? 1 : 0);
             values.put("aktiv", nebenuhr.aktiv ? 1 : 0);
             values.put("impuls_ausstehend", nebenuhr.impulsAusstehend ? 1 : 0);
+            if (currentPendingRelaisA == null) {
+                values.putNull("pending_relais_a");
+            } else {
+                values.put("pending_relais_a", currentPendingRelaisA ? 1 : 0);
+            }
             values.put("updated_at", "CURRENT_TIMESTAMP");
             
             int rowsUpdated = db.update(TABLE_NEBENUHR_CONFIG, values, 
@@ -2296,6 +2344,11 @@ public class PlatinenDatabaseHelper extends SQLiteOpenHelper {
             values.put("last_relais_a", nebenuhr.lastRelaisA ? 1 : 0);
             values.put("aktiv", nebenuhr.aktiv ? 1 : 0);
             values.put("impuls_ausstehend", nebenuhr.impulsAusstehend ? 1 : 0);
+            if (nebenuhr.pendingRelaisA == null) {
+                values.putNull("pending_relais_a");
+            } else {
+                values.put("pending_relais_a", nebenuhr.pendingRelaisA ? 1 : 0);
+            }
             
             db.insert(TABLE_NEBENUHR_CONFIG, null, values);
             Log.d(TAG, "Nebenuhr " + nebenuhr.uhrName + " (Zeile " + nebenuhr.zeile + ") erstellt");
@@ -2622,6 +2675,7 @@ public class PlatinenDatabaseHelper extends SQLiteOpenHelper {
         public boolean aktiv;           // Aktiv-Status (true=aktiv, false=inaktiv)
         /** true = angezeigteZeit wurde vor Impuls gespeichert, Impuls ist noch nicht durch (Absturzfall). Beim Laden dann angezeigteZeit − 1 verwenden. */
         public boolean impulsAusstehend;
+        public Boolean pendingRelaisA;
     }
 
     private static String normalizeNebenuhrModus(String modus, int zeile) {
@@ -3946,6 +4000,25 @@ public class PlatinenDatabaseHelper extends SQLiteOpenHelper {
         }
         return names;
     }
+
+    public int renameVerknuepfteTasteInProgrammen(String oldName, String newName) {
+        String oldValue = oldName != null ? oldName.trim() : "";
+        String newValue = newName != null ? newName.trim() : "";
+        if (oldValue.isEmpty() || newValue.isEmpty() || oldValue.equals(newValue)) {
+            return 0;
+        }
+        SQLiteDatabase db = getWritableDatabase();
+        android.content.ContentValues values = new android.content.ContentValues();
+        values.put("verknuepfte_taste", newValue);
+        int updated = db.update(TABLE_PROGRAMME, values,
+                "trim(verknuepfte_taste) = ?",
+                new String[]{oldValue});
+        if (updated > 0) {
+            StaticVariable.programmeDatabaseChanged = true;
+            Log.d(TAG, "Verknüpfte Taste in Programmen umbenannt: '" + oldValue + "' -> '" + newValue + "', Treffer=" + updated);
+        }
+        return updated;
+    }
     
     /**
      * Prüft, ob alle in den Programmtagen verwendeten Verknüpften Tasten in der Tastenconfig vorhanden sind.
@@ -4532,11 +4605,16 @@ public class PlatinenDatabaseHelper extends SQLiteOpenHelper {
     private static final int SONDER_ID_AUTOMATIK = 1101;
 
     private void ensureLayoutItemsBackfilled() {
-        ensureLayoutItemsFromBeschriftungTasten(getWritableDatabase());
+        SQLiteDatabase db = getWritableDatabase();
+        ensureLayoutItemsFromBeschriftungTasten(db, getLayoutGridCols(db));
     }
 
     private void ensureLayoutItemsFromBeschriftungTasten(SQLiteDatabase db) {
-        final int layoutCols = getLayoutGridCols();
+        ensureLayoutItemsFromBeschriftungTasten(db, getLayoutGridCols(db));
+    }
+
+    private void ensureLayoutItemsFromBeschriftungTasten(SQLiteDatabase db, int layoutCols) {
+        final int normalizedLayoutCols = normalizeLayoutGridCols(layoutCols);
         Cursor countCursor = null;
         try {
             countCursor = db.rawQuery("SELECT COUNT(*) FROM " + TABLE_LAYOUT_ITEM, null);
@@ -4583,8 +4661,8 @@ public class PlatinenDatabaseHelper extends SQLiteOpenHelper {
                 android.content.ContentValues values = new android.content.ContentValues();
                 values.put("page_nummer", (zeileIndex / 24) + 1);
                 values.put("slot_index", slotOnPage);
-                values.put("grid_row", slotOnPage / layoutCols);
-                values.put("grid_col", slotOnPage % layoutCols);
+                values.put("grid_row", slotOnPage / normalizedLayoutCols);
+                values.put("grid_col", slotOnPage % normalizedLayoutCols);
                 values.put("grid_width", 1);
                 values.put("grid_height", 1);
                 values.put("label_text", c2);

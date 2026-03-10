@@ -10,6 +10,9 @@
 *.hprof
 java_pid*.hprof
 Thumbs.db
+current_screen.png
+live_*.log
+tmp_turmtechnik_config.db
 
 # Dekompilierte APK (Vorgaenger-Version)
 decompiled_vorgaenger/

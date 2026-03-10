@@ -21,7 +21,18 @@ public class HammerManualThread extends Thread
     {
         StaticVariable.hammerThreadLaeuft = true;
 
-        TurmtechnikActivity.startGlockenSound(beschriftungTastenIndex, StaticConstants.PLAY_SOUND_EINMALIG);
+        boolean playedConfiguredSound = TurmtechnikActivity.startConfiguredButtonSoundIfPresent(
+                beschriftungTastenIndex, StaticConstants.PLAY_SOUND_EINMALIG);
+        if (!playedConfiguredSound) {
+            try {
+                if (StaticVariable.hammerSound == 1) {
+                    Sound.playHammerSound1();
+                } else {
+                    Sound.playHammerSound2();
+                }
+            } catch (Exception ignored) {
+            }
+        }
 
         TurmtechnikActivity.globalOn[beschriftungTastenIndex] = true;
         if (relaisNewIndex >= 0 && relaisNewIndex < Serial_IoThread.relaisNew.length) {

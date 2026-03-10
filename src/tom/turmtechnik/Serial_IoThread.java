@@ -22,7 +22,10 @@ public class Serial_IoThread extends Thread {
 //	  private final int minimalCheckTime = 40 ; // minimal alle 800 ms PIC ansprechen 5.6.13
 //	  private final int minimalCheckTime = 50 ; // minimal alle 1000 ms PIC ansprechen 5.6.13
 
-    private final int minimalCheckTime = (StaticVariable.scanRelaisMS / 20);
+    private int getMinimalCheckTime() {
+        int minimalCheckTime = (StaticVariable.scanRelaisMS / 20);
+        return Math.max(1, minimalCheckTime);
+    }
 
     private int[] sendByteBuffer = {0, 0, 0, 0, 1,}; // erstes byte = port a
     // dann port b, c, d, und pic nummer
@@ -274,7 +277,7 @@ public class Serial_IoThread extends Thread {
             }
         } else {
             checkChangeCount++;
-            if (checkChangeCount > minimalCheckTime) {
+            if (checkChangeCount > getMinimalCheckTime()) {
                 sendAllRelais();
                 checkChangeCount = 0;
             }

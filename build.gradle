@@ -88,7 +88,7 @@ android
                 // versionCode bleibt ein eindeutiger Android-kompatibler Zahlenwert.
                 def buildTime = new Date()
                 def buildVersionCode = Integer.parseInt(buildTime.format('yyDDDHHmm'))
-                versionCode 4001
+                versionCode 260900001
                 versionName "40.1"
             }
 

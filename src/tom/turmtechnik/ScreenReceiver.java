@@ -37,7 +37,7 @@ public class ScreenReceiver extends BroadcastReceiver {
 
     private void tryTriggerRecovery(Context context, String action) {
         if (context == null) return;
-        if (TurmtechnikActivity.isInForeground) return;
+        if (StartTurmtechnikService.isTurmtechnikUiVisible(context)) return;
         if (TurmtechnikActivity.getExitForSettingsUntilMillis(context) > System.currentTimeMillis()) return;
         if (TurmtechnikActivity.getBackgroundAllowedUntilMillis(context) > System.currentTimeMillis()) return;
 

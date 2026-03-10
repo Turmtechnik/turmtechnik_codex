@@ -463,7 +463,9 @@ public class MotionDetectionService extends LifecycleService {
         }
     }
     private Intent createWakeActivityIntent() {
-        Intent intent = new Intent(this, TurmtechnikActivity.class);
+        Intent intent = new Intent(this, WebUiActivity.class);
+        intent.putExtra(WebUiActivity.EXTRA_PATH, "/app-seite1.html");
+        intent.putExtra(WebUiActivity.EXTRA_USE_LOCALHOST, true);
         intent.addFlags(WAKE_ACTIVITY_FLAGS);
         return intent;
     }

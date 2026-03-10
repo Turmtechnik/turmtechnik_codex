@@ -5,13 +5,14 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.content.pm.ResolveInfo;
+import android.graphics.Color;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.PowerManager;
 import android.os.Handler;
 import android.os.Looper;
+import android.os.PowerManager;
 import android.util.Log;
-import android.graphics.Color;
 import android.view.Gravity;
 import android.view.KeyEvent;
 import android.view.View;
@@ -32,40 +33,36 @@ import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.List;
 
 /**
- * Zeigt die Web-UI (z. B. Benutzerprogramme) im Vollbild in einer WebView.
- * Eine „Zurück“-Taste beendet die Activity und kehrt zur aufrufenden App zurück.
+ * Zeigt die Web-UI (z. B. Benutzerprogramme) im Vollbild in einer WebView.
  */
 public class WebUiActivity extends Activity {
     private static volatile WebUiActivity activeInstance;
 
     public static final String EXTRA_PATH = "path";
-    /** Wenn true: URL = http://127.0.0.1:8080/&lt;path&gt; (immer funktionsfähig beim Bildschirmschoner vom gleichen Gerät). */
+    /** Wenn true: URL = http://127.0.0.1:8080/<path> (immer funktionsfähig beim Bildschirmschoner vom gleichen Gerät). */
     public static final String EXTRA_USE_LOCALHOST = "use_localhost";
     private static final int RETRY_DELAY_MS = 2000;
     private static final int MAX_RETRIES = 5;
     private static final String SCREENSAVER_URL = "http://127.0.0.1:8080/screensaver.html";
-    /** RustDesk Android-Paket (F-Droid/official: flutter_hbb). */
     private static final String RUSTDESK_PACKAGE = "com.carriez.flutter_hbb";
+    private static final long HEARTBEAT_INTERVAL_MS = 60_000L;
+    private static final String SCHEME_BACK_TO_APP = "turmt://layout1";
+    private static final String DEFAULT_PAGE_AFTER_SCREENSAVER = "http://127.0.0.1:8080/app-seite1.html";
 
     private WebView webView;
     private String loadUrl;
     private int retryCount;
-    /** URL der Seite vor dem Schoner (app-seite1 oder app-seite2), um nach Tipp zurückzukehren. */
     private String pageBeforeScreensaver;
-    /** True, wenn wir per Timer auf screensaver.html gewechselt haben (Tipp = zurück zur vorherigen Seite). */
     private boolean showingScreensaver;
-    /** Bildschirmschoner: Nach konfigurierter Zeit Schoner anzeigen bzw. Bildschirm abdunkeln. */
-    private Handler screenOffHandler = new Handler(Looper.getMainLooper());
+    private final Handler screenOffHandler = new Handler(Looper.getMainLooper());
     private Runnable screenDimRunnable;
-    /** Overlay beim Abdunkeln; beim Wiedereinschalten entfernen und Helligkeit wieder hell. */
     private View screenDimOverlay;
-    private Handler screensaverHandler = new Handler(Looper.getMainLooper());
+    private final Handler screensaverHandler = new Handler(Looper.getMainLooper());
     private Runnable screensaverRunnable;
-    /** Heartbeat an StartTurmtechnikService, damit beim Bildschirmschoner die App nicht nach 90 s neu gestartet wird (Relais bleiben an, TurmtechnikActivity wird nicht zerstört). */
-    private static final long HEARTBEAT_INTERVAL_MS = 60_000L;
-    private Handler heartbeatHandler = new Handler(Looper.getMainLooper());
+    private final Handler heartbeatHandler = new Handler(Looper.getMainLooper());
     private Runnable heartbeatRunnable;
 
     private void cancelScreenDimState() {
@@ -82,7 +79,9 @@ public class WebUiActivity extends Activity {
         }
         if (screenDimOverlay != null) {
             ViewGroup parent = (ViewGroup) screenDimOverlay.getParent();
-            if (parent != null) parent.removeView(screenDimOverlay);
+            if (parent != null) {
+                parent.removeView(screenDimOverlay);
+            }
             screenDimOverlay = null;
         }
     }
@@ -115,6 +114,9 @@ public class WebUiActivity extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        if (maybeReleaseTabletInsteadOfKioskStart(getIntent())) {
+            return;
+        }
         activeInstance = this;
         requestWindowFeature(Window.FEATURE_NO_TITLE);
         getWindow().setFlags(
@@ -129,23 +131,16 @@ public class WebUiActivity extends Activity {
         hideSystemUi();
         setContentView(R.layout.activity_web_ui);
 
-        String path = null;
+        String path = "/app-seite1.html";
         boolean useLocalhost = false;
         Intent intent = getIntent();
         if (intent != null) {
             if (intent.hasExtra(EXTRA_PATH)) path = intent.getStringExtra(EXTRA_PATH);
             if (intent.hasExtra(EXTRA_USE_LOCALHOST)) useLocalhost = intent.getBooleanExtra(EXTRA_USE_LOCALHOST, false);
         }
-        if (useLocalhost && path != null && !path.isEmpty()) {
-            loadUrl = "http://127.0.0.1:8080/" + (path.startsWith("/") ? path.substring(1) : path);
-        } else {
-            loadUrl = TurmtechnikActivity.getWebUiUrlForPath(path);
-        }
+        loadUrl = buildTargetUrl(path, useLocalhost);
 
-        // Server ggf. starten (wichtig nach Prozess-Neustart, wenn WebUiActivity vor TurmtechnikActivity läuft)
-        TurmtechnikActivity.ensureWebServerStarted(getApplicationContext());
-
-        // Heartbeat sofort: Service soll nicht nach 90 s eine zweite Activity starten (verhindert Neustart + „alle Relais aus“ beim Zurückkehren)
+        TurmtechnikActivity.ensureCoreRuntimeStarted(getApplicationContext());
         StartTurmtechnikService.touchHeartbeat();
 
         webView = findViewById(R.id.web_ui_webview);
@@ -156,16 +151,24 @@ public class WebUiActivity extends Activity {
         if ("screensaver.html".equals(path)) {
             scheduleScreenDim();
         } else {
-            // App-Seite (z. B. app-seite1/2): Schoner nach konfigurierter Zeit in derselben WebView anzeigen
             pageBeforeScreensaver = loadUrl;
             startScreensaverTimer();
         }
     }
 
-    /** Startet den Timer: Nach X Min wechseln wir in der WebView zu screensaver.html. */
+    private String buildTargetUrl(String path, boolean useLocalhost) {
+        String resolvedPath = (path == null || path.isEmpty()) ? "/app-seite1.html" : path;
+        if (useLocalhost) {
+            return "http://127.0.0.1:8080/" + (resolvedPath.startsWith("/") ? resolvedPath.substring(1) : resolvedPath);
+        }
+        return TurmtechnikActivity.getWebUiUrlForPath(resolvedPath);
+    }
+
     private void startScreensaverTimer() {
-        screensaverHandler.removeCallbacks(screensaverRunnable);
-        long delayMs = TurmtechnikActivity.getScreensaverDelayMsStatic(getApplicationContext());
+        if (screensaverRunnable != null) {
+            screensaverHandler.removeCallbacks(screensaverRunnable);
+        }
+        final long delayMs = TurmtechnikActivity.getScreensaverDelayMsStatic(getApplicationContext());
         screensaverRunnable = new Runnable() {
             @Override
             public void run() {
@@ -179,7 +182,6 @@ public class WebUiActivity extends Activity {
         screensaverHandler.postDelayed(screensaverRunnable, delayMs);
     }
 
-    /** Liest aus Config „Bildschirm aus nach (Minuten)“ und startet Timer zum Abdunkeln. */
     private void scheduleScreenDim() {
         screenDimRunnable = new Runnable() {
             @Override
@@ -189,10 +191,11 @@ public class WebUiActivity extends Activity {
                     WindowManager.LayoutParams lp = getWindow().getAttributes();
                     lp.screenBrightness = 0f;
                     getWindow().setAttributes(lp);
-                    // Zusätzlich schwarzes Vollbild-Overlay, damit der Bildschirm garantiert ganz abgedunkelt ist
                     screenDimOverlay = new View(WebUiActivity.this);
                     screenDimOverlay.setBackgroundColor(0xFF000000);
-                    screenDimOverlay.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+                    screenDimOverlay.setLayoutParams(new ViewGroup.LayoutParams(
+                            ViewGroup.LayoutParams.MATCH_PARENT,
+                            ViewGroup.LayoutParams.MATCH_PARENT));
                     screenDimOverlay.setClickable(true);
                     screenDimOverlay.setOnClickListener(new View.OnClickListener() {
                         @Override
@@ -241,13 +244,75 @@ public class WebUiActivity extends Activity {
         }).start();
     }
 
-    /** Custom-URL: Zurück zur App (Layout Seite 1) statt Serverseite. */
-    private static final String SCHEME_BACK_TO_APP = "turmt://layout1";
+    private boolean isTemporaryTabletReleaseActive() {
+        long now = System.currentTimeMillis();
+        return TurmtechnikActivity.getExitForSettingsUntilMillis(this) > now
+                || TurmtechnikActivity.getBackgroundAllowedUntilMillis(this) > now;
+    }
 
-    /** Standard-URL nach Schoner, wenn keine vorherige Seite (wie Wechsel zu Seite 1/2 – kein App-Neustart, Relais bleiben unverändert). */
-    private static final String DEFAULT_PAGE_AFTER_SCREENSAVER = "http://127.0.0.1:8080/app-seite1.html";
+    private boolean isStartedFromHomeOrLauncher(Intent intent) {
+        if (intent == null) return false;
+        return intent.hasCategory(Intent.CATEGORY_HOME);
+    }
 
-    /** Schoner-Tipp: Immer nur Seite wechseln (wie bei App Seite 1/2) – keine TurmtechnikActivity starten, damit App nicht neu startet und Relais unverändert bleiben. */
+    private void openTabletNormalSurface() {
+        try {
+            Intent home = new Intent(Intent.ACTION_MAIN);
+            home.addCategory(Intent.CATEGORY_HOME);
+            home.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+            String ourPackage = getPackageName();
+            List<ResolveInfo> homes = getPackageManager().queryIntentActivities(home, 0);
+            if (homes != null) {
+                for (ResolveInfo ri : homes) {
+                    if (ri != null && ri.activityInfo != null && !ourPackage.equals(ri.activityInfo.packageName)) {
+                        Intent launcher = new Intent(Intent.ACTION_MAIN);
+                        launcher.addCategory(Intent.CATEGORY_HOME);
+                        launcher.setPackage(ri.activityInfo.packageName);
+                        launcher.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                        startActivity(launcher);
+                        moveTaskToBack(true);
+                        finish();
+                        return;
+                    }
+                }
+            }
+        } catch (Exception e) {
+            Log.w("WebUiActivity", "Externer Launcher fehlgeschlagen: " + (e != null ? e.getMessage() : ""));
+        }
+        try {
+            startActivity(new Intent(android.provider.Settings.ACTION_SETTINGS)
+                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP));
+            moveTaskToBack(true);
+            finish();
+        } catch (Exception e) {
+            Log.w("WebUiActivity", "Settings-Fallback fehlgeschlagen: " + (e != null ? e.getMessage() : ""));
+        }
+    }
+
+    private boolean maybeReleaseTabletInsteadOfKioskStart(Intent intent) {
+        if (!isTemporaryTabletReleaseActive()) {
+            return false;
+        }
+        if (!isStartedFromHomeOrLauncher(intent)) {
+            return false;
+        }
+        Log.i("WebUiActivity", "Kiosk-Start unterdrückt: Tablet-Freigabe aktiv");
+        openTabletNormalSurface();
+        return true;
+    }
+
+    private void loadLayoutPage1IfNeeded() {
+        if (webView == null) return;
+        String currentUrl = webView.getUrl();
+        if (currentUrl == null || !currentUrl.contains("app-seite1.html")) {
+            showingScreensaver = false;
+            cancelScreenDimState();
+            pageBeforeScreensaver = DEFAULT_PAGE_AFTER_SCREENSAVER;
+            webView.loadUrl(DEFAULT_PAGE_AFTER_SCREENSAVER);
+            startScreensaverTimer();
+        }
+    }
+
     private void handleScreensaverDismiss() {
         if (webView == null) return;
         showingScreensaver = false;
@@ -256,11 +321,10 @@ public class WebUiActivity extends Activity {
                 ? pageBeforeScreensaver
                 : DEFAULT_PAGE_AFTER_SCREENSAVER;
         webView.loadUrl(targetUrl);
-        pageBeforeScreensaver = targetUrl; // für nächsten Schoner-Wechsel
+        pageBeforeScreensaver = targetUrl;
         startScreensaverTimer();
     }
 
-    /** Startet die RustDesk-App, falls installiert (z. B. com.carriez.flutter_hbb). */
     private void launchRustDesk() {
         try {
             PackageManager pm = getPackageManager();
@@ -316,7 +380,9 @@ public class WebUiActivity extends Activity {
                     new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
                         @Override
                         public void run() {
-                            if (!isFinishing()) hideSystemUi();
+                            if (!isFinishing()) {
+                                hideSystemUi();
+                            }
                         }
                     }, 150);
                 }
@@ -327,7 +393,7 @@ public class WebUiActivity extends Activity {
                 Log.e("WebUiActivity", "WebView error: " + description + " " + failingUrl);
                 if (description != null && description.contains("ERR_CONNECTION_REFUSED") && retryCount < MAX_RETRIES) {
                     retryCount++;
-                    Toast.makeText(WebUiActivity.this, "Server startet, bitte warten … (" + retryCount + "/" + MAX_RETRIES + ")", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(WebUiActivity.this, "Server startet, bitte warten ... (" + retryCount + "/" + MAX_RETRIES + ")", Toast.LENGTH_SHORT).show();
                     new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
                         @Override
                         public void run() {
@@ -349,6 +415,9 @@ public class WebUiActivity extends Activity {
     @Override
     protected void onResume() {
         super.onResume();
+        if (maybeReleaseTabletInsteadOfKioskStart(getIntent())) {
+            return;
+        }
         hideSystemUi();
         StartTurmtechnikService.reportVisibleActivity(this, getClass().getName());
         StartTurmtechnikService.touchHeartbeat();
@@ -393,7 +462,9 @@ public class WebUiActivity extends Activity {
         }
         StartTurmtechnikService.reportHiddenActivity(getClass().getName());
         stopHeartbeat();
-        screensaverHandler.removeCallbacks(screensaverRunnable);
+        if (screensaverRunnable != null) {
+            screensaverHandler.removeCallbacks(screensaverRunnable);
+        }
         if (screenDimRunnable != null) {
             screenOffHandler.removeCallbacks(screenDimRunnable);
         }
@@ -421,11 +492,10 @@ public class WebUiActivity extends Activity {
         return super.dispatchTouchEvent(ev);
     }
 
-    /** Tastendruck (z. B. E) bei Schoner/abgedunkeltem Bildschirm: Aufwecken und direkt Layout-Seite anzeigen, ohne Sperrbildschirm. */
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
         if (keyCode == KeyEvent.KEYCODE_BACK && !(showingScreensaver || screenDimOverlay != null)) {
-            onBackPressed();
+            loadLayoutPage1IfNeeded();
             return true;
         }
         if (showingScreensaver || screenDimOverlay != null) {
@@ -460,17 +530,23 @@ public class WebUiActivity extends Activity {
         if (webView != null && webView.canGoBack()) {
             webView.goBack();
         } else {
-            try {
-                TurmtechnikActivity.prepareAppExitForSettings(getApplicationContext(), 30);
-                Intent home = new Intent(Intent.ACTION_MAIN);
-                home.addCategory(Intent.CATEGORY_HOME);
-                home.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
-                startActivity(home);
-                moveTaskToBack(true);
-                finish();
-            } catch (Exception e) {
-                Log.w("WebUiActivity", "Zurück aktiviert Tablet-Freigabe nicht: " + (e != null ? e.getMessage() : ""));
-                moveTaskToBack(true);
+            loadLayoutPage1IfNeeded();
+        }
+    }
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        setIntent(intent);
+        if (maybeReleaseTabletInsteadOfKioskStart(intent)) {
+            return;
+        }
+        if (webView != null && intent != null && (intent.hasExtra(EXTRA_PATH) || intent.hasCategory(Intent.CATEGORY_HOME) || intent.hasCategory(Intent.CATEGORY_LAUNCHER))) {
+            String path = intent.hasExtra(EXTRA_PATH) ? intent.getStringExtra(EXTRA_PATH) : "/app-seite1.html";
+            boolean useLocalhost = intent.getBooleanExtra(EXTRA_USE_LOCALHOST, true);
+            loadUrl = buildTargetUrl(path, useLocalhost);
+            if (!loadUrl.equals(webView.getUrl())) {
+                webView.loadUrl(loadUrl);
             }
         }
     }

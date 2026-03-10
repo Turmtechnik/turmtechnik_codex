@@ -55,7 +55,13 @@ public class Carambola_IoThread extends Thread {
     /** Nach Empfang der Antwort mindestens so lange warten, bis wieder periodisch gesendet wird (nicht sofort wieder senden – ESP entlasten). Bei Tastendruck (Relais-Änderung) wird trotzdem sofort gesendet. */
     private static final long MIN_SEND_INTERVAL_AFTER_RESPONSE_MS = 180;
     /** Wenn sich der Relais-Zustand nicht geändert hat: mindestens alle 1 s periodisch senden (Keepalive – ESP schaltet sonst ab). */
-    private static final long PERIODIC_SEND_WHEN_UNCHANGED_MS = 1000;
+    private long getPeriodicSendWhenUnchangedMs() {
+        long ms = StaticVariable.scanRelaisMS;
+        if (ms < MIN_SEND_INTERVAL_AFTER_RESPONSE_MS) {
+            ms = MIN_SEND_INTERVAL_AFTER_RESPONSE_MS;
+        }
+        return ms;
+    }
 
 //	  private final int minimalCheckTime = 20 ; // minimal alle 400 ms PIC ansprechen
 //	  private final int minimalCheckTime = 40 ; // minimal alle 800 ms PIC ansprechen 5.6.13
@@ -346,7 +352,7 @@ public class Carambola_IoThread extends Thread {
             long now = android.os.SystemClock.elapsedRealtime();
             long msSinceLastResponse = now - lastSuccessfulResponseTimeMs;
             boolean minIntervalElapsed = msSinceLastResponse >= MIN_SEND_INTERVAL_AFTER_RESPONSE_MS;
-            boolean periodicIntervalElapsed = msSinceLastResponse >= PERIODIC_SEND_WHEN_UNCHANGED_MS;
+            boolean periodicIntervalElapsed = msSinceLastResponse >= getPeriodicSendWhenUnchangedMs();
             if (checkChangeCount > getMinimalCheckTime() && !etwasGesendetCarambola && minIntervalElapsed && periodicIntervalElapsed) {
                 sendAllRelais();
                 checkChangeCount = 0;

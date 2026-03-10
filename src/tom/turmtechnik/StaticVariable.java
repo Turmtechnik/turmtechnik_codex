@@ -207,14 +207,20 @@ public class StaticVariable
     public static int uhrA_angezeigteZeit = 0;
     public static boolean uhrA_doRun; // flag fuer thread auslaufen lassen
     public static boolean uhrA_lastRelaisA = false; // true = letztes Relais war A, false = letztes Relais war B
+    public static boolean uhrA_pendingImpuls = false;
+    public static boolean uhrA_pendingRelaisA = false;
     public static int uhrB_calendarZeit = 0;
     public static int uhrB_angezeigteZeit = 0;
     public static boolean uhrB_doRun;
     public static boolean uhrB_lastRelaisA = false; // true = letztes Relais war A, false = letztes Relais war B
+    public static boolean uhrB_pendingImpuls = false;
+    public static boolean uhrB_pendingRelaisA = false;
     public static int uhrC_calendarZeit = 0;
     public static int uhrC_angezeigteZeit = 0;
     public static boolean uhrC_doRun;
     public static boolean uhrC_lastRelaisA = false; // true = letztes Relais war A, false = letztes Relais war B
+    public static boolean uhrC_pendingImpuls = false;
+    public static boolean uhrC_pendingRelaisA = false;
     // Monduhr D: historische 12h-Felder bleiben für Altpfade erhalten; aktiv genutzt wird der Mond-Impulswert
     public static int uhrD_calendarZeit = 0;      // Altwert in 12h-Minuten (0–719), aktuell für Monduhr D nicht relevant
     public static int uhrD_angezeigteZeit = 0;   // Altwert in 12h-Minuten (0–719), aktuell für Monduhr D nicht relevant
@@ -222,6 +228,8 @@ public class StaticVariable
     public static int uhrD_mondphaseIst = 0;      // Ist-Impulswert im konfigurierten Mondzyklus
     public static boolean uhrD_doRun;            // Flag für Thread auslaufen lassen
     public static boolean uhrD_lastRelaisA = false; // true = letztes Relais war A, false = letztes Relais war B
+    public static boolean uhrD_pendingImpuls = false;
+    public static boolean uhrD_pendingRelaisA = false;
     public static long uhrD_letzteBerechnungMs = 0; // Zeitpunkt der letzten Mondphase-Berechnung
     public static boolean nebenuhrEinstellungsSeiteOffen = false; // Flag: Nebenuhr-Einstellungsseite ist offen
     /** Nach Load: auf erste volle Minute warten, dann Soll=RTC setzen und normal aufholen/warten. */

@@ -50,6 +50,7 @@ public class StartTurmtechnikService extends Service {
     private static final long OPEN_APP_ACTIVITY_FALLBACK_DELAY_MS = 2_000L;
     private static final int MAX_ACTIVITY_LAUNCH_CHECKS = 3;
     private static final long RECENT_VISIBLE_ACTIVITY_WINDOW_MS = 15_000L;
+    private static final int BACKGROUND_TASK_RECHECK_SEC = 300;
     private static final int TURMTECHNIK_ACTIVITY_LAUNCH_FLAGS =
             Intent.FLAG_ACTIVITY_NEW_TASK
                     | Intent.FLAG_ACTIVITY_REORDER_TO_FRONT
@@ -81,6 +82,7 @@ public class StartTurmtechnikService extends Service {
     /** Von TurmtechnikActivity/WebUiActivity aufrufen – Timer wird zurückgesetzt. Setzt auch Clocksaver-Crash-Zähler zurück, damit Schoner wieder aktiviert werden kann. */
     public static void touchHeartbeat() {
         lastHeartbeatMs = System.currentTimeMillis();
+        setTimeTurmtechnik(RESTART_AFTER_CRASH_SEC);
         resetClocksaverCrashCount();
     }
 
@@ -105,6 +107,7 @@ public class StartTurmtechnikService extends Service {
         lastVisibleActivityClassName = activityClassName != null ? activityClassName : "";
         lastVisibleActivityMs = System.currentTimeMillis();
         touchHeartbeat();
+        cancelDirectActivityLaunch(context);
         Log.i(sourceFileName, "Activity sichtbar: " + lastVisibleActivityClassName);
     }
 
@@ -223,6 +226,13 @@ public class StartTurmtechnikService extends Service {
             setTimeTurmtechnik(60);
             return;
         }
+        // Wenn der App-Task noch lebt, aber der Launcher vorne ist, nicht permanent aus dem Hintergrund nach vorne zwingen.
+        // Die Runtime läuft weiter; sichtbares Nach-vorne-Holen gelingt auf Samsung aus dem Hintergrund oft ohnehin nicht.
+        if (hasTurmtechnikTask(this)) {
+            Log.d(sourceFileName, "Turmtechnik-Task existiert bereits im Hintergrund – Vordergrundstart übersprungen");
+            setTimeTurmtechnik(BACKGROUND_TASK_RECHECK_SEC);
+            return;
+        }
         // Noch nie Heartbeat → nicht starten (App evtl. gerade am Starten)
         if (lastHeartbeatMs == 0) {
             Log.d(sourceFileName, "Noch kein Heartbeat, Start übersprungen");
@@ -312,7 +322,9 @@ public class StartTurmtechnikService extends Service {
     }
 
     public static Intent createTurmtechnikLaunchIntent(Context context) {
-        Intent intent = new Intent(context, TurmtechnikActivity.class);
+        Intent intent = new Intent(context, WebUiActivity.class);
+        intent.putExtra(WebUiActivity.EXTRA_PATH, "/app-seite1.html");
+        intent.putExtra(WebUiActivity.EXTRA_USE_LOCALHOST, true);
         intent.addFlags(TURMTECHNIK_ACTIVITY_LAUNCH_FLAGS);
         // SHOW_WHEN_LOCKED/TURN_SCREEN_ON nicht per Intent-Flags (ab Android 14 nur noch erlaubte Flags), ggf. in der Activity/Manifest setzen
         return intent;
@@ -345,6 +357,25 @@ public class StartTurmtechnikService extends Service {
         }
     }
 
+    public static void cancelDirectActivityLaunch(Context context) {
+        if (context == null) return;
+        try {
+            Context appContext = context.getApplicationContext();
+            AlarmManager alarmManager = (AlarmManager) appContext.getSystemService(Context.ALARM_SERVICE);
+            if (alarmManager == null) return;
+            Intent intent = createTurmtechnikLaunchIntent(appContext);
+            PendingIntent pendingIntent = PendingIntent.getActivity(
+                    appContext,
+                    DIRECT_ACTIVITY_ALARM_REQUEST_CODE,
+                    intent,
+                    getImmutableUpdateCurrentPendingIntentFlags());
+            alarmManager.cancel(pendingIntent);
+            pendingIntent.cancel();
+        } catch (Exception e) {
+            Log.w(sourceFileName, "Direktstart-Alarm abbrechen fehlgeschlagen: " + (e != null ? e.getMessage() : ""));
+        }
+    }
+
     private static int getImmutableUpdateCurrentPendingIntentFlags() {
         int flags = PendingIntent.FLAG_UPDATE_CURRENT;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
@@ -366,7 +397,7 @@ public class StartTurmtechnikService extends Service {
         }, OPEN_APP_NOTIFICATION_CANCEL_DELAY_MS);
     }
 
-    private static boolean isTurmtechnikUiVisible(Context context) {
+    public static boolean isTurmtechnikUiVisible(Context context) {
         if (TurmtechnikActivity.isInForeground) {
             return true;
         }
@@ -379,17 +410,14 @@ public class StartTurmtechnikService extends Service {
         try {
             ActivityManager activityManager = (ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE);
             if (activityManager != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                List<ActivityManager.AppTask> appTasks = activityManager.getAppTasks();
-                if (appTasks != null) {
-                    String packageName = context.getPackageName();
-                    for (ActivityManager.AppTask appTask : appTasks) {
-                        ActivityManager.RecentTaskInfo taskInfo = appTask != null ? appTask.getTaskInfo() : null;
-                        if (taskInfo != null
-                                && taskInfo.topActivity != null
-                                && packageName.equals(taskInfo.topActivity.getPackageName())) {
-                            Log.i(sourceFileName, "Start-Check: App-Task sichtbar mit " + taskInfo.topActivity.getClassName());
-                            return true;
-                        }
+                ActivityManager.AppTask foregroundTask = findTurmtechnikAppTask(context);
+                if (foregroundTask != null) {
+                    ActivityManager.RecentTaskInfo taskInfo = foregroundTask.getTaskInfo();
+                    if (taskInfo != null
+                            && taskInfo.topActivity != null
+                            && taskInfo.id == taskInfo.persistentId) {
+                        Log.i(sourceFileName, "Start-Check: App-Task sichtbar mit " + taskInfo.topActivity.getClassName());
+                        return true;
                     }
                 }
             }
@@ -419,12 +447,55 @@ public class StartTurmtechnikService extends Service {
         return false;
     }
 
+    private static boolean hasTurmtechnikTask(Context context) {
+        return findTurmtechnikAppTask(context) != null;
+    }
+
+    private static ActivityManager.AppTask findTurmtechnikAppTask(Context context) {
+        if (context == null || Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
+            return null;
+        }
+        try {
+            ActivityManager activityManager = (ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE);
+            if (activityManager == null) return null;
+            List<ActivityManager.AppTask> appTasks = activityManager.getAppTasks();
+            if (appTasks == null) return null;
+            String packageName = context.getPackageName();
+            for (ActivityManager.AppTask appTask : appTasks) {
+                ActivityManager.RecentTaskInfo taskInfo = appTask != null ? appTask.getTaskInfo() : null;
+                if (taskInfo != null
+                        && taskInfo.baseIntent != null
+                        && taskInfo.baseIntent.getComponent() != null
+                        && packageName.equals(taskInfo.baseIntent.getComponent().getPackageName())) {
+                    return appTask;
+                }
+                if (taskInfo != null
+                        && taskInfo.topActivity != null
+                        && packageName.equals(taskInfo.topActivity.getPackageName())) {
+                    return appTask;
+                }
+                if (taskInfo != null
+                        && taskInfo.baseActivity != null
+                        && packageName.equals(taskInfo.baseActivity.getPackageName())) {
+                    return appTask;
+                }
+            }
+        } catch (Exception e) {
+            Log.w(sourceFileName, "App-Task-Suche fehlgeschlagen: " + (e != null ? e.getMessage() : ""));
+        }
+        return null;
+    }
+
     private static void scheduleActivityLaunchFallback(final Context appContext, final Intent activityIntent, final int attempt) {
         new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
             @Override
             public void run() {
                 if (isTurmtechnikUiVisible(appContext)) {
                     Log.i(sourceFileName, "Fallback-Start erfolgreich: Turmtechnik-UI sichtbar (" + lastVisibleActivityClassName + ")");
+                    return;
+                }
+                if (hasTurmtechnikTask(appContext)) {
+                    Log.i(sourceFileName, "Fallback-Start übersprungen: Turmtechnik-Task lebt bereits im Hintergrund");
                     return;
                 }
                 if (TurmtechnikActivity.getExitForSettingsUntilMillis(appContext) > System.currentTimeMillis()) {

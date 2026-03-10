@@ -1287,9 +1287,20 @@ public class TurmtechnikActivity extends Activity {
                                 String wv = db != null ? db.getConfigValue(CONFIG_WEB_UI_VOLLBILD_TEST) : null;
                                 boolean webUiVollbildTest = "1".equals(wv != null ? wv.trim() : "");
                                 // Web-UI anzeigen wenn gewünscht oder wenn Layout nicht gebaut wurde (damit nach Init immer etwas kommt)
-                                if (parentLayout != null) {
+                                if (parentLayout != null && layoutCreated != null) {
                                     parentLayout.addView(layoutCreated);
                                 }
+                            }
+                            if (!activityStartedForScreensaver && !isFinishing()) {
+                                new Handler().postDelayed(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        if (!isFinishing()) {
+                                            ensureWebServerStarted(TurmtechnikActivity.this);
+                                            openWebUiInBrowser(TurmtechnikActivity.this, "/app-seite1.html");
+                                        }
+                                    }
+                                }, 150);
                             }
                             handler = new Handler();
                             // Schwere Arbeit nach dem nächsten Frame ausführen, damit Layout 1 nicht einfriert (Skipped N frames)
@@ -2717,6 +2728,42 @@ public class TurmtechnikActivity extends Activity {
         }
     }
 
+    /** Fuehrt Exit-Aktionen direkt aus, ohne ueber einen sichtbaren Sprung in TurmtechnikActivity zu gehen. */
+    public static void requestExitActionDirect(final android.content.Context context, final String action) {
+        if (action == null || action.trim().isEmpty()) return;
+        final TurmtechnikActivity act = turmtechnikActivityInstance;
+        if (act != null) {
+            act.runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    if ("15min".equals(action)) {
+                        act.beendenMit15MinHintergrund();
+                    } else if ("beenden".equals(action)) {
+                        act.beenden();
+                    } else if ("delete_beenden".equals(action)) {
+                        act.deleteBeschriftungTasten();
+                        act.beenden();
+                    }
+                }
+            });
+            return;
+        }
+
+        android.content.Context appContext = context != null ? context.getApplicationContext() : null;
+        if (appContext == null) return;
+        if ("15min".equals(action)) {
+            long untilMillis = System.currentTimeMillis() + BACKGROUND_ALLOWED_MINUTES * 60L * 1000L;
+            appContext.getSharedPreferences("Turmtechnik", 0)
+                    .edit()
+                    .putLong(PREF_BACKGROUND_ALLOWED_UNTIL_MILLIS, untilMillis)
+                    .commit();
+        } else if ("delete_beenden".equals(action)) {
+            try {
+                new File(beschriftungTastenFileString).delete();
+            } catch (Exception ignored) { }
+        }
+    }
+
     @Override
     protected void onPause() {
         super.onPause();
@@ -2876,6 +2923,94 @@ public class TurmtechnikActivity extends Activity {
         String c1 = (r.c1 != null ? r.c1 : "").trim();
         return "Stop".equalsIgnoreCase(c1) || "Automatik".equalsIgnoreCase(c1)
                 || "Verknüpft".equals(c1) || "verknuepft".equalsIgnoreCase(c1)
+                || "Sofort Start".equalsIgnoreCase(c1) || "Hammer".equalsIgnoreCase(c1)
+                || "Zweite Seite".equalsIgnoreCase(c1) || "Programmeingeben".equalsIgnoreCase(c1)
+                || "Nebenuhr Stellen".equalsIgnoreCase(c1);
+    }
+
+    private static void loadRelayMappingsFromDbStatic(android.content.Context appContext) {
+        if (appContext == null) return;
+        for (int i = 0; i < RELAIS_COUNT; i++) {
+            relaisNumber[i] = 0;
+            hammerZeit[i] = 0;
+            buttonId[i] = "null";
+        }
+        try {
+            PlatinenDatabaseHelper dbHelper = PlatinenDatabaseHelper.getInstance(appContext);
+            java.util.List<PlatinenDatabaseHelper.BeschriftungTastenRow> rows = dbHelper.getBeschriftungTasten();
+            if (rows != null && !rows.isEmpty()) {
+                int end = Math.min(BESCHRIFTUNG_TASTEN_MAX_SLOTS, rows.size());
+                for (int i = 0; i < end; i++) {
+                    PlatinenDatabaseHelper.BeschriftungTastenRow r = rows.get(i);
+                    String c2 = (r.c2 != null ? r.c2 : "").trim();
+                    if ("leer".equalsIgnoreCase(c2) || "NULL".equals(c2) || "null".equals(c2)) {
+                        continue;
+                    }
+                    String c1 = (r.c1 != null ? r.c1 : "").trim();
+                    if (c2.isEmpty() && !isSystemTasteRowStatic(r)) {
+                        continue;
+                    }
+                    String c3 = (r.c3 != null ? r.c3 : "").trim();
+                    String c5 = (r.c5 != null ? r.c5 : "1").trim();
+                    int relNumber = 0;
+                    if (r.sonderId != null) {
+                        relNumber = r.sonderId;
+                    } else if (!c3.isEmpty() && !"null".equalsIgnoreCase(c3) && !"leer".equalsIgnoreCase(c3)) {
+                        try {
+                            relNumber = Integer.parseInt(c3);
+                        } catch (NumberFormatException e) {
+                            relNumber = 0;
+                        }
+                    }
+                    int platNumber = 1;
+                    if (!c5.isEmpty() && !"null".equalsIgnoreCase(c5) && !"leer".equalsIgnoreCase(c5)) {
+                        try {
+                            platNumber = (int) (Double.parseDouble(c5));
+                            if (platNumber < 1) platNumber = 1;
+                        } catch (NumberFormatException e) {
+                            platNumber = 1;
+                        }
+                    }
+                    relaisNumber[i] = relNumber + ((platNumber - 1) * 32);
+                    buttonId[i] = r.c13 != null ? r.c13 : "null";
+                    int hammertemp = 0;
+                    String c4 = r.c4 != null ? r.c4 : "";
+                    if (!c4.equals("null") && !c4.equals("NULL") && !c4.trim().isEmpty() && !"leer".equalsIgnoreCase(c4.trim())) {
+                        try {
+                            hammertemp = (int) (Double.parseDouble(c4.trim()) * 10);
+                        } catch (NumberFormatException e) {
+                            hammertemp = 0;
+                        }
+                    }
+                    hammerZeit[i] = hammertemp;
+                    if (hammerZeit[i] > 0) {
+                        StaticVariable.schlagWerkVariable1 = hammerZeit[i];
+                    }
+                }
+            }
+            UhrThread.verknuepfteTastenString.clear();
+            if (rows != null && !rows.isEmpty()) {
+                int verknuepftIndex = 0;
+                for (PlatinenDatabaseHelper.BeschriftungTastenRow r : rows) {
+                    String c1 = r.c1 != null ? r.c1.trim() : "";
+                    if ("verknuepft".equalsIgnoreCase(c1) || "VerknÃ¼pft".equals(c1)) {
+                        String name = r.c2 != null ? r.c2.trim() : "";
+                        if (name.isEmpty()) name = "VerknÃ¼pft " + verknuepftIndex;
+                        UhrThread.verknuepfteTastenString.add(name);
+                        verknuepftIndex++;
+                    }
+                }
+            }
+        } catch (Exception e) {
+            Log.e(sourceFileName, "Relais aus DB (beschriftung_tasten) statisch befÃ¼llen fehlgeschlagen", e);
+        }
+    }
+
+    private static boolean isSystemTasteRowStatic(PlatinenDatabaseHelper.BeschriftungTastenRow r) {
+        if (r == null) return false;
+        String c1 = (r.c1 != null ? r.c1 : "").trim();
+        return "Stop".equalsIgnoreCase(c1) || "Automatik".equalsIgnoreCase(c1)
+                || "VerknÃ¼pft".equals(c1) || "verknuepft".equalsIgnoreCase(c1)
                 || "Sofort Start".equalsIgnoreCase(c1) || "Hammer".equalsIgnoreCase(c1)
                 || "Zweite Seite".equalsIgnoreCase(c1) || "Programmeingeben".equalsIgnoreCase(c1)
                 || "Nebenuhr Stellen".equalsIgnoreCase(c1);
@@ -3457,11 +3592,23 @@ public class TurmtechnikActivity extends Activity {
             if (context == null) {
                 context = contextToUse;
             }
+            if (sdCardPath == null || sdCardPath.trim().isEmpty()) {
+                sdCardPath = Environment.getExternalStorageDirectory().getPath();
+            }
+            if (beschriftungTastenFileString == null || beschriftungTastenFileString.trim().isEmpty()) {
+                beschriftungTastenFileString = sdCardPath + "/Turmtechnik/Config/Beschriftung-Tasten.xls";
+            }
+            if (systemFileString == null || systemFileString.trim().isEmpty()) {
+                systemFileString = sdCardPath + StaticConstants.excellSystemString;
+            }
 
             ensureWebServerStarted(contextToUse);
             loadPlatinenDemoModusFromDb();
             loadPlatinenIpListFromDb();
+            loadAnlageLogAndRebootFromDb(contextToUse);
             loadBenutzerprogrammeFromDb(contextToUse);
+            loadRelayMappingsFromDbStatic(contextToUse);
+            ensureSoundRuntimeInitialized();
             StaticVariable.helpForStartBenutzermelodien = false;
             StaticVariable.firstStartMelodie = false;
             loadNebenuhrLastRelaisAndAnzeigeFromDbStatic(contextToUse);
@@ -3482,6 +3629,89 @@ public class TurmtechnikActivity extends Activity {
             }
 
             TimeSyncThread.startInstance(contextToUse);
+        }
+    }
+
+    public static void restartCoreRuntime(android.content.Context appContext) {
+        if (appContext == null) return;
+        synchronized (RUNTIME_LOCK) {
+            android.content.Context contextToUse = appContext.getApplicationContext();
+            turmtechnikContext = contextToUse;
+            if (context == null) {
+                context = contextToUse;
+            }
+
+            Log.i(sourceFileName, "restartCoreRuntime: stoppe Runtime-Kern vor frischem Neustart");
+
+            MelodieThreadNew.doRunOff();
+
+            StaticVariable.uhrA_doRun = false;
+            StaticVariable.uhrB_doRun = false;
+            StaticVariable.uhrC_doRun = false;
+            StaticVariable.uhrD_doRun = false;
+
+            if (uhr_thread != null) {
+                uhr_thread.endUhrThread();
+            }
+            uhr_thread = null;
+
+            StaticVariable.serial_io_ThreadsRun = false;
+            if (serial_iothread != null && serial_iothread.isAlive()) {
+                try {
+                    serial_iothread.join(2500);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                }
+            }
+            serial_iothread = null;
+
+            TimeSyncThread.stopInstance();
+
+            if (configWebServer != null) {
+                try {
+                    configWebServer.stop();
+                } catch (Exception e) {
+                    Log.w("ConfigWebServer", "Web-Server konnte beim Runtime-Neustart nicht sauber gestoppt werden", e);
+                }
+                configWebServer = null;
+            }
+
+            try {
+                Thread.sleep(750);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        }
+
+        ensureCoreRuntimeStarted(appContext);
+    }
+
+    private static void ensureSoundRuntimeInitialized() {
+        if (StaticVariable.soundPool2 == null) {
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
+                AudioAttributes attributes = new AudioAttributes.Builder()
+                        .setUsage(AudioAttributes.USAGE_GAME)
+                        .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                        .build();
+                StaticVariable.soundPool2 = new SoundPool.Builder()
+                        .setAudioAttributes(attributes)
+                        .setMaxStreams(25)
+                        .build();
+            } else {
+                StaticVariable.soundPool2 = new SoundPool(25, AudioManager.STREAM_MUSIC, 0);
+            }
+        }
+        if (StaticVariable.soundIndexList == null) {
+            StaticVariable.soundIndexList = new ArrayList<>();
+        }
+        if (StaticVariable.soundIDsList == null) {
+            StaticVariable.soundIDsList = new ArrayList<>();
+        }
+        if (StaticVariable.streamIDsList == null) {
+            StaticVariable.streamIDsList = new ArrayList<>();
+        }
+        if (StaticVariable.soundGlocke == null) {
+            StaticVariable.soundGlocke = new SoundGlocke();
         }
     }
 
@@ -3673,7 +3903,15 @@ public class TurmtechnikActivity extends Activity {
             if (path != null && !path.isEmpty()) {
                 intent.putExtra(WebUiActivity.EXTRA_PATH, path);
             }
-            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            if (context instanceof android.app.Activity) {
+                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP
+                        | Intent.FLAG_ACTIVITY_SINGLE_TOP
+                        | Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
+            } else {
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK
+                        | Intent.FLAG_ACTIVITY_CLEAR_TOP
+                        | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+            }
             context.startActivity(intent);
         } catch (Exception e) {
             Log.e("WebUI", "Web-UI konnte nicht geöffnet werden", e);
@@ -3956,31 +4194,45 @@ public class TurmtechnikActivity extends Activity {
                         LogTurmtechnik2.appendNebenuhrRelaisLogWarnung("D", "kein DB-Eintrag – Phase auf 0 gesetzt");
                         StaticVariable.uhrD_mondphaseIst = 0;
                         StaticVariable.uhrD_lastRelaisA = false;
+                        StaticVariable.uhrD_pendingImpuls = false;
+                        StaticVariable.uhrD_pendingRelaisA = false;
                     }
                     continue;
                 }
                 if (zeile == 6) {
                     StaticVariable.uhrD_lastRelaisA = config.lastRelaisA;
                     StaticVariable.uhrD_mondphaseIst = config.mondphaseIst;
+                    StaticVariable.uhrD_pendingImpuls = config.impulsAusstehend && config.pendingRelaisA != null;
+                    StaticVariable.uhrD_pendingRelaisA = config.pendingRelaisA != null && config.pendingRelaisA;
+                    if (config.impulsAusstehend) {
+                        Log.w("nebenuhrLoad", "Nebenuhr D: impulsAusstehend nach Neustart erkannt - gleicher Relaisimpuls wird wiederholt");
+                        LogTurmtechnik2.appendNebenuhrRelaisLogWarnung("D", "impulsAusstehend beim Start - gleicher Relaisimpuls wird wiederholt");
+                    }
                     continue;
                 }
                 int angezeigteZeit = config.angezeigteZeit;
+                boolean lastRelaisA = config.lastRelaisA;
+                boolean pendingImpuls = config.impulsAusstehend && config.pendingRelaisA != null;
+                boolean pendingRelaisA = config.pendingRelaisA != null && config.pendingRelaisA;
                 if (config.impulsAusstehend) {
-                    angezeigteZeit = config.angezeigteZeit - 1;
-                    if (angezeigteZeit < 0) angezeigteZeit = 719;
-                    config.angezeigteZeit = angezeigteZeit;
-                    config.impulsAusstehend = false;
-                    dbHelper.saveNebenuhr(config);
+                    Log.w("nebenuhrLoad", "Nebenuhr " + label + ": impulsAusstehend nach Neustart erkannt - gleicher Impuls wird wiederholt");
+                    LogTurmtechnik2.appendNebenuhrRelaisLogWarnung(label, "impulsAusstehend beim Start - gleicher Relaisimpuls wird wiederholt");
                 }
                 if (zeile == 3) {
-                    StaticVariable.uhrA_lastRelaisA = config.lastRelaisA;
+                    StaticVariable.uhrA_lastRelaisA = lastRelaisA;
                     StaticVariable.uhrA_angezeigteZeit = angezeigteZeit;
+                    StaticVariable.uhrA_pendingImpuls = pendingImpuls;
+                    StaticVariable.uhrA_pendingRelaisA = pendingRelaisA;
                 } else if (zeile == 4) {
-                    StaticVariable.uhrB_lastRelaisA = config.lastRelaisA;
+                    StaticVariable.uhrB_lastRelaisA = lastRelaisA;
                     StaticVariable.uhrB_angezeigteZeit = angezeigteZeit;
+                    StaticVariable.uhrB_pendingImpuls = pendingImpuls;
+                    StaticVariable.uhrB_pendingRelaisA = pendingRelaisA;
                 } else {
-                    StaticVariable.uhrC_lastRelaisA = config.lastRelaisA;
+                    StaticVariable.uhrC_lastRelaisA = lastRelaisA;
                     StaticVariable.uhrC_angezeigteZeit = angezeigteZeit;
+                    StaticVariable.uhrC_pendingImpuls = pendingImpuls;
+                    StaticVariable.uhrC_pendingRelaisA = pendingRelaisA;
                 }
             }
             StaticVariable.nebenuhrWaitFirstFullMinute = true;
@@ -4393,7 +4645,9 @@ public class TurmtechnikActivity extends Activity {
 
     private void startTurmtechnik() {
         Intent activityTurmtechnik = new Intent(TurmtechnikActivity.this,
-                TurmtechnikActivity.class);
+                WebUiActivity.class);
+        activityTurmtechnik.putExtra(WebUiActivity.EXTRA_PATH, "/app-seite1.html");
+        activityTurmtechnik.putExtra(WebUiActivity.EXTRA_USE_LOCALHOST, true);
         activityTurmtechnik.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT | Intent.FLAG_ACTIVITY_SINGLE_TOP);
         TurmtechnikActivity.this.startActivity(activityTurmtechnik);
     }
@@ -4577,10 +4831,7 @@ public class TurmtechnikActivity extends Activity {
                 else if (pwdNormal.equals(value)) action = "beenden";
                 else if (pwdDelete.equals(value)) action = "delete_beenden";
                 if (action != null) {
-                    Intent i = new Intent(activity, TurmtechnikActivity.class);
-                    i.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP);
-                    i.putExtra(EXTRA_EXIT_ACTION, action);
-                    activity.startActivity(i);
+                    requestExitActionDirect(activity, action);
                     activity.finish();
                 }
             }
@@ -6059,6 +6310,13 @@ public class TurmtechnikActivity extends Activity {
         if (hammerZeit[gridIndex] == null || hammerZeit[gridIndex] <= 0) return;
         Integer relNr = relaisNumber != null && gridIndex < relaisNumber.length ? relaisNumber[gridIndex] : null;
         if (relNr == null || relNr <= 0) return;
+        StaticVariable.hammerSound = 1;
+        for (int i = gridIndex + 1; i < RELAIS_COUNT; i++) {
+            if (hammerZeit[i] != null && hammerZeit[i] > 0) {
+                StaticVariable.hammerSound = 0;
+                break;
+            }
+        }
         long delay = hammerZeit[gridIndex].longValue();
         HammerManualThread t = new HammerManualThread(gridIndex, relNr, delay);
         t.start();
@@ -6070,13 +6328,50 @@ public class TurmtechnikActivity extends Activity {
      */
     public static void setAutomaticFromWeb(android.content.Context ctx, final boolean on) {
         final TurmtechnikActivity act = turmtechnikActivityInstance != null ? turmtechnikActivityInstance : (ctx instanceof TurmtechnikActivity ? (TurmtechnikActivity) ctx : null);
-        if (act == null) return;
+        if (act == null) {
+            applyAutomaticFromWebCore(ctx, on);
+            return;
+        }
         act.runOnUiThread(new Runnable() {
             @Override
             public void run() {
                 act.applyAutomaticFromWeb(on);
             }
         });
+    }
+
+    private static void applyAutomaticFromWebCore(android.content.Context ctx, boolean on) {
+        if (flagAutomaticOnOff == on) return;
+        flagAutomaticOnOff = on;
+        if (!on) {
+            MelodieThreadNew.doRunOff();
+            StaticVariable.stopBetaetigt = true;
+            allMelodieRelaisOffAusfuehren();
+            if (StaticVariable.stringInfoTextField != null && StaticVariable.stringInfoTextField.length > 0) {
+                StaticVariable.stringInfoTextField[0] = StaticVariable.getUebersetzung(0);
+                if (StaticVariable.stringInfoTextField.length > 2) {
+                    StaticVariable.stringInfoTextField[2] = "";
+                }
+            }
+        } else {
+            if (StaticVariable.stringInfoTextField != null && StaticVariable.stringInfoTextField.length > 0) {
+                StaticVariable.stringInfoTextField[0] = StaticVariable.getUebersetzung(17);
+                if (StaticVariable.stringInfoTextField.length > 2) {
+                    StaticVariable.stringInfoTextField[2] = "";
+                }
+            }
+            UhrThread.newSearchAutomaticStart = true;
+        }
+        android.content.Context appContext = ctx != null ? ctx.getApplicationContext() : turmtechnikContext;
+        if (appContext != null) {
+            try {
+                android.content.SharedPreferences pref = appContext.getSharedPreferences("Turmtechnik", 0);
+                pref.edit().putBoolean("automatic", flagAutomaticOnOff).apply();
+                PlatinenDatabaseHelper.getInstance(appContext).setConfigValue("automatic", flagAutomaticOnOff ? "1" : "0");
+            } catch (Exception e) {
+                Log.w("TurmtechnikActivity", "Automatik aus Web-Core konnte nicht gespeichert werden", e);
+            }
+        }
     }
 
     /**
@@ -6115,7 +6410,10 @@ public class TurmtechnikActivity extends Activity {
      */
     public static void triggerKeyFromWeb(android.content.Context ctx, final int gridIndex) {
         TurmtechnikActivity act = turmtechnikActivityInstance != null ? turmtechnikActivityInstance : (ctx instanceof TurmtechnikActivity ? (TurmtechnikActivity) ctx : null);
-        if (act == null) return;
+        if (act == null) {
+            applyKeyPressFromWebCore(ctx, gridIndex);
+            return;
+        }
         if (gridIndex < 0 || gridIndex >= RELAIS_COUNT) return;
         Integer relNr = relaisNumber != null && gridIndex < relaisNumber.length ? relaisNumber[gridIndex] : null;
         /* Fallback: Eine Platine (24 oder 32 Relais), Taste noch nicht zugewiesen → Grid 0–23 = Relais 1–24 */
@@ -6134,6 +6432,36 @@ public class TurmtechnikActivity extends Activity {
                 act.applyKeyPressFromWeb(gridIndex);
             }
         });
+    }
+
+    private static void applyKeyPressFromWebCore(android.content.Context ctx, int gridIndex) {
+        if (serial_iothread == null) return;
+        if (gridIndex < 0 || gridIndex >= RELAIS_COUNT) return;
+        Integer rnObj = relaisNumber != null && gridIndex < relaisNumber.length ? relaisNumber[gridIndex] : null;
+        android.content.Context appContext = ctx != null ? ctx.getApplicationContext() : turmtechnikContext;
+        if ((rnObj == null || rnObj <= 0) && appContext != null && gridIndex < 24) {
+            try {
+                Platine p = PlatinenDatabaseHelper.getInstance(appContext).getPlatine(1);
+                if (p != null && p.relaisAnzahl >= 24) rnObj = gridIndex + 1;
+            } catch (Exception ignored) { }
+        }
+        if (rnObj == null || rnObj <= 0) return;
+        int rn = rnObj;
+        if (Boolean.TRUE.equals(globalOn[gridIndex])) {
+            globalOn[gridIndex] = false;
+            if (StaticVariable.soundGlocke != null) {
+                StaticVariable.soundGlocke.stopGlockenSound(gridIndex);
+            }
+            serial_iothread.changeRelais(rn, false);
+        } else {
+            globalOn[gridIndex] = true;
+            try {
+                startGlockenSound(gridIndex, StaticConstants.PLAY_SOUND_IMMMER);
+            } catch (Exception e) {
+                Log.w("TurmtechnikActivity", "Web-Key Sound fehlgeschlagen, Relais wird trotzdem geschaltet", e);
+            }
+            serial_iothread.changeRelais(rn, true);
+        }
     }
 
     /**
@@ -7697,7 +8025,7 @@ public class TurmtechnikActivity extends Activity {
             // Bei woke_by_motion (Bewegungserkennung) immer natives Layout bauen, damit kein schwarzer Bildschirm (Web-UI) erscheint.
             boolean wokeByMotion = getIntent() != null && getIntent().getBooleanExtra("woke_by_motion", false);
             String webUiConfig = dbForLayout != null ? dbForLayout.getConfigValue(CONFIG_WEB_UI_VOLLBILD_TEST) : null;
-            boolean webUiVollbildTest = webUiConfig == null || !"0".equals(webUiConfig.trim());
+            boolean webUiVollbildTest = false;
             if (!webUiVollbildTest || wokeByMotion) {
                 printInfo("\nlayout wir aufgebaut...");
                 layout = new Seite1Layout(beschriftungTastenFileString, getApplicationContext());
@@ -8269,7 +8597,7 @@ public class TurmtechnikActivity extends Activity {
         StaticVariable.soundPool2 = new SoundPool(25, AudioManager.STREAM_MUSIC, 0);
     }
 
-    public static void startGlockenSound(int index, int wiederholung)
+    public static String getConfiguredButtonSoundName(int index)
     {
         String soundName = null;
         if (turmtechnikContext != null) {
@@ -8285,7 +8613,9 @@ public class TurmtechnikActivity extends Activity {
                 Log.e("startGlockenSound", "DB-Lesen Sound", e);
             }
         }
-        if (soundName == null) {
+        if (soundName == null &&
+                beschriftungTastenFileString != null &&
+                !beschriftungTastenFileString.trim().isEmpty()) {
             ExcelRead excelread = new ExcelRead();
             try {
                 excelread.openXls(beschriftungTastenFileString);
@@ -8301,10 +8631,29 @@ public class TurmtechnikActivity extends Activity {
                 try { excelread.closeWorkbook(); } catch (Exception ignored) { }
             }
         }
-        Log.e("soundGlocke", "name=" + soundName);
-        if (StaticVariable.soundGlocke != null) {
-            StaticVariable.soundGlocke.playGlockeSound(soundName, index, wiederholung);
+        if (soundName != null) {
+            soundName = soundName.trim();
+            if (soundName.isEmpty() || "null".equalsIgnoreCase(soundName) || "leer".equalsIgnoreCase(soundName)) {
+                soundName = null;
+            }
         }
+        return soundName;
+    }
+
+    public static boolean startConfiguredButtonSoundIfPresent(int index, int wiederholung)
+    {
+        String soundName = getConfiguredButtonSoundName(index);
+        Log.e("soundGlocke", "name=" + soundName);
+        if (soundName != null && StaticVariable.soundGlocke != null) {
+            StaticVariable.soundGlocke.playGlockeSound(soundName, index, wiederholung);
+            return true;
+        }
+        return false;
+    }
+
+    public static void startGlockenSound(int index, int wiederholung)
+    {
+        startConfiguredButtonSoundIfPresent(index, wiederholung);
 
         //String pathAndFilename = TurmtechnikActivity.sdCardPath + "/Turmtechnik/Sound/" + soundName ;
         //File file = new File(pathAndFilename) ;
