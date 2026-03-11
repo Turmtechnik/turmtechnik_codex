@@ -59,6 +59,9 @@ public class MelodieThreadNew extends Thread {
                 melodiename = melodiename.substring(0, melodiename.length() - 4).trim();
             LogTurmtechnik2.appendMelodieStart(melodiename);
         }
+        // Bei Melodie-Start „Start: [Name]“ an Webhook/Telegram senden (wenn in Anlagendaten ausgewählt)
+        String displayName = (StaticVariable.nameNextMelodie != null && !StaticVariable.nameNextMelodie.trim().isEmpty()) ? StaticVariable.nameNextMelodie.trim() : extractMelodieNameFromPath(pathUndfileNameMelodie);
+        if (TurmtechnikActivity.turmtechnikContext != null) TurmtechnikActivity.sendMelodieStartIfConfigured(TurmtechnikActivity.turmtechnikContext, displayName);
         // Prüfe, ob es eine MIDI-Datei ist
         String lowerPath = pathUndfileNameMelodie.toLowerCase();
         if (lowerPath.endsWith(".mid") || lowerPath.endsWith(".midi")) {

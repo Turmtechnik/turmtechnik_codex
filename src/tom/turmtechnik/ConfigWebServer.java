@@ -939,6 +939,10 @@ public class ConfigWebServer {
                 return handlePutAnlagendaten(request);
             }
         }
+        // POST /api/telegram-test - Testnachricht an Telegram senden (Token + Chat-ID aus Request-Body)
+        if (uri.equals(API_PREFIX + "/telegram-test") && "POST".equals(method)) {
+            return handlePostTelegramTest(request);
+        }
         // /api/beschriftung-tasten-reset-neuanlage - Layout Seite 1/2 auf Neuanlage-Vorlage (Stop, Automatik, Leer)
         if (uri.equals(API_PREFIX + "/beschriftung-tasten-reset-neuanlage") && "POST".equals(method)) {
             return handlePostBeschriftungTastenResetNeuanlage();
@@ -1515,6 +1519,8 @@ public class ConfigWebServer {
             String bewegungserkennungEmpfindlichkeit = dbHelper.getConfigValue("anlage_bewegungserkennung_empfindlichkeit");
             String bewegungserkennungIntervall = dbHelper.getConfigValue("anlage_bewegungserkennung_intervall_sekunden");
             String bewegungserkennungNurBildschirmAus = dbHelper.getConfigValue("anlage_bewegungserkennung_nur_bei_bildschirm_aus");
+            String telegramBotToken = dbHelper.getConfigValue("telegram_bot_token");
+            String telegramChatId = dbHelper.getConfigValue("telegram_chat_id");
             Boolean autostart = dbHelper.getAutostartDerApp();
             if (baustelle == null) baustelle = "";
             if (installationsdatum == null) installationsdatum = "";
@@ -1548,6 +1554,10 @@ public class ConfigWebServer {
             data.put("bewegungserkennungIntervallSekunden", (bewegungserkennungIntervall != null && !bewegungserkennungIntervall.trim().isEmpty()) ? bewegungserkennungIntervall.trim() : "2");
             data.put("bewegungserkennungNurBeiBildschirmAus", "ein".equalsIgnoreCase(bewegungserkennungNurBildschirmAus != null ? bewegungserkennungNurBildschirmAus.trim() : "ein") ? "true" : "false");
             data.put("platinenDemoModus", dbHelper.getPlatinenDemoModus() ? "true" : "false");
+            data.put("telegramBotToken", (telegramBotToken != null && !telegramBotToken.trim().isEmpty()) ? telegramBotToken.trim() : "");
+            data.put("telegramChatId", (telegramChatId != null && !telegramChatId.trim().isEmpty()) ? telegramChatId.trim() : "");
+            String melodieStartSenden = dbHelper.getConfigValue("melodie_start_senden");
+            data.put("melodieStartSenden", (melodieStartSenden != null && !melodieStartSenden.trim().isEmpty()) ? melodieStartSenden.trim() : "aus");
             return new SimpleHttpServer.HttpResponse(200, "application/json", gson.toJson(data));
         } catch (Exception e) {
             Log.e(TAG, "Anlagendaten GET fehlgeschlagen", e);
@@ -1600,6 +1610,8 @@ public class ConfigWebServer {
                 } catch (Exception ignored) {}
             }
             boolean bewegungserkennungNurBeiBildschirmAus = body == null || Boolean.TRUE.equals(body.get("bewegungserkennungNurBeiBildschirmAus"));
+            String telegramBotToken = (body != null && body.containsKey("telegramBotToken")) ? String.valueOf(body.get("telegramBotToken")).trim() : "";
+            String telegramChatId = (body != null && body.containsKey("telegramChatId")) ? String.valueOf(body.get("telegramChatId")).trim() : "";
             PlatinenDatabaseHelper dbHelper = PlatinenDatabaseHelper.getInstance(context);
             dbHelper.setConfigValue("anlage_baustelle_name", baustelle);
             dbHelper.setConfigValue("anlage_installationsdatum", installationsdatum);
@@ -1624,6 +1636,11 @@ public class ConfigWebServer {
             dbHelper.setConfigValue("anlage_bewegungserkennung_nur_bei_bildschirm_aus", bewegungserkennungNurBeiBildschirmAus ? "ein" : "aus");
             dbHelper.setPlatinenDemoModus(platinenDemoModus);
             StaticVariable.platinenDemoModus = platinenDemoModus;
+            dbHelper.setConfigValue("telegram_bot_token", telegramBotToken);
+            dbHelper.setConfigValue("telegram_chat_id", telegramChatId);
+            String melodieStartSenden = (body != null && body.containsKey("melodieStartSenden")) ? String.valueOf(body.get("melodieStartSenden")).trim() : "aus";
+            if (!melodieStartSenden.equals("telegram")) melodieStartSenden = "aus";
+            dbHelper.setConfigValue("melodie_start_senden", melodieStartSenden);
             // Bewegungserkennung/Kamera ausgebaut – MotionDetectionService wird nicht mehr gestartet/gestoppt
             Map<String, Object> result = new HashMap<>();
             result.put("success", true);
@@ -1632,6 +1649,64 @@ public class ConfigWebServer {
         } catch (Exception e) {
             Log.e(TAG, "Anlagendaten PUT fehlgeschlagen", e);
             return new SimpleHttpServer.HttpResponse(500, "application/json", "{\"error\":\"" + (e.getMessage() != null ? e.getMessage().replace("\"", "'") : "Fehler") + "\"}");
+        }
+    }
+
+    /** POST /api/telegram-test – Testnachricht an Telegram senden (Body: telegramBotToken, telegramChatId). */
+    private SimpleHttpServer.HttpResponse handlePostTelegramTest(SimpleHttpServer.HttpRequest request) {
+        HttpURLConnection conn = null;
+        try {
+            if (request.body == null || request.body.trim().isEmpty()) {
+                return new SimpleHttpServer.HttpResponse(400, "application/json", "{\"success\":false,\"error\":\"Body fehlt\"}");
+            }
+            @SuppressWarnings("unchecked")
+            Map<String, Object> body = gson.fromJson(request.body, Map.class);
+            String token = body != null && body.get("telegramBotToken") != null ? String.valueOf(body.get("telegramBotToken")).trim() : "";
+            String chatId = body != null && body.get("telegramChatId") != null ? String.valueOf(body.get("telegramChatId")).trim() : "";
+            if (token.isEmpty()) {
+                return new SimpleHttpServer.HttpResponse(200, "application/json", "{\"success\":false,\"error\":\"Bot-Token fehlt\"}");
+            }
+            if (chatId.isEmpty()) {
+                return new SimpleHttpServer.HttpResponse(200, "application/json", "{\"success\":false,\"error\":\"Chat-ID fehlt\"}");
+            }
+            token = token.replaceAll("[^0-9A-Za-z:\\-_]", "");
+            if (token.isEmpty()) {
+                return new SimpleHttpServer.HttpResponse(200, "application/json", "{\"success\":false,\"error\":\"Token ungültig\"}");
+            }
+            String text = "Turmtechnik Test – Konfiguration OK";
+            String urlString = "https://api.telegram.org/bot" + token + "/sendMessage";
+            java.net.URL url = new java.net.URL(urlString);
+            conn = (HttpURLConnection) url.openConnection();
+            conn.setRequestMethod("POST");
+            conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8");
+            conn.setDoOutput(true);
+            conn.setConnectTimeout(10000);
+            conn.setReadTimeout(10000);
+            String postBody = "chat_id=" + java.net.URLEncoder.encode(chatId, "UTF-8") + "&text=" + java.net.URLEncoder.encode(text, "UTF-8");
+            try (java.io.OutputStream os = conn.getOutputStream()) {
+                os.write(postBody.getBytes(StandardCharsets.UTF_8));
+            }
+            int code = conn.getResponseCode();
+            java.io.InputStream stream = code >= 200 && code < 300 ? conn.getInputStream() : conn.getErrorStream();
+            String response = readFully(stream != null ? stream : new java.io.ByteArrayInputStream(new byte[0]));
+            if (code >= 200 && code < 300) {
+                Map<String, Object> res = gson.fromJson(response, Map.class);
+                boolean ok = res != null && Boolean.TRUE.equals(res.get("ok"));
+                if (ok) {
+                    return new SimpleHttpServer.HttpResponse(200, "application/json", "{\"success\":true,\"message\":\"Testnachricht gesendet\"}");
+                }
+                String desc = res != null && res.get("description") != null ? String.valueOf(res.get("description")) : response;
+                return new SimpleHttpServer.HttpResponse(200, "application/json", "{\"success\":false,\"error\":\"" + (desc != null ? desc.replace("\\", "\\\\").replace("\"", "'") : "Unbekannt") + "\"}");
+            }
+            Map<String, Object> err = gson.fromJson(response, Map.class);
+            String desc = err != null && err.get("description") != null ? String.valueOf(err.get("description")) : ("HTTP " + code);
+            return new SimpleHttpServer.HttpResponse(200, "application/json", "{\"success\":false,\"error\":\"" + (desc != null ? desc.replace("\\", "\\\\").replace("\"", "'") : "Unbekannt") + "\"}");
+        } catch (Exception e) {
+            Log.e(TAG, "Telegram-Test fehlgeschlagen", e);
+            String msg = e.getMessage() != null ? e.getMessage().replace("\\", "\\\\").replace("\"", "'") : "Fehler";
+            return new SimpleHttpServer.HttpResponse(200, "application/json", "{\"success\":false,\"error\":\"" + msg + "\"}");
+        } finally {
+            if (conn != null) try { conn.disconnect(); } catch (Exception ignored) {}
         }
     }
 
@@ -3402,6 +3477,7 @@ public class ConfigWebServer {
     /** GET /api/device-ip – WLAN-IP, optional Tailscale-IP und App-Version (Firmware) für Layout-Header. */
     private SimpleHttpServer.HttpResponse handleGetDeviceIp() {
         String ip = getLocalIpForScan();
+        if (ip == null || ip.isEmpty()) ip = getAnyLocalIPv4();
         if (ip == null) ip = "";
         String tailscale = getTailscaleIp();
         if (tailscale == null) tailscale = "";
@@ -4601,20 +4677,20 @@ public class ConfigWebServer {
                 "        html { height: 100%; }\n" +
                 "        body.app-seite-page { font-family: 'Inter', -apple-system, sans-serif; background: var(--tt-bg); color: var(--tt-text); margin: 0; padding: 0; min-height: 100%; height: 100%; display: flex; flex-direction: column; -webkit-user-select: none; user-select: none; -webkit-tap-highlight-color: transparent; touch-action: manipulation; }\n" +
                 "        body.app-seite-page .app-seite-wrap { flex: 1; display: flex; flex-direction: column; min-height: 0; width: 100%; max-width: 100%; padding: calc(env(safe-area-inset-top) + 2rem) max(env(safe-area-inset-right), 0.5rem) 0 max(env(safe-area-inset-left), 0.5rem); box-sizing: border-box; background: var(--tt-bg); }\n" +
-                "        .tt-header { background: var(--tt-bg); border: none; border-radius: 0; padding: 0.75rem 1rem; flex-shrink: 0; height: 25vh; min-height: 25vh; display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 0.75rem; box-sizing: border-box; }\n" +
+                "        .tt-header { background: var(--tt-bg); border: none; border-radius: 0; padding: 0.75rem 1rem; flex-shrink: 0; height: clamp(80px, 22vmin, 160px); min-height: clamp(80px, 22vmin, 160px); display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 0.75rem; box-sizing: border-box; }\n" +
                 "        .app-header-left { min-width: 0; display: flex; align-items: center; justify-content: flex-start; }\n" +
                 "        .app-header-center { min-width: 0; display: flex; justify-content: center; align-items: center; }\n" +
                 "        .app-header-center > div { display: flex; flex-direction: column; align-items: center; text-align: center; justify-content: center; }\n" +
                 "        .app-relais-block { margin-top: 0.35em; width: 100%; }\n" +
                 "        .app-relais-grid-wrap { margin: 0 auto; width: fit-content; position: relative; display: inline-block; }\n" +
-                "        .app-uhr-dauer { position: absolute; right: 100%; margin-right: 0.25rem; top: 50%; transform: translateY(-50%); font-size: clamp(0.85rem, 2.2vh, 1.1rem); color: var(--tt-muted); min-width: 4em; text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }\n" +
-                "        .app-header-moon { width: clamp(3rem, 12vh, 7rem); height: clamp(3rem, 12vh, 7rem); flex-shrink: 0; display: flex; align-items: center; justify-content: center; }\n" +
+                "        .app-uhr-dauer { position: absolute; right: 100%; margin-right: 0.25rem; top: 50%; transform: translateY(-50%); font-size: clamp(0.8rem, 2.2vmin, 1.1rem); color: var(--tt-muted); min-width: 4em; text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }\n" +
+                "        .app-header-moon { width: clamp(2.5rem, 11vmin, 5rem); height: clamp(2.5rem, 11vmin, 5rem); flex-shrink: 0; display: flex; align-items: center; justify-content: center; }\n" +
                 "        .app-header-moon canvas { display: block; width: 100%; height: 100%; border-radius: 50%; background: var(--tt-bg); border: none; }\n" +
                 "        .app-header-right { min-width: 0; display: flex; flex-direction: column; align-items: flex-end; justify-content: center; text-align: right; gap: 0.15rem; }\n" +
-                "        .app-uhr { font-size: clamp(5rem, 20vh, 12rem); font-variant-numeric: tabular-nums; font-weight: 400; line-height: 1.1; text-align: center; }\n" +
+                "        .app-uhr { font-size: clamp(2.5rem, 18vmin, 5.5rem); font-variant-numeric: tabular-nums; font-weight: 400; line-height: 1.1; text-align: center; }\n" +
                 "        .app-uhr-sekunden { cursor: pointer; padding: 0 0.05em; border-radius: 4px; }\n" +
                 "        .app-uhr-sekunden:hover { background: rgba(201,162,39,0.2); }\n" +
-                "        .app-info-text { font-size: clamp(0.8rem, 2.2vh, 1.1rem); color: #b0b0b0; margin-top: 0.35em; max-width: 100%; text-align: center; white-space: normal; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; overflow: hidden; text-overflow: ellipsis; }\n" +
+                "        .app-info-text { font-size: clamp(0.75rem, 2.2vmin, 1.1rem); color: #b0b0b0; margin-top: 0.35em; max-width: 100%; text-align: center; white-space: normal; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; overflow: hidden; text-overflow: ellipsis; }\n" +
                 "        .app-relais-anzeige { display: grid; row-gap: 0.08em; column-gap: 0.2em; justify-content: center; align-items: center; }\n" +
                 "        .app-relais-anzeige .relais-cell { display: flex; align-items: center; justify-content: center; min-width: 1.5em; min-height: 0.75em; }\n" +
                 "        .app-relais-anzeige .relais-dot { width: 9px; height: 9px; border-radius: 50%; box-sizing: border-box; flex-shrink: 0; }\n" +
@@ -4622,18 +4698,18 @@ public class ConfigWebServer {
                 "        .app-relais-anzeige .relais-dot.aus { background: transparent; border: 1px solid #4a7c59; }\n" +
                 "        .app-relais-anzeige .relais-dauer { font-size: 0.95rem; color: var(--tt-text); }\n" +
                 "        .app-relais-anzeige .relais-label { font-size: 0.6rem; color: var(--tt-muted); line-height: 1; }\n" +
-                "        .app-datum { font-size: clamp(0.9rem, 2.2vh, 1.15rem); color: var(--tt-muted); }\n" +
-                "        .app-wochentag { font-size: clamp(1.1rem, 2.8vh, 1.5rem); font-weight: 600; color: var(--tt-text); }\n" +
-                "        .app-header-ip { font-size: clamp(0.7rem, 1.8vh, 0.85rem); color: var(--tt-muted); font-family: ui-monospace, monospace; }\n" +
-                "        .app-header-tailscale { font-size: clamp(0.65rem, 1.5vh, 0.75rem); color: var(--tt-muted); opacity: 0.9; font-family: ui-monospace, monospace; }\n" +
-                "        .app-header-firmware { font-size: clamp(0.65rem, 1.5vh, 0.75rem); color: var(--tt-muted); font-family: ui-monospace, monospace; }\n" +
-                "        .app-header-rustdesk { font-size: clamp(0.65rem, 1.5vh, 0.75rem); color: var(--tt-muted); font-family: ui-monospace, monospace; }\n" +
+                "        .app-datum { font-size: clamp(0.8rem, 2.2vmin, 1.15rem); color: var(--tt-muted); }\n" +
+                "        .app-wochentag { font-size: clamp(0.9rem, 2.8vmin, 1.5rem); font-weight: 600; color: var(--tt-text); }\n" +
+                "        .app-header-ip { font-size: clamp(0.65rem, 1.8vmin, 0.85rem); color: var(--tt-muted); font-family: ui-monospace, monospace; }\n" +
+                "        .app-header-tailscale { font-size: clamp(0.6rem, 1.5vmin, 0.75rem); color: var(--tt-muted); opacity: 0.9; font-family: ui-monospace, monospace; }\n" +
+                "        .app-header-firmware { font-size: clamp(0.6rem, 1.5vmin, 0.75rem); color: var(--tt-muted); font-family: ui-monospace, monospace; }\n" +
+                "        .app-header-rustdesk { font-size: clamp(0.6rem, 1.5vmin, 0.75rem); color: var(--tt-muted); font-family: ui-monospace, monospace; }\n" +
                 "        .app-nav-link { font-size: 0.75rem; color: var(--tt-muted); text-decoration: none; margin-right: 0.5rem; }\n" +
                 "        .app-nav-link:hover { color: var(--tt-accent); }\n" +
                 "        .app-page-main { flex: 1; display: flex; flex-direction: column; min-height: 0; padding: 3.5rem 1rem 0.5rem 1rem; overflow: hidden; }\n" +
-                "        .app-grid-wrap { flex: 1; min-height: 0; display: flex; overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling: touch; overscroll-behavior-y: contain; touch-action: pan-y; padding: 0 0.15rem 1rem 0.15rem; }\n" +
+                "        .app-grid-wrap { flex: 1; min-height: 0; display: flex; overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling: touch; overscroll-behavior-y: contain; touch-action: pan-y; padding: 0 0.15rem 1rem 0.15rem; scroll-snap-type: y mandatory; }\n" +
                 "        .app-grid { display: grid; gap: 0.7rem; width: 100%; height: auto; min-height: 100%; cursor: pointer; touch-action: pan-y manipulation; box-sizing: border-box; grid-auto-flow: dense; align-content: start; }\n" +
-                "        .app-cell { background: var(--tt-card); border: 2px solid var(--tt-border); border-radius: 8px; padding: 0.35rem; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; box-sizing: border-box; min-height: 72px; transition: box-shadow 0.1s, outline 0.1s; -webkit-tap-highlight-color: rgba(201,162,39,0.25); touch-action: pan-y manipulation; }\n" +
+                "        .app-cell { background: var(--tt-card); border: 2px solid var(--tt-border); border-radius: 8px; padding: 0.35rem; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; box-sizing: border-box; min-height: 72px; transition: box-shadow 0.1s, outline 0.1s; -webkit-tap-highlight-color: rgba(201,162,39,0.25); touch-action: pan-y manipulation; scroll-snap-align: start; }\n" +
                 "        .app-cell:hover { outline: 2px solid var(--tt-accent); outline-offset: 2px; box-shadow: 0 0 0 1px var(--tt-accent); }\n" +
                 "        .app-cell.leer { background: var(--tt-bg); border: none; color: var(--tt-bg); }\n" +
                 "        .app-cell.leer:hover { outline: none; box-shadow: none; }\n" +
@@ -4681,8 +4757,7 @@ public class ConfigWebServer {
                 "        .tt-modal .btn-outline-secondary { background: transparent; color: var(--tt-muted); border: 1px solid var(--tt-border); }\n" +
                 "        .tt-modal .btn-outline-secondary:hover { color: var(--tt-text); border-color: var(--tt-accent); }\n" +
                 "        .tt-modal .tt-modal-berechnung { font-size: 0.8rem; color: var(--tt-muted); margin-top: 0.6rem; padding: 0.4rem; background: var(--tt-surface); border-radius: 4px; white-space: normal; word-break: break-word; }\n" +
-                "        @media (max-width: 767px) { .tt-header { height: 22vh; min-height: 22vh; } .app-header-moon { width: clamp(2.5rem, 10vh, 5rem); height: clamp(2.5rem, 10vh, 5rem); } .app-uhr { font-size: clamp(3rem, 14vh, 8rem); } .app-info-text { font-size: clamp(0.75rem, 2vh, 1rem); } .app-datum { font-size: clamp(0.8rem, 2vh, 1rem); } .app-wochentag { font-size: clamp(0.9rem, 2.5vh, 1.1rem); } .app-cell { min-height: 68px; } .app-cell .label { font-size: clamp(0.6rem, 1.8vh, 0.95rem); } .app-cell .typ { font-size: clamp(0.5rem, 1.4vh, 0.7rem); } .app-cell .verknuepft-state, .app-cell .sofort-time-display { font-size: clamp(0.75rem, 2.2vh, 1rem); } }\n" +
-                "        @media (min-width: 768px) and (min-height: 500px) { .tt-header { height: min(25vh, 160px); min-height: min(25vh, 160px); } .app-header-moon { width: min(12vh, 5rem); height: min(12vh, 5rem); } .app-uhr { font-size: min(20vh, 5.5rem); } .app-info-text { font-size: min(2.2vh, 1rem); } .app-datum, .app-wochentag { font-size: min(2.2vh, 1rem); } .app-wochentag { font-size: min(2.8vh, 1.15rem); } .app-cell { min-height: 82px; } .app-cell .label { font-size: min(1.8vh, 0.9rem); } .app-cell .typ { font-size: min(1.4vh, 0.7rem); } .app-cell .verknuepft-state, .app-cell .sofort-time-display { font-size: min(2.5vh, 1rem); } }\n" +
+                "        @media (max-width: 767px) { body.app-seite-page .app-seite-wrap { padding-top: calc(env(safe-area-inset-top) + 0.5rem); } .tt-header { display: none !important; } .app-page-main { padding: 0.5rem 0.5rem 0.5rem 0.5rem; } .app-grid-wrap { scroll-snap-type: y mandatory; padding-top: 0.25rem; } .app-grid { gap: 0.5rem; } .app-cell { min-height: 84px; padding: 0.5rem; scroll-snap-align: start; } .app-cell .label { font-size: clamp(0.75rem, 2.2vmin, 1rem); } .app-cell .typ { font-size: clamp(0.55rem, 1.5vmin, 0.7rem); } .app-cell .verknuepft-state, .app-cell .sofort-time-display { font-size: clamp(0.8rem, 2.2vmin, 1rem); } }\n" +
                 "    </style>\n" +
                 "</head>\n" +
                 "<body class=\"app-seite-page\" data-app-page=\"" + page + "\">\n" +
@@ -4727,7 +4802,7 @@ public class ConfigWebServer {
                 "            <div class=\"app-wochentag\" id=\"wochentag\">--</div>\n" +
                 "            <div class=\"app-header-ip\" id=\"appHeaderIp\"></div>\n" +
                 "            <div class=\"app-header-tailscale\" id=\"appHeaderTailscale\" style=\"display:none;\"></div>\n" +
-                "            <div class=\"app-header-rustdesk\" id=\"appHeaderRustdesk\" style=\"display:none;\"><span id=\"appHeaderRustdeskLabel\"></span> <a id=\"appHeaderRustdeskLink\" href=\"#\" class=\"app-nav-link\" target=\"_blank\">Mit RustDesk verbinden</a></div>\n" +
+                "            <div class=\"app-header-rustdesk\" id=\"appHeaderRustdesk\" style=\"display:none;\"><span id=\"appHeaderRustdeskLabel\"></span> <a id=\"appHeaderRustdeskLink\" href=\"#\" class=\"app-nav-link\" target=\"_blank\" title=\"Auf dem Tablet (diesem Gerät): RustDesk-App starten, Einstellungen → Sicherheit → Direktverbindung (Port 21118) aktivieren. Dann von PC/Handy aus verbinden.\">Mit RustDesk verbinden</a><br><span class=\"app-header-rustdesk-hint\" style=\"font-size:0.6em;opacity:0.85;\">Auf diesem Gerät: RustDesk starten, Einstellungen → Sicherheit → Direktverbindung aktivieren</span></div>\n" +
                 "            <div class=\"app-header-firmware\" id=\"appHeaderFirmware\"></div>\n" +
                 "        </div>\n" +
                 "    </header>\n" +
@@ -5270,6 +5345,18 @@ public class ConfigWebServer {
                 "                <div class=\"form-check\"><input type=\"checkbox\" class=\"form-check-input\" id=\"anlageWebUiVollbildTest\"><label class=\"form-check-label\" for=\"anlageWebUiVollbildTest\">Web-UI Vollbild (Testmodus) – beim App-Start Layout-Seiten als Web-UI anzeigen</label></div>\n" +
                 "                <div class=\"form-check\"><input type=\"checkbox\" class=\"form-check-input\" id=\"anlagePlatinenDemoModus\"><label class=\"form-check-label\" for=\"anlagePlatinenDemoModus\">Platinen Demo-Modus (keine echte Hardware – Relais nur in Software, für Tests ohne Geräte)</label></div>\n" +
                 "            </div>\n" +
+                "            <p class=\"text-muted small mb-2\">Telegram (optional)</p>\n" +
+                "            <div class=\"mb-3\">\n" +
+                "                <label class=\"form-label\">Bot-Token &amp; Chat-ID</label>\n" +
+                "                <div class=\"row g-2 align-items-end\"><div class=\"col-md-5\"><input type=\"text\" class=\"form-control\" id=\"anlageTelegramBotToken\" placeholder=\"Bot-Token (von @BotFather)\" autocomplete=\"off\"></div><div class=\"col-md-4\"><input type=\"text\" class=\"form-control\" id=\"anlageTelegramChatId\" placeholder=\"Chat-ID\"></div><div class=\"col-md-3\"><button type=\"button\" class=\"btn btn-outline-secondary\" id=\"telegramTestBtn\" onclick=\"testTelegram()\">Test</button><span id=\"telegramTestStatus\" class=\"ms-1 small\"></span></div></div>\n" +
+                "                <small class=\"form-text text-muted\">Bot bei @BotFather anlegen, Token ohne Leerzeichen kopieren. Mit deinem eigenen Telegram-Konto dem Bot /start schreiben. Chat-ID aus getUpdates. Befehle: <code>reboot</code> (App-Neustart), <code>backup</code> (Backup-Datei senden), <code>melodie &lt;Name&gt;</code> oder <code>start &lt;Name&gt;</code> (Melodie starten), <code>.db</code>-Datei als Anhang = Restore – nur von der konfigurierten Chat-ID. Nach Test „Anlagendaten speichern“ klicken.</small>\n" +
+                "                <label class=\"form-label mt-2\">Bei Melodie-Start senden</label>\n" +
+                "                <select class=\"form-select\" id=\"anlageMelodieStartSenden\" style=\"max-width:220px\">\n" +
+                "                <option value=\"aus\">Aus</option>\n" +
+                "                <option value=\"telegram\">Telegram</option>\n" +
+                "                </select>\n" +
+                "                <small class=\"form-text text-muted\">Wenn eine Melodie startet, wird „Start: [Melodiename]“ an Telegram gesendet (wie oben konfiguriert).</small>\n" +
+                "            </div>\n" +
                 "            <p class=\"text-muted small mb-2\">Bildschirmschoner (Analoguhr)</p>\n" +
                 "            <div class=\"row g-2 mb-3\">\n" +
                 "                <div class=\"col-md-4\"><label class=\"form-label\">Verzögerung (Minuten)</label><input type=\"number\" class=\"form-control\" id=\"anlageBildschirmschonerMinuten\" min=\"1\" max=\"120\" value=\"5\" placeholder=\"5\"><small class=\"form-text text-muted\">Nach so vielen Minuten ohne Eingabe erscheint die Analoguhr als Bildschirmschoner.</small></div>\n" +
@@ -5330,10 +5417,11 @@ public class ConfigWebServer {
                 "        </div>\n" +
                 "    </div>\n" +
                 "    <script>\n" +
-                "        async function loadAnlagendaten() { try { var r = await fetch('/api/anlagendaten'); var j = await r.json(); if (j.baustelleName != null) document.getElementById('anlageBaustelle').value = j.baustelleName; if (j.installationsdatum != null) document.getElementById('anlageInstallationsdatum').value = j.installationsdatum; if (j.anzahlGlocken != null) document.getElementById('anlageAnzahlGlocken').value = j.anzahlGlocken; if (j.anzahlKloeppelfaenger != null) document.getElementById('anlageAnzahlKloeppelfaenger').value = j.anzahlKloeppelfaenger; if (j.anzahlNebenuhren != null) document.getElementById('anlageAnzahlNebenuhren').value = j.anzahlNebenuhren; if (j.anzahlHammer != null) document.getElementById('anlageAnzahlHammer').value = j.anzahlHammer; document.getElementById('anlageAutostartDerApp').checked = (j.autostartDerApp === true || j.autostartDerApp === 'true'); document.getElementById('anlageLogAbgelaufeneMelodien').checked = (j.logAbgelaufeneMelodien === true || j.logAbgelaufeneMelodien === 'true'); document.getElementById('anlageLogFehlerCrashes').checked = (j.logFehlerCrashes === true || j.logFehlerCrashes === 'true'); document.getElementById('anlageRebootVerbindungsausfall').checked = (j.rebootBeiVerbindungsausfall === true || j.rebootBeiVerbindungsausfall === 'true'); document.getElementById('anlageAlarmActivityWecken').checked = (j.alarmActivityWecken !== false && j.alarmActivityWecken !== 'false'); document.getElementById('anlageWebUiVollbildTest').checked = (j.webUiVollbildTest === true || j.webUiVollbildTest === 'true'); document.getElementById('anlagePlatinenDemoModus').checked = (j.platinenDemoModus === true || j.platinenDemoModus === 'true'); if (j.bildschirmschonerVerzoegerungMinuten != null) document.getElementById('anlageBildschirmschonerMinuten').value = j.bildschirmschonerVerzoegerungMinuten; if (j.bildschirmAusMinuten != null) document.getElementById('anlageBildschirmAusMinuten').value = j.bildschirmAusMinuten; if (j.mondSternzeichenAnzeigen !== undefined) document.getElementById('anlageMondSternzeichenAnzeigen').checked = (j.mondSternzeichenAnzeigen === true || j.mondSternzeichenAnzeigen === 'true'); if (j.sternzeichenAlsSymbol !== undefined) document.getElementById('anlageSternzeichenAlsSymbol').checked = (j.sternzeichenAlsSymbol === true || j.sternzeichenAlsSymbol === 'true'); if (j.bewegungserkennungEin !== undefined) document.getElementById('anlageBewegungserkennungEin').checked = (j.bewegungserkennungEin === true || j.bewegungserkennungEin === 'true'); if (j.bewegungserkennungEmpfindlichkeit != null) document.getElementById('anlageBewegungserkennungEmpfindlichkeit').value = j.bewegungserkennungEmpfindlichkeit; if (j.bewegungserkennungIntervallSekunden != null) document.getElementById('anlageBewegungserkennungIntervall').value = j.bewegungserkennungIntervallSekunden; if (j.bewegungserkennungNurBeiBildschirmAus !== undefined) document.getElementById('anlageBewegungserkennungNurBildschirmAus').checked = (j.bewegungserkennungNurBeiBildschirmAus === true || j.bewegungserkennungNurBeiBildschirmAus === 'true'); var vb = document.getElementById('anlagenVorlageBox'); if (vb) vb.style.display = (!String(j.baustelleName || '').trim() && !String(j.installationsdatum || '').trim()) ? 'block' : 'none'; } catch (e) { console.warn('Anlagendaten laden:', e); var vb = document.getElementById('anlagenVorlageBox'); if (vb) vb.style.display = 'block'; } }\n" +
+                "        async function loadAnlagendaten() { try { var r = await fetch('/api/anlagendaten'); var j = await r.json(); if (j.baustelleName != null) document.getElementById('anlageBaustelle').value = j.baustelleName; if (j.installationsdatum != null) document.getElementById('anlageInstallationsdatum').value = j.installationsdatum; if (j.anzahlGlocken != null) document.getElementById('anlageAnzahlGlocken').value = j.anzahlGlocken; if (j.anzahlKloeppelfaenger != null) document.getElementById('anlageAnzahlKloeppelfaenger').value = j.anzahlKloeppelfaenger; if (j.anzahlNebenuhren != null) document.getElementById('anlageAnzahlNebenuhren').value = j.anzahlNebenuhren; if (j.anzahlHammer != null) document.getElementById('anlageAnzahlHammer').value = j.anzahlHammer; document.getElementById('anlageAutostartDerApp').checked = (j.autostartDerApp === true || j.autostartDerApp === 'true'); document.getElementById('anlageLogAbgelaufeneMelodien').checked = (j.logAbgelaufeneMelodien === true || j.logAbgelaufeneMelodien === 'true'); document.getElementById('anlageLogFehlerCrashes').checked = (j.logFehlerCrashes === true || j.logFehlerCrashes === 'true'); document.getElementById('anlageRebootVerbindungsausfall').checked = (j.rebootBeiVerbindungsausfall === true || j.rebootBeiVerbindungsausfall === 'true'); document.getElementById('anlageAlarmActivityWecken').checked = (j.alarmActivityWecken !== false && j.alarmActivityWecken !== 'false'); document.getElementById('anlageWebUiVollbildTest').checked = (j.webUiVollbildTest === true || j.webUiVollbildTest === 'true'); document.getElementById('anlagePlatinenDemoModus').checked = (j.platinenDemoModus === true || j.platinenDemoModus === 'true'); if (j.bildschirmschonerVerzoegerungMinuten != null) document.getElementById('anlageBildschirmschonerMinuten').value = j.bildschirmschonerVerzoegerungMinuten; if (j.bildschirmAusMinuten != null) document.getElementById('anlageBildschirmAusMinuten').value = j.bildschirmAusMinuten; if (j.mondSternzeichenAnzeigen !== undefined) document.getElementById('anlageMondSternzeichenAnzeigen').checked = (j.mondSternzeichenAnzeigen === true || j.mondSternzeichenAnzeigen === 'true'); if (j.sternzeichenAlsSymbol !== undefined) document.getElementById('anlageSternzeichenAlsSymbol').checked = (j.sternzeichenAlsSymbol === true || j.sternzeichenAlsSymbol === 'true'); if (j.bewegungserkennungEin !== undefined) document.getElementById('anlageBewegungserkennungEin').checked = (j.bewegungserkennungEin === true || j.bewegungserkennungEin === 'true'); if (j.bewegungserkennungEmpfindlichkeit != null) document.getElementById('anlageBewegungserkennungEmpfindlichkeit').value = j.bewegungserkennungEmpfindlichkeit; if (j.bewegungserkennungIntervallSekunden != null) document.getElementById('anlageBewegungserkennungIntervall').value = j.bewegungserkennungIntervallSekunden; if (j.bewegungserkennungNurBeiBildschirmAus !== undefined) document.getElementById('anlageBewegungserkennungNurBildschirmAus').checked = (j.bewegungserkennungNurBeiBildschirmAus === true || j.bewegungserkennungNurBeiBildschirmAus === 'true'); if (j.telegramBotToken != null) document.getElementById('anlageTelegramBotToken').value = j.telegramBotToken; if (j.telegramChatId != null) document.getElementById('anlageTelegramChatId').value = j.telegramChatId; if (j.melodieStartSenden != null) { var sel = document.getElementById('anlageMelodieStartSenden'); if (sel) sel.value = j.melodieStartSenden; } var vb = document.getElementById('anlagenVorlageBox'); if (vb) vb.style.display = (!String(j.baustelleName || '').trim() && !String(j.installationsdatum || '').trim()) ? 'block' : 'none'; } catch (e) { console.warn('Anlagendaten laden:', e); var vb = document.getElementById('anlagenVorlageBox'); if (vb) vb.style.display = 'block'; } }\n" +
                 "        function datumHeute() { var d = new Date(); return ('0' + d.getDate()).slice(-2) + '.' + ('0' + (d.getMonth()+1)).slice(-2) + '.' + d.getFullYear(); }\n" +
-                "        async function loadAnlagenvorlage() { document.getElementById('anlageBaustelle').value = 'Neue Anlage'; document.getElementById('anlageInstallationsdatum').value = datumHeute(); document.getElementById('anlageAnzahlGlocken').value = '8'; document.getElementById('anlageAnzahlKloeppelfaenger').value = '7'; document.getElementById('anlageAnzahlNebenuhren').value = '2'; document.getElementById('anlageAnzahlHammer').value = '2'; document.getElementById('anlageAutostartDerApp').checked = true; document.getElementById('anlageLogAbgelaufeneMelodien').checked = false; document.getElementById('anlageLogFehlerCrashes').checked = false; document.getElementById('anlageRebootVerbindungsausfall').checked = false; document.getElementById('anlageAlarmActivityWecken').checked = true; document.getElementById('anlageWebUiVollbildTest').checked = false; document.getElementById('anlagePlatinenDemoModus').checked = false; document.getElementById('anlageBildschirmschonerMinuten').value = '5'; document.getElementById('anlageBildschirmAusMinuten').value = '60'; document.getElementById('anlageMondSternzeichenAnzeigen').checked = true; document.getElementById('anlageSternzeichenAlsSymbol').checked = true; document.getElementById('anlageBewegungserkennungEin').checked = false; document.getElementById('anlageBewegungserkennungEmpfindlichkeit').value = '50'; document.getElementById('anlageBewegungserkennungIntervall').value = '2'; document.getElementById('anlageBewegungserkennungNurBildschirmAus').checked = true; await saveAnlagendaten(); try { await fetch('/api/beschriftung-tasten-reset-neuanlage', { method: 'POST' }); } catch(e) { console.warn('Layout-Reset:', e); } loadAnlagendaten(); }\n" +
-                "        async function saveAnlagendaten() { var el = document.getElementById('anlagendatenStatus'); el.textContent = 'Speichere...'; el.className = 'ms-2 text-muted'; try { var payload = { baustelleName: document.getElementById('anlageBaustelle').value.trim(), installationsdatum: document.getElementById('anlageInstallationsdatum').value, anzahlGlocken: document.getElementById('anlageAnzahlGlocken').value.trim(), anzahlKloeppelfaenger: document.getElementById('anlageAnzahlKloeppelfaenger').value.trim(), anzahlNebenuhren: document.getElementById('anlageAnzahlNebenuhren').value.trim(), anzahlHammer: document.getElementById('anlageAnzahlHammer').value.trim(), autostartDerApp: document.getElementById('anlageAutostartDerApp').checked, logAbgelaufeneMelodien: document.getElementById('anlageLogAbgelaufeneMelodien').checked, logFehlerCrashes: document.getElementById('anlageLogFehlerCrashes').checked, rebootBeiVerbindungsausfall: document.getElementById('anlageRebootVerbindungsausfall').checked, alarmActivityWecken: document.getElementById('anlageAlarmActivityWecken').checked, webUiVollbildTest: document.getElementById('anlageWebUiVollbildTest').checked, platinenDemoModus: document.getElementById('anlagePlatinenDemoModus').checked, bildschirmschonerVerzoegerungMinuten: document.getElementById('anlageBildschirmschonerMinuten').value || '5', bildschirmAusMinuten: document.getElementById('anlageBildschirmAusMinuten').value || '60', mondSternzeichenAnzeigen: document.getElementById('anlageMondSternzeichenAnzeigen').checked, sternzeichenAlsSymbol: document.getElementById('anlageSternzeichenAlsSymbol').checked, bewegungserkennungEin: document.getElementById('anlageBewegungserkennungEin').checked, bewegungserkennungEmpfindlichkeit: parseInt(document.getElementById('anlageBewegungserkennungEmpfindlichkeit').value, 10) || 50, bewegungserkennungIntervallSekunden: parseInt(document.getElementById('anlageBewegungserkennungIntervall').value, 10) || 2, bewegungserkennungNurBeiBildschirmAus: document.getElementById('anlageBewegungserkennungNurBildschirmAus').checked }; var r = await fetch('/api/anlagendaten', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) }); var j = await r.json(); if (j.success) { el.textContent = 'Gespeichert.'; el.className = 'ms-2 text-success'; } else { el.textContent = j.error || 'Fehler'; el.className = 'ms-2 text-danger'; } } catch (e) { el.textContent = 'Fehler: ' + e.message; el.className = 'ms-2 text-danger'; } }\n" +
+                "        async function loadAnlagenvorlage() { document.getElementById('anlageBaustelle').value = 'Neue Anlage'; document.getElementById('anlageInstallationsdatum').value = datumHeute(); document.getElementById('anlageAnzahlGlocken').value = '8'; document.getElementById('anlageAnzahlKloeppelfaenger').value = '7'; document.getElementById('anlageAnzahlNebenuhren').value = '2'; document.getElementById('anlageAnzahlHammer').value = '2'; document.getElementById('anlageAutostartDerApp').checked = true; document.getElementById('anlageLogAbgelaufeneMelodien').checked = false; document.getElementById('anlageLogFehlerCrashes').checked = false; document.getElementById('anlageRebootVerbindungsausfall').checked = false; document.getElementById('anlageAlarmActivityWecken').checked = true; document.getElementById('anlageWebUiVollbildTest').checked = false; document.getElementById('anlagePlatinenDemoModus').checked = false; document.getElementById('anlageBildschirmschonerMinuten').value = '5'; document.getElementById('anlageBildschirmAusMinuten').value = '60'; document.getElementById('anlageMondSternzeichenAnzeigen').checked = true; document.getElementById('anlageSternzeichenAlsSymbol').checked = true; document.getElementById('anlageBewegungserkennungEin').checked = false; document.getElementById('anlageBewegungserkennungEmpfindlichkeit').value = '50'; document.getElementById('anlageBewegungserkennungIntervall').value = '2'; document.getElementById('anlageBewegungserkennungNurBildschirmAus').checked = true; document.getElementById('anlageTelegramBotToken').value = ''; document.getElementById('anlageTelegramChatId').value = ''; var ms = document.getElementById('anlageMelodieStartSenden'); if (ms) ms.value = 'aus'; await saveAnlagendaten(); try { await fetch('/api/beschriftung-tasten-reset-neuanlage', { method: 'POST' }); } catch(e) { console.warn('Layout-Reset:', e); } loadAnlagendaten(); }\n" +
+                "        async function saveAnlagendaten() { var el = document.getElementById('anlagendatenStatus'); el.textContent = 'Speichere...'; el.className = 'ms-2 text-muted'; try { var payload = { baustelleName: document.getElementById('anlageBaustelle').value.trim(), installationsdatum: document.getElementById('anlageInstallationsdatum').value, anzahlGlocken: document.getElementById('anlageAnzahlGlocken').value.trim(), anzahlKloeppelfaenger: document.getElementById('anlageAnzahlKloeppelfaenger').value.trim(), anzahlNebenuhren: document.getElementById('anlageAnzahlNebenuhren').value.trim(), anzahlHammer: document.getElementById('anlageAnzahlHammer').value.trim(), autostartDerApp: document.getElementById('anlageAutostartDerApp').checked, logAbgelaufeneMelodien: document.getElementById('anlageLogAbgelaufeneMelodien').checked, logFehlerCrashes: document.getElementById('anlageLogFehlerCrashes').checked, rebootBeiVerbindungsausfall: document.getElementById('anlageRebootVerbindungsausfall').checked, alarmActivityWecken: document.getElementById('anlageAlarmActivityWecken').checked, webUiVollbildTest: document.getElementById('anlageWebUiVollbildTest').checked, platinenDemoModus: document.getElementById('anlagePlatinenDemoModus').checked, bildschirmschonerVerzoegerungMinuten: document.getElementById('anlageBildschirmschonerMinuten').value || '5', bildschirmAusMinuten: document.getElementById('anlageBildschirmAusMinuten').value || '60', mondSternzeichenAnzeigen: document.getElementById('anlageMondSternzeichenAnzeigen').checked, sternzeichenAlsSymbol: document.getElementById('anlageSternzeichenAlsSymbol').checked, bewegungserkennungEin: document.getElementById('anlageBewegungserkennungEin').checked, bewegungserkennungEmpfindlichkeit: parseInt(document.getElementById('anlageBewegungserkennungEmpfindlichkeit').value, 10) || 50, bewegungserkennungIntervallSekunden: parseInt(document.getElementById('anlageBewegungserkennungIntervall').value, 10) || 2, bewegungserkennungNurBeiBildschirmAus: document.getElementById('anlageBewegungserkennungNurBildschirmAus').checked, telegramBotToken: document.getElementById('anlageTelegramBotToken').value.trim(), telegramChatId: document.getElementById('anlageTelegramChatId').value.trim(), melodieStartSenden: (document.getElementById('anlageMelodieStartSenden') && document.getElementById('anlageMelodieStartSenden').value) ? document.getElementById('anlageMelodieStartSenden').value : 'aus' }; var r = await fetch('/api/anlagendaten', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) }); var j = await r.json(); if (j.success) { el.textContent = 'Gespeichert.'; el.className = 'ms-2 text-success'; } else { el.textContent = j.error || 'Fehler'; el.className = 'ms-2 text-danger'; } } catch (e) { el.textContent = 'Fehler: ' + e.message; el.className = 'ms-2 text-danger'; } }\n" +
+                "        async function testTelegram() { var btn = document.getElementById('telegramTestBtn'); var st = document.getElementById('telegramTestStatus'); if (btn) btn.disabled = true; if (st) { st.textContent = 'Sende...'; st.className = 'ms-1 small text-muted'; } try { var r = await fetch('/api/telegram-test', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ telegramBotToken: document.getElementById('anlageTelegramBotToken').value.trim(), telegramChatId: document.getElementById('anlageTelegramChatId').value.trim() }) }); var j = await r.json(); if (st) { st.textContent = j.success ? 'OK' : (j.error || 'Fehler'); st.className = j.success ? 'ms-1 small text-success' : 'ms-1 small text-danger'; } } catch (e) { if (st) { st.textContent = 'Fehler'; st.className = 'ms-1 small text-danger'; } } if (btn) btn.disabled = false; }\n" +
                 "        async function loadFernsteuern() { try { var r = await fetch('/api/fernsteuern-config'); var j = await r.json(); document.getElementById('fernsteuernInternetPollingMs').value = j.internetPollingMs != null ? j.internetPollingMs : ''; document.getElementById('fernsteuernTimeServerEinAus').value = j.timeServerEinAus != null ? j.timeServerEinAus : ''; document.getElementById('fernsteuernTimeServerIp').value = j.timeServerIp != null ? j.timeServerIp : ''; document.getElementById('fernsteuernTimeServerMaxOffset').value = j.timeServerMaxOffsetMinuten != null ? j.timeServerMaxOffsetMinuten : ''; document.getElementById('fernsteuernTimeServerIntervall').value = j.timeServerAbfrageIntervallMs != null ? j.timeServerAbfrageIntervallMs : ''; document.getElementById('fernsteuernSerialGPSEinAus').value = j.serialGPSEinAus === true ? 'true' : 'false'; document.getElementById('fernsteuernSerialGPSIp').value = j.serialGPSIp != null ? j.serialGPSIp : ''; document.getElementById('fernsteuernSerialGPSPort').value = j.serialGPSPort != null ? j.serialGPSPort : ''; } catch (e) { console.warn('Fernsteuern laden:', e); } }\n" +
                 "        async function saveFernsteuern() { var el = document.getElementById('fernsteuernStatus'); el.textContent = 'Speichere...'; el.className = 'ms-2 text-muted'; try { var payload = { internetPollingMs: parseInt(document.getElementById('fernsteuernInternetPollingMs').value, 10) || 300000, timeServerEinAus: document.getElementById('fernsteuernTimeServerEinAus').value.trim(), timeServerIp: document.getElementById('fernsteuernTimeServerIp').value.trim(), timeServerMaxOffsetMinuten: document.getElementById('fernsteuernTimeServerMaxOffset').value.trim(), timeServerAbfrageIntervallMs: document.getElementById('fernsteuernTimeServerIntervall').value.trim(), serialGPSEinAus: document.getElementById('fernsteuernSerialGPSEinAus').value === 'true', serialGPSIp: document.getElementById('fernsteuernSerialGPSIp').value.trim(), serialGPSPort: parseInt(document.getElementById('fernsteuernSerialGPSPort').value, 10) || 0 }; var r = await fetch('/api/fernsteuern-config', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) }); var j = await r.json(); if (j.success) { el.textContent = 'Gespeichert.'; el.className = 'ms-2 text-success'; } else { el.textContent = j.error || 'Fehler'; el.className = 'ms-2 text-danger'; } } catch (e) { el.textContent = 'Fehler: ' + e.message; el.className = 'ms-2 text-danger'; } }\n" +
                 "        async function loadAnlagenstandort() { try { var r = await fetch('/api/anlagenstandort'); var j = await r.json(); document.getElementById('anlagenstandortOrt').value = j.ort != null ? j.ort : ''; document.getElementById('anlagenstandortPlz').value = j.plz != null ? j.plz : ''; document.getElementById('anlagenstandortBreitengrad').value = j.breitengrad != null ? j.breitengrad : ''; document.getElementById('anlagenstandortLaengengrad').value = j.laengengrad != null ? j.laengengrad : ''; document.getElementById('anlagenstandortAnpassungSA').value = j.anpassungSonnenaufgangMinuten != null ? j.anpassungSonnenaufgangMinuten : '0'; document.getElementById('anlagenstandortAnpassungSU').value = j.anpassungSonnenuntergangMinuten != null ? j.anpassungSonnenuntergangMinuten : '0'; document.getElementById('anlagenstandortRunden').value = j.rundenMinuten != null ? j.rundenMinuten : '5'; } catch (e) { console.warn('Anlagenstandort laden:', e); } }\n" +
@@ -9370,6 +9458,41 @@ public class ConfigWebServer {
             return (ip & 0xff) + "." + ((ip >> 8) & 0xff) + "." + ((ip >> 16) & 0xff) + "." + ((ip >> 24) & 0xff);
         } catch (Exception e) {
             Log.w(TAG, "WLAN-IP für Scan nicht ermittelt", e);
+            return null;
+        }
+    }
+
+    /**
+     * Ermittelt eine beliebige lokale IPv4-Adresse (z. B. WLAN, Ethernet), falls getLocalIpForScan() nichts liefert.
+     * Bevorzugt private Adressen (192.168., 10., 172.16.–172.31.). Für RustDesk-Direktverbindung.
+     */
+    private String getAnyLocalIPv4() {
+        try {
+            java.util.List<String> privateList = new java.util.ArrayList<>();
+            java.util.List<String> otherList = new java.util.ArrayList<>();
+            java.util.Enumeration<NetworkInterface> nis = NetworkInterface.getNetworkInterfaces();
+            if (nis == null) return null;
+            while (nis.hasMoreElements()) {
+                NetworkInterface ni = nis.nextElement();
+                if (ni == null || !ni.isUp()) continue;
+                java.util.Enumeration<java.net.InetAddress> addrs = ni.getInetAddresses();
+                while (addrs.hasMoreElements()) {
+                    java.net.InetAddress a = addrs.nextElement();
+                    if (a instanceof Inet4Address && !a.isLoopbackAddress()) {
+                        String host = a.getHostAddress();
+                        if (host == null || host.startsWith("100.")) continue;
+                        if (host.startsWith("192.168.") || host.startsWith("10.") || host.startsWith("172.16.") || host.startsWith("172.17.") || host.startsWith("172.18.") || host.startsWith("172.19.") || host.startsWith("172.2") || host.startsWith("172.30.") || host.startsWith("172.31."))
+                            privateList.add(host);
+                        else
+                            otherList.add(host);
+                    }
+                }
+            }
+            if (!privateList.isEmpty()) return privateList.get(0);
+            if (!otherList.isEmpty()) return otherList.get(0);
+            return null;
+        } catch (Exception e) {
+            Log.w(TAG, "Fallback IPv4 nicht ermittelt", e);
             return null;
         }
     }

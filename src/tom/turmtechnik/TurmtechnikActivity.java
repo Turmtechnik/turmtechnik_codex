@@ -124,6 +124,26 @@ public class TurmtechnikActivity extends Activity {
     private boolean activityJustCreated = false;
     /** Einmal pro Prozess „Neustart“ ins Crash-Log (LogCrash), damit nicht bei jeder Activity-Erstellung. */
     private static boolean crashLogNeustartAlreadyLoggedThisProcess = false;
+    /** Einmal pro Prozess Neustart-Benachrichtigungen (Webhook, SMS, Telegram) anstoßen – auch wenn Launcher WebUiActivity ist. */
+    private static volatile boolean neustartNotificationsScheduledThisProcess = false;
+    /** Telegram-Befehls-Poller: letzte verarbeitete update_id (getUpdates offset). */
+    private static volatile long telegramLastUpdateId = 0;
+    /** Telegram-Befehls-Poller: ob der Poller-Thread bereits gestartet wurde. */
+    private static volatile boolean telegramPollerStarted = false;
+    /** Abstand zwischen zwei getUpdates-Abfragen in ms (max. Verzögerung bis ein Befehl erkannt wird). 60 s = unter 10 Min garantiert. */
+    private static final long TELEGRAM_POLL_INTERVAL_MS = 60_000L;
+    /** Bei längerem Internetausfall: nach so vielen Fehlversuchen seltener pollen (Backoff), um Ressourcen zu schonen. */
+    private static final int TELEGRAM_POLL_BACKOFF_AFTER_FAILURES = 5;
+    /** Intervall in ms, wenn Backoff aktiv (kein Internet): 5 Min – bei tagelangem Ausfall nicht jede Minute fehlschlagen. */
+    private static final long TELEGRAM_POLL_INTERVAL_OFFLINE_MS = 300_000L;
+    /** Zähler aufeinanderfolgender getUpdates-Fehler (für Backoff). */
+    private static volatile int telegramPollerConsecutiveFailures = 0;
+    /** Max. Wiederholungsversuche beim Senden einer Telegram-Nachricht bei Netzwerkfehler. */
+    private static final int TELEGRAM_SEND_MAX_RETRIES = 3;
+    /** Pause in ms zwischen zwei Sendewiederholungen bei Fehler. */
+    private static final long TELEGRAM_SEND_RETRY_DELAY_MS = 5000L;
+    /** Befehle älter als diese Sekunden werden verworfen (z. B. nach Netzwerkausfall zu spät angekommen). 10 Min = 600. */
+    private static final long TELEGRAM_CMD_MAX_AGE_SECONDS = 600L;
 
     private NMEA_gps_clock nmea_gps_clock = null;
 
@@ -709,6 +729,8 @@ public class TurmtechnikActivity extends Activity {
             LogTurmtechnik2.appendCrashLog("Neustart");
             crashLogNeustartAlreadyLoggedThisProcess = true;
         }
+        // Neustart-Benachrichtigungen (Webhook, SMS, Telegram) – einmal pro Prozess, auch wenn Launcher WebUiActivity ist
+        scheduleNeustartNotificationsOnce(getApplicationContext());
 
         // service vor allem starten
         // wegen timeout der app (warten/beenden)
@@ -3772,6 +3794,439 @@ public class TurmtechnikActivity extends Activity {
             Log.w("TurmtechnikActivity", "WLAN war aus – wurde eingeschaltet (Keine Verbindung).");
         } catch (Exception e) {
             Log.e("TurmtechnikActivity", "WLAN einschalten fehlgeschlagen: " + (e.getMessage() != null ? e.getMessage() : e.toString()));
+        }
+    }
+
+    /**
+     * Sendet beim Start einer Melodie „Start: [Melodiename]“ an Telegram, wenn in Anlagendaten ausgewählt.
+     * Kann aus jedem Thread aufgerufen werden (startet ggf. einen kurzen Hintergrund-Thread).
+     */
+    public static void sendMelodieStartIfConfigured(Context appContext, String melodieName) {
+        if (appContext == null) return;
+        final Context appCtx = appContext.getApplicationContext();
+        final String name = (melodieName != null ? melodieName.trim() : "");
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    PlatinenDatabaseHelper db = PlatinenDatabaseHelper.getInstance(appCtx);
+                    String opt = db != null ? db.getConfigValue("melodie_start_senden") : null;
+                    if (opt == null) opt = "";
+                    opt = opt.trim().toLowerCase();
+                    if (opt.isEmpty() || opt.equals("aus")) return;
+                    String msg = "Start: " + (name.isEmpty() ? "Melodie" : name);
+                    if (opt.equals("telegram")) sendMelodieStartTelegram(appCtx, msg);
+                } catch (Throwable t) {
+                    Log.w("TurmtechnikActivity", "Melodie-Start senden: " + (t.getMessage() != null ? t.getMessage() : t.toString()));
+                }
+            }
+        }).start();
+    }
+
+    private static void sendMelodieStartTelegram(Context appContext, String textMessage) {
+        PlatinenDatabaseHelper db = PlatinenDatabaseHelper.getInstance(appContext);
+        String token = db != null ? db.getConfigValue("telegram_bot_token") : null;
+        String chatId = db != null ? db.getConfigValue("telegram_chat_id") : null;
+        if (token == null || (token = token.trim()).isEmpty() || chatId == null || (chatId = chatId.trim()).isEmpty()) return;
+        token = token.replaceAll("[^0-9A-Za-z:\\-_]", "");
+        if (token.isEmpty()) return;
+        sendTelegramMessage(token, chatId, textMessage);
+    }
+
+    /**
+     * Stößt einmal pro Prozess den Telegram-Befehls-Poller an (reboot, backup, restore).
+     * Muss sowohl aus TurmtechnikActivity als auch aus WebUiActivity.onCreate aufgerufen werden,
+     * da die App oft mit WebUiActivity als Launcher startet.
+     */
+    public static void scheduleNeustartNotificationsOnce(Context appContext) {
+        if (appContext == null) return;
+        if (neustartNotificationsScheduledThisProcess) return;
+        neustartNotificationsScheduledThisProcess = true;
+        final Context appCtx = appContext.getApplicationContext();
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try { Thread.sleep(3000); } catch (InterruptedException ignored) {}
+                startTelegramCommandPollerIfConfigured(appCtx);
+            }
+        }).start();
+    }
+
+    /**
+     * Startet einmal pro Prozess einen Hintergrund-Thread, der periodisch Telegram getUpdates abfragt
+     * und Befehle ausführt (z. B. reboot, backup, melodie). Nur wenn Bot-Token und Chat-ID konfiguriert sind.
+     * Intervall TELEGRAM_POLL_INTERVAL_MS (z. B. 1 Min) – maximale Verzögerung bis ein Befehl erkannt wird.
+     */
+    public static void startTelegramCommandPollerIfConfigured(Context appContext) {
+        if (appContext == null) return;
+        if (telegramPollerStarted) return;
+        PlatinenDatabaseHelper db = PlatinenDatabaseHelper.getInstance(appContext);
+        String token = db != null ? db.getConfigValue("telegram_bot_token") : null;
+        String chatId = db != null ? db.getConfigValue("telegram_chat_id") : null;
+        if (token == null || (token = token.trim()).isEmpty() || chatId == null || (chatId = chatId.trim()).isEmpty()) return;
+        telegramPollerStarted = true;
+        final Context appCtx = appContext.getApplicationContext();
+        Thread poller = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                Log.i("TurmtechnikActivity", "Telegram-Befehls-Poller gestartet (Intervall " + (TELEGRAM_POLL_INTERVAL_MS / 1000) + " s, bei Ausfall Backoff nach " + TELEGRAM_POLL_BACKOFF_AFTER_FAILURES + " Fehlern)");
+                while (true) {
+                    long interval = telegramPollerConsecutiveFailures >= TELEGRAM_POLL_BACKOFF_AFTER_FAILURES ? TELEGRAM_POLL_INTERVAL_OFFLINE_MS : TELEGRAM_POLL_INTERVAL_MS;
+                    try { Thread.sleep(interval); } catch (InterruptedException e) { break; }
+                    try {
+                        if (pollTelegramCommands(appCtx)) {
+                            telegramPollerConsecutiveFailures = 0;
+                        } else {
+                            telegramPollerConsecutiveFailures++;
+                            if (telegramPollerConsecutiveFailures == TELEGRAM_POLL_BACKOFF_AFTER_FAILURES) {
+                                Log.i("TurmtechnikActivity", "Telegram: Kein Internet – Poll-Intervall auf " + (TELEGRAM_POLL_INTERVAL_OFFLINE_MS / 60000) + " Min (Backoff). Bei Wiederkehr wird wieder 1 Min verwendet.");
+                            }
+                        }
+                    } catch (Throwable t) {
+                        telegramPollerConsecutiveFailures++;
+                        Log.w("TurmtechnikActivity", "Telegram-Poller: " + (t.getMessage() != null ? t.getMessage() : t.toString()));
+                    }
+                }
+            }
+        });
+        poller.setDaemon(true);
+        poller.start();
+    }
+
+    /**
+     * Ruft getUpdates ab, verarbeitet Nachrichten nur von der konfigurierten Chat-ID.
+     * Befehle: reboot/neustart → App-Neustart; backup/sicherung → Backup-Datei senden; zugesandte .db-Datei → Restore.
+     * @return true wenn die Abfrage erfolgreich war (Verbindung zu Telegram OK), false bei Netzwerkfehler
+     */
+    private static boolean pollTelegramCommands(Context appContext) {
+        PlatinenDatabaseHelper db = PlatinenDatabaseHelper.getInstance(appContext);
+        String token = db != null ? db.getConfigValue("telegram_bot_token") : null;
+        String chatId = db != null ? db.getConfigValue("telegram_chat_id") : null;
+        if (token == null || (token = token.trim()).isEmpty() || chatId == null || (chatId = chatId.trim()).isEmpty()) return false;
+        token = token.replaceAll("[^0-9A-Za-z:\\-_]", "");
+        if (token.isEmpty()) return false;
+        long offset = telegramLastUpdateId + 1;
+        java.net.HttpURLConnection conn = null;
+        try {
+            String urlString = "https://api.telegram.org/bot" + token + "/getUpdates?offset=" + offset + "&timeout=30";
+            java.net.URL url = new java.net.URL(urlString);
+            conn = (java.net.HttpURLConnection) url.openConnection();
+            conn.setRequestMethod("GET");
+            conn.setConnectTimeout(15000);
+            conn.setReadTimeout(35000);
+            int code = conn.getResponseCode();
+            if (code != 200) return false;
+            java.io.InputStream is = conn.getInputStream();
+            if (is == null) return false;
+            java.io.BufferedReader reader = new java.io.BufferedReader(new java.io.InputStreamReader(is, "UTF-8"));
+            StringBuilder sb = new StringBuilder();
+            String line;
+            while ((line = reader.readLine()) != null) sb.append(line);
+            reader.close();
+            conn.disconnect();
+            conn = null;
+            JSONObject root = new JSONObject(sb.toString());
+            if (!root.optBoolean("ok", false)) return true;
+            org.json.JSONArray result = root.optJSONArray("result");
+            if (result == null) return true;
+            for (int i = 0; i < result.length(); i++) {
+                JSONObject upd = result.optJSONObject(i);
+                if (upd == null) continue;
+                long updateId = upd.optLong("update_id", 0);
+                if (updateId > telegramLastUpdateId) telegramLastUpdateId = updateId;
+                JSONObject message = upd.optJSONObject("message");
+                if (message == null) continue;
+                JSONObject chat = message.optJSONObject("chat");
+                if (chat == null) continue;
+                String msgChatId = chat.has("id") ? String.valueOf(chat.optLong("id", 0)) : chat.optString("id", "");
+                String allowedChatId = chatId.trim();
+                if (msgChatId.isEmpty() || !msgChatId.equals(allowedChatId)) continue;
+                // Befehle verwerfen, die zu alt sind (z. B. nach Netzausfall – nicht mehr ausführen)
+                long msgDate = message.optLong("date", 0);
+                if (msgDate > 0 && (System.currentTimeMillis() / 1000 - msgDate) > TELEGRAM_CMD_MAX_AGE_SECONDS) continue;
+                // Anhang (Dokument): als Restore-Backup verarbeiten
+                JSONObject document = message.optJSONObject("document");
+                if (document != null) {
+                    String fileId = document.optString("file_id", "");
+                    String fileName = document.optString("file_name", "").toLowerCase();
+                    if (!fileId.isEmpty() && fileName.endsWith(".db")) {
+                        byte[] fileData = downloadTelegramFile(token, fileId);
+                        if (fileData != null && fileData.length > 0 && fileData.length <= 100 * 1024 * 1024) {
+                            if (restoreDatabaseFromBytes(appContext, fileData)) {
+                                sendTelegramMessage(token, chatId, "Wiederherstellung durchgeführt. Bitte App neu starten.");
+                            } else {
+                                sendTelegramMessage(token, chatId, "Restore fehlgeschlagen (Datenbank konnte nicht geschrieben werden).");
+                            }
+                        } else {
+                            sendTelegramMessage(token, chatId, "Datei zu groß oder Download fehlgeschlagen (max. 100 MB, nur .db).");
+                        }
+                    }
+                    continue;
+                }
+                String text = message.optString("text", "").trim();
+                if (text.isEmpty()) continue;
+                String cmd = text.toLowerCase();
+                if (cmd.equals("reboot") || cmd.equals("neustart") || cmd.equals("/reboot") || cmd.equals("/neustart")) {
+                    sendTelegramMessage(token, chatId, "App-Neustart wird ausgeführt …");
+                    restartCoreRuntime(appContext);
+                    continue;
+                }
+                if (cmd.equals("backup") || cmd.equals("sicherung") || cmd.equals("/backup") || cmd.equals("anlagen sicherung") || cmd.equals("anlagen-sicherung")) {
+                    byte[] backupBytes = getBackupBytes(appContext);
+                    String backupFilename = buildBackupFilename(appContext);
+                    if (backupBytes != null && backupBytes.length > 0 && backupFilename != null) {
+                        if (sendTelegramDocument(token, chatId, backupFilename, backupBytes)) {
+                            sendTelegramMessage(token, chatId, "Backup gesendet.");
+                        } else {
+                            sendTelegramMessage(token, chatId, "Backup-Datei konnte nicht gesendet werden (z. B. zu groß für Telegram, max. 50 MB).");
+                        }
+                    } else {
+                        sendTelegramMessage(token, chatId, "Backup fehlgeschlagen (Datenbank nicht lesbar).");
+                    }
+                    continue;
+                }
+                // Melodie starten: "melodie <Name>" oder "start <Name>"
+                String melodieNameArg = null;
+                if (text.toLowerCase().startsWith("melodie ")) melodieNameArg = text.substring(8).trim();
+                else if (text.toLowerCase().startsWith("start ")) melodieNameArg = text.substring(6).trim();
+                if (melodieNameArg != null) {
+                    startMelodieByNameFromTelegram(appContext, token, chatId, melodieNameArg);
+                }
+            }
+            return true;
+        } catch (Exception e) {
+            Log.w("TurmtechnikActivity", "Telegram getUpdates: " + (e.getMessage() != null ? e.getMessage() : e.toString()));
+            return false;
+        } finally {
+            if (conn != null) try { conn.disconnect(); } catch (Exception ignored) {}
+        }
+    }
+
+    /**
+     * Startet eine Melodie per Namen (aus Telegram-Befehl „melodie &lt;Name&gt;“ oder „start &lt;Name&gt;“).
+     * Sucht in der DB nach getMelodieByNormalizedName, setzt pathAndFileNameNextMelodie/nameNextMelodie und startet MelodieThreadNew.
+     */
+    private static void startMelodieByNameFromTelegram(Context appContext, String token, String chatId, String melodieName) {
+        if (melodieName == null || melodieName.trim().isEmpty()) {
+            sendTelegramMessage(token, chatId, "Bitte Melodienamen angeben: melodie <Name> oder start <Name>");
+            return;
+        }
+        String name = melodieName.trim();
+        PlatinenDatabaseHelper db = PlatinenDatabaseHelper.getInstance(appContext);
+        if (db == null) {
+            sendTelegramMessage(token, chatId, "Datenbank nicht verfügbar.");
+            return;
+        }
+        PlatinenDatabaseHelper.Melodie melodie = db.getMelodieByNormalizedName(name);
+        if (melodie == null) {
+            sendTelegramMessage(token, chatId, "Melodie nicht gefunden: \"" + name + "\"");
+            return;
+        }
+        String basePath = sdCardPath != null && !sdCardPath.isEmpty() ? sdCardPath : android.os.Environment.getExternalStorageDirectory().getPath();
+        String path = basePath + "/Turmtechnik/Melodien/" + melodie.name;
+        try {
+            MelodieThreadNew.doRunOff();
+            StaticVariable.pathStoppedByUser = "";
+            StaticVariable.pathAndFileNameNextMelodie = path;
+            StaticVariable.nameNextMelodie = melodie.name;
+            new MelodieThreadNew(path).start();
+            sendTelegramMessage(token, chatId, "Melodie gestartet: " + melodie.name);
+        } catch (Exception e) {
+            Log.w("TurmtechnikActivity", "Melodie starten (Telegram): " + (e.getMessage() != null ? e.getMessage() : e.toString()));
+            sendTelegramMessage(token, chatId, "Fehler beim Start: " + (e.getMessage() != null ? e.getMessage() : "Unbekannt"));
+        }
+    }
+
+    /** Sendet eine Textnachricht an den Telegram-Chat (für Befehls-Antworten). Bei Netzwerkfehler bis zu TELEGRAM_SEND_MAX_RETRIES Wiederholungen mit Pause. */
+    private static void sendTelegramMessage(String token, String chatId, String text) {
+        for (int attempt = 1; attempt <= TELEGRAM_SEND_MAX_RETRIES; attempt++) {
+            java.net.HttpURLConnection conn = null;
+            try {
+                String urlString = "https://api.telegram.org/bot" + token + "/sendMessage";
+                java.net.URL url = new java.net.URL(urlString);
+                conn = (java.net.HttpURLConnection) url.openConnection();
+                conn.setRequestMethod("POST");
+                conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8");
+                conn.setDoOutput(true);
+                conn.setConnectTimeout(10000);
+                conn.setReadTimeout(10000);
+                String body = "chat_id=" + java.net.URLEncoder.encode(chatId, "UTF-8") + "&text=" + java.net.URLEncoder.encode(text, "UTF-8");
+                java.io.OutputStream os = conn.getOutputStream();
+                os.write(body.getBytes("UTF-8"));
+                os.flush();
+                os.close();
+                int code = conn.getResponseCode();
+                conn.disconnect();
+                conn = null;
+                if (code >= 200 && code < 300) return;
+                if (attempt < TELEGRAM_SEND_MAX_RETRIES) {
+                    Log.w("TurmtechnikActivity", "Telegram sendMessage HTTP " + code + ", Wiederholung " + (attempt + 1) + "/" + TELEGRAM_SEND_MAX_RETRIES + " in " + (TELEGRAM_SEND_RETRY_DELAY_MS / 1000) + " s");
+                    Thread.sleep(TELEGRAM_SEND_RETRY_DELAY_MS);
+                } else {
+                    Log.w("TurmtechnikActivity", "Telegram sendMessage fehlgeschlagen nach " + TELEGRAM_SEND_MAX_RETRIES + " Versuchen (HTTP " + code + ")");
+                }
+            } catch (Exception e) {
+                if (conn != null) try { conn.disconnect(); } catch (Exception ignored) {}
+                Log.w("TurmtechnikActivity", "Telegram sendMessage Versuch " + attempt + "/" + TELEGRAM_SEND_MAX_RETRIES + ": " + (e.getMessage() != null ? e.getMessage() : e.toString()));
+                if (attempt < TELEGRAM_SEND_MAX_RETRIES) {
+                    try { Thread.sleep(TELEGRAM_SEND_RETRY_DELAY_MS); } catch (InterruptedException ie) { Thread.currentThread().interrupt(); break; }
+                }
+            }
+        }
+    }
+
+    /** Liest die Konfigurations-Datenbank und gibt die Bytes zurück (für Telegram-Backup). */
+    private static byte[] getBackupBytes(Context appContext) {
+        try {
+            java.io.File dbFile = appContext.getDatabasePath("turmtechnik_config.db");
+            if (dbFile == null || !dbFile.exists()) return null;
+            java.io.FileInputStream fis = new java.io.FileInputStream(dbFile);
+            java.io.ByteArrayOutputStream baos = new java.io.ByteArrayOutputStream();
+            byte[] buf = new byte[8192];
+            int n;
+            while ((n = fis.read(buf)) != -1) baos.write(buf, 0, n);
+            fis.close();
+            return baos.toByteArray();
+        } catch (Exception e) {
+            Log.w("TurmtechnikActivity", "getBackupBytes: " + (e.getMessage() != null ? e.getMessage() : e.toString()));
+            return null;
+        }
+    }
+
+    /** Erzeugt Backup-Dateinamen mit Baustelle und Datum (wie ConfigWebServer). */
+    private static String buildBackupFilename(Context appContext) {
+        PlatinenDatabaseHelper db = PlatinenDatabaseHelper.getInstance(appContext);
+        String baustelle = db != null ? db.getConfigValue("anlage_baustelle_name") : null;
+        String installDatum = db != null ? db.getConfigValue("anlage_installationsdatum") : null;
+        String datePart = (installDatum != null && !installDatum.trim().isEmpty()) ? installDatum.trim() : new java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.GERMANY).format(new java.util.Date());
+        if (datePart.length() > 10) datePart = datePart.substring(0, 10);
+        datePart = datePart.replaceAll("[^0-9\\-]", "-");
+        String namePart = "turmtechnik_config";
+        if (baustelle != null && !baustelle.trim().isEmpty()) {
+            String safe = baustelle.trim().replaceAll("[^a-zA-Z0-9\u00C4\u00E4\u00D6\u00F6\u00DC\u00FC\u00DF\\- ]", "").replaceAll("\\s+", "_").replaceAll("_+", "_");
+            if (safe.length() > 50) safe = safe.substring(0, 50);
+            if (!safe.isEmpty()) namePart = namePart + "_" + safe;
+        }
+        return namePart + "_" + datePart + ".db";
+    }
+
+    /** Sendet eine Datei als Dokument an den Telegram-Chat (sendDocument). Max 50 MB. Bei Netzwerkfehler bis zu TELEGRAM_SEND_MAX_RETRIES Wiederholungen. */
+    private static boolean sendTelegramDocument(String token, String chatId, String filename, byte[] fileBytes) {
+        if (fileBytes == null || fileBytes.length == 0 || filename == null || filename.isEmpty()) return false;
+        if (fileBytes.length > 50 * 1024 * 1024) return false;
+        for (int attempt = 1; attempt <= TELEGRAM_SEND_MAX_RETRIES; attempt++) {
+            java.net.HttpURLConnection conn = null;
+            try {
+                String boundary = "----TurmtechnikBoundary" + System.currentTimeMillis();
+                String urlString = "https://api.telegram.org/bot" + token + "/sendDocument";
+                java.net.URL url = new java.net.URL(urlString);
+                conn = (java.net.HttpURLConnection) url.openConnection();
+                conn.setRequestMethod("POST");
+                conn.setRequestProperty("Content-Type", "multipart/form-data; boundary=" + boundary);
+                conn.setDoOutput(true);
+                conn.setConnectTimeout(15000);
+                conn.setReadTimeout(60000);
+                java.io.OutputStream os = conn.getOutputStream();
+                String crlf = "\r\n";
+                String charset = "UTF-8";
+                os.write(("--" + boundary + crlf).getBytes(charset));
+                os.write(("Content-Disposition: form-data; name=\"chat_id\"" + crlf + crlf).getBytes(charset));
+                os.write((chatId + crlf).getBytes(charset));
+                os.write(("--" + boundary + crlf).getBytes(charset));
+                os.write(("Content-Disposition: form-data; name=\"document\"; filename=\"" + filename.replace("\"", "") + "\"" + crlf).getBytes(charset));
+                os.write(("Content-Type: application/octet-stream" + crlf + crlf).getBytes(charset));
+                os.write(fileBytes);
+                os.write((crlf + "--" + boundary + "--" + crlf).getBytes(charset));
+                os.flush();
+                os.close();
+                int code = conn.getResponseCode();
+                conn.disconnect();
+                conn = null;
+                if (code >= 200 && code < 300) return true;
+                if (attempt < TELEGRAM_SEND_MAX_RETRIES) {
+                    Log.w("TurmtechnikActivity", "Telegram sendDocument HTTP " + code + ", Wiederholung " + (attempt + 1) + "/" + TELEGRAM_SEND_MAX_RETRIES);
+                    Thread.sleep(TELEGRAM_SEND_RETRY_DELAY_MS);
+                }
+            } catch (Exception e) {
+                if (conn != null) try { conn.disconnect(); } catch (Exception ignored) {}
+                Log.w("TurmtechnikActivity", "Telegram sendDocument Versuch " + attempt + "/" + TELEGRAM_SEND_MAX_RETRIES + ": " + (e.getMessage() != null ? e.getMessage() : e.toString()));
+                if (attempt < TELEGRAM_SEND_MAX_RETRIES) {
+                    try { Thread.sleep(TELEGRAM_SEND_RETRY_DELAY_MS); } catch (InterruptedException ie) { Thread.currentThread().interrupt(); return false; }
+                }
+            }
+        }
+        return false;
+    }
+
+    /** Lädt eine Datei von der Telegram-Server-URL (getFile + Download). */
+    private static byte[] downloadTelegramFile(String token, String fileId) {
+        String filePath = null;
+        java.net.HttpURLConnection conn = null;
+        try {
+            String urlString = "https://api.telegram.org/bot" + token + "/getFile?file_id=" + java.net.URLEncoder.encode(fileId, "UTF-8");
+            java.net.URL url = new java.net.URL(urlString);
+            conn = (java.net.HttpURLConnection) url.openConnection();
+            conn.setRequestMethod("GET");
+            conn.setConnectTimeout(10000);
+            conn.setReadTimeout(10000);
+            int code = conn.getResponseCode();
+            if (code != 200) return null;
+            java.io.BufferedReader reader = new java.io.BufferedReader(new java.io.InputStreamReader(conn.getInputStream(), "UTF-8"));
+            StringBuilder sb = new StringBuilder();
+            String line;
+            while ((line = reader.readLine()) != null) sb.append(line);
+            reader.close();
+            conn.disconnect();
+            conn = null;
+            JSONObject root = new JSONObject(sb.toString());
+            if (!root.optBoolean("ok", false)) return null;
+            JSONObject result = root.optJSONObject("result");
+            if (result == null) return null;
+            filePath = result.optString("file_path", "");
+        } catch (Exception e) {
+            Log.w("TurmtechnikActivity", "Telegram getFile: " + (e.getMessage() != null ? e.getMessage() : e.toString()));
+            return null;
+        } finally {
+            if (conn != null) try { conn.disconnect(); } catch (Exception ignored) {}
+        }
+        if (filePath == null || filePath.isEmpty()) return null;
+        try {
+            String downloadUrl = "https://api.telegram.org/file/bot" + token + "/" + filePath;
+            java.net.URL url = new java.net.URL(downloadUrl);
+            conn = (java.net.HttpURLConnection) url.openConnection();
+            conn.setRequestMethod("GET");
+            conn.setConnectTimeout(15000);
+            conn.setReadTimeout(60000);
+            int code = conn.getResponseCode();
+            if (code != 200) return null;
+            java.io.InputStream is = conn.getInputStream();
+            java.io.ByteArrayOutputStream baos = new java.io.ByteArrayOutputStream();
+            byte[] buf = new byte[8192];
+            int n;
+            while ((n = is.read(buf)) != -1) baos.write(buf, 0, n);
+            is.close();
+            return baos.toByteArray();
+        } catch (Exception e) {
+            Log.w("TurmtechnikActivity", "Telegram file download: " + (e.getMessage() != null ? e.getMessage() : e.toString()));
+            return null;
+        } finally {
+            if (conn != null) try { conn.disconnect(); } catch (Exception ignored) {}
+        }
+    }
+
+    /** Schreibt Backup-Bytes in die Konfigurations-DB und setzt die Singleton-Instanz zurück (wie Web-API Restore). */
+    private static boolean restoreDatabaseFromBytes(Context appContext, byte[] data) {
+        if (data == null || data.length == 0) return false;
+        try {
+            PlatinenDatabaseHelper.closeInstanceForRestore();
+            java.io.File dbFile = appContext.getDatabasePath("turmtechnik_config.db");
+            java.io.FileOutputStream fos = new java.io.FileOutputStream(dbFile);
+            fos.write(data);
+            fos.close();
+            return true;
+        } catch (Exception e) {
+            Log.w("TurmtechnikActivity", "restoreDatabaseFromBytes: " + (e.getMessage() != null ? e.getMessage() : e.toString()));
+            return false;
         }
     }
 

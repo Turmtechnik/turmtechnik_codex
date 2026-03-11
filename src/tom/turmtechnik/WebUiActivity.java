@@ -118,6 +118,7 @@ public class WebUiActivity extends Activity {
             return;
         }
         activeInstance = this;
+        TurmtechnikActivity.scheduleNeustartNotificationsOnce(getApplicationContext());
         requestWindowFeature(Window.FEATURE_NO_TITLE);
         getWindow().setFlags(
                 WindowManager.LayoutParams.FLAG_FULLSCREEN,
