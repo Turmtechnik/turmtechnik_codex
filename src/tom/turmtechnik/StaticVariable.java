@@ -189,7 +189,7 @@ public class StaticVariable
 
     // ========== Time Server ==========
     public static boolean timeServerOk = false;
-    public static String timeServerEinAus = "AUS";
+    public static String timeServerEinAus = "EIN";
     public static String timeServerIp = "141.2.22.74"; //Time Server uni Frankfurt
     public static String timeServerMaxOffsetMinuten = "5";
     public static String timeServerAbfrageIntervallMs = "500";

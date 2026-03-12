@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="surface">#F6F3EE</color>
+    <color name="card">#FFFDF9</color>
+    <color name="cardStroke">#D8D2C8</color>
+    <color name="ink">#1E293B</color>
+    <color name="muted">#6B7280</color>
+    <color name="accent">#C76B2A</color>
+    <color name="accentSoft">#E5D6C8</color>
+    <color name="cardAlt">#E9E2D7</color>
+    <color name="white">#FFFFFF</color>
+</resources>

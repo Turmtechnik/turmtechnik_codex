@@ -5347,8 +5347,12 @@ public class TurmtechnikActivity extends Activity {
                 else if (pwdNormal.equals(value)) action = "beenden";
                 else if (pwdDelete.equals(value)) action = "delete_beenden";
                 if (action != null) {
-                    requestExitActionDirect(activity, action);
-                    activity.finish();
+                    if (activity instanceof WebUiActivity) {
+                        ((WebUiActivity) activity).handlePasswordProtectedExitAction(action);
+                    } else {
+                        requestExitActionDirect(activity, action);
+                        activity.finish();
+                    }
                 }
             }
         });

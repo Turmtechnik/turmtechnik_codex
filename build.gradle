@@ -89,7 +89,7 @@ android
                 def buildTime = new Date()
                 def buildVersionCode = Integer.parseInt(buildTime.format('yyDDDHHmm'))
                 versionCode 260900001
-                versionName "40.2"
+                versionName "40.3"
             }
 
 

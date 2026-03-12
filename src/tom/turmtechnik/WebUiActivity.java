@@ -29,6 +29,7 @@ import android.widget.Toast;
 
 import org.json.JSONObject;
 
+import java.io.File;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
@@ -51,6 +52,7 @@ public class WebUiActivity extends Activity {
     private static final long HEARTBEAT_INTERVAL_MS = 60_000L;
     private static final String SCHEME_BACK_TO_APP = "turmt://layout1";
     private static final String DEFAULT_PAGE_AFTER_SCREENSAVER = "http://127.0.0.1:8080/app-seite1.html";
+    private static final int BACK_EXIT_RELEASE_MINUTES = 30;
 
     private WebView webView;
     private String loadUrl;
@@ -257,6 +259,7 @@ public class WebUiActivity extends Activity {
     }
 
     private void openTabletNormalSurface() {
+        KioskModeHelper.releaseToExternalHome(this);
         try {
             Intent home = new Intent(Intent.ACTION_MAIN);
             home.addCategory(Intent.CATEGORY_HOME);
@@ -312,6 +315,35 @@ public class WebUiActivity extends Activity {
             webView.loadUrl(DEFAULT_PAGE_AFTER_SCREENSAVER);
             startScreensaverTimer();
         }
+    }
+
+    private void showPasswordProtectedExitDialog() {
+        TurmtechnikActivity.showExitPasswordDialogFrom(this);
+    }
+
+    public void handlePasswordProtectedExitAction(String action) {
+        if (action == null || action.trim().isEmpty()) {
+            return;
+        }
+
+        if ("15min".equals(action)) {
+            TurmtechnikActivity.requestExitActionDirect(this, action);
+            finish();
+            return;
+        }
+
+        if ("delete_beenden".equals(action)) {
+            try {
+                if (TurmtechnikActivity.beschriftungTastenFileString != null
+                        && !TurmtechnikActivity.beschriftungTastenFileString.trim().isEmpty()) {
+                    new File(TurmtechnikActivity.beschriftungTastenFileString).delete();
+                }
+            } catch (Exception ignored) {
+            }
+        }
+
+        TurmtechnikActivity.prepareAppExitForSettings(this, BACK_EXIT_RELEASE_MINUTES);
+        openTabletNormalSurface();
     }
 
     private void handleScreensaverDismiss() {
@@ -419,6 +451,7 @@ public class WebUiActivity extends Activity {
         if (maybeReleaseTabletInsteadOfKioskStart(getIntent())) {
             return;
         }
+        KioskModeHelper.startKioskIfPossible(this);
         hideSystemUi();
         StartTurmtechnikService.reportVisibleActivity(this, getClass().getName());
         StartTurmtechnikService.touchHeartbeat();
@@ -496,7 +529,7 @@ public class WebUiActivity extends Activity {
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
         if (keyCode == KeyEvent.KEYCODE_BACK && !(showingScreensaver || screenDimOverlay != null)) {
-            loadLayoutPage1IfNeeded();
+            showPasswordProtectedExitDialog();
             return true;
         }
         if (showingScreensaver || screenDimOverlay != null) {
@@ -528,11 +561,7 @@ public class WebUiActivity extends Activity {
 
     @Override
     public void onBackPressed() {
-        if (webView != null && webView.canGoBack()) {
-            webView.goBack();
-        } else {
-            loadLayoutPage1IfNeeded();
-        }
+        showPasswordProtectedExitDialog();
     }
 
     @Override

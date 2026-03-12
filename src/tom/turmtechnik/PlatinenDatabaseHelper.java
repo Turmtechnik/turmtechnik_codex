@@ -1974,7 +1974,7 @@ public class PlatinenDatabaseHelper extends SQLiteOpenHelper {
      */
     public static class FernsteuernConfig {
         public int internetPollingMs = DEFAULT_FERNSTEUERN_INTERNET_POLLING_MS;
-        public String timeServerEinAus = "";
+        public String timeServerEinAus = "EIN";
         public String timeServerIp = "";
         public String timeServerMaxOffsetMinuten = "";
         public String timeServerAbfrageIntervallMs = "";

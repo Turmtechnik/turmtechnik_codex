@@ -2,7 +2,9 @@ package tom.turmtechnik;
 
 import android.content.Intent;
 import android.database.sqlite.SQLiteDatabase;
+import android.net.Uri;
 import android.os.Handler;
+import android.provider.Settings;
 import android.os.Looper;
 import android.util.Log;
 
@@ -943,6 +945,10 @@ public class ConfigWebServer {
         if (uri.equals(API_PREFIX + "/telegram-test") && "POST".equals(method)) {
             return handlePostTelegramTest(request);
         }
+        // POST /api/telegram-get-chat-id - Chat-ID aus getUpdates ermitteln (Body: telegramBotToken)
+        if (uri.equals(API_PREFIX + "/telegram-get-chat-id") && "POST".equals(method)) {
+            return handlePostTelegramGetChatId(request);
+        }
         // /api/beschriftung-tasten-reset-neuanlage - Layout Seite 1/2 auf Neuanlage-Vorlage (Stop, Automatik, Leer)
         if (uri.equals(API_PREFIX + "/beschriftung-tasten-reset-neuanlage") && "POST".equals(method)) {
             return handlePostBeschriftungTastenResetNeuanlage();
@@ -952,10 +958,30 @@ public class ConfigWebServer {
             if ("GET".equals(method)) return handleGetFernsteuernConfig();
             if ("PUT".equals(method)) return handlePutFernsteuernConfig(request);
         }
+        // /api/open-home-settings - Launcher-Auswahl (Startseite Samsung/Turmtechnik)
+        if (uri.equals(API_PREFIX + "/open-home-settings") && "GET".equals(method)) {
+            return handleGetOpenHomeSettings();
+        }
+        // /api/open-write-settings - Berechtigung „Systemeinstellungen ändern“ erteilen (damit App nicht erneut abgefragt wird)
+        if (uri.equals(API_PREFIX + "/open-write-settings") && "GET".equals(method)) {
+            return handleGetOpenWriteSettings();
+        }
+        // /api/can-write-settings - Prüfen ob App „Systemeinstellungen ändern“ darf
+        if (uri.equals(API_PREFIX + "/can-write-settings") && "GET".equals(method)) {
+            return handleGetCanWriteSettings();
+        }
+        // /api/open-time-settings - Einstellungen „Datum & Uhrzeit“ öffnen (wenn WRITE_SECURE_SETTINGS fehlt)
+        if (uri.equals(API_PREFIX + "/open-time-settings") && "GET".equals(method)) {
+            return handleGetOpenTimeSettings();
+        }
         // /api/system-auto-time - Systemeinstellung "Zeit aus Internet" (AUTO_TIME) GET/PUT
         if (uri.equals(API_PREFIX + "/system-auto-time")) {
             if ("GET".equals(method)) return handleGetSystemAutoTime();
             if ("PUT".equals(method)) return handlePutSystemAutoTime(request);
+        }
+        // /api/system-auto-time-toggle-now - AUTO_TIME kurz AUS/EIN schalten
+        if (uri.equals(API_PREFIX + "/system-auto-time-toggle-now") && "POST".equals(method)) {
+            return handlePostSystemAutoTimeToggleNow();
         }
         // /api/anlagenstandort - Anlagenstandort (Breiten-/Längengrad, Sonnenauf-/untergang) GET/PUT
         if (uri.equals(API_PREFIX + "/anlagenstandort")) {
@@ -1710,6 +1736,71 @@ public class ConfigWebServer {
         }
     }
 
+    /** POST /api/telegram-get-chat-id – ruft getUpdates auf und liefert die Chat-ID der letzten Nachricht (Body: telegramBotToken). */
+    private SimpleHttpServer.HttpResponse handlePostTelegramGetChatId(SimpleHttpServer.HttpRequest request) {
+        HttpURLConnection conn = null;
+        try {
+            if (request.body == null || request.body.trim().isEmpty()) {
+                return new SimpleHttpServer.HttpResponse(200, "application/json", "{\"success\":false,\"error\":\"Body fehlt\"}");
+            }
+            @SuppressWarnings("unchecked")
+            Map<String, Object> body = gson.fromJson(request.body, Map.class);
+            String token = body != null && body.get("telegramBotToken") != null ? String.valueOf(body.get("telegramBotToken")).trim() : "";
+            if (token.isEmpty()) {
+                return new SimpleHttpServer.HttpResponse(200, "application/json", "{\"success\":false,\"error\":\"Bot-Token fehlt\"}");
+            }
+            token = token.replaceAll("[^0-9A-Za-z:\\-_]", "");
+            if (token.isEmpty()) {
+                return new SimpleHttpServer.HttpResponse(200, "application/json", "{\"success\":false,\"error\":\"Token ungültig\"}");
+            }
+            String urlString = "https://api.telegram.org/bot" + token + "/getUpdates?limit=10";
+            java.net.URL url = new java.net.URL(urlString);
+            conn = (HttpURLConnection) url.openConnection();
+            conn.setRequestMethod("GET");
+            conn.setConnectTimeout(10000);
+            conn.setReadTimeout(15000);
+            int code = conn.getResponseCode();
+            java.io.InputStream stream = code == 200 ? conn.getInputStream() : conn.getErrorStream();
+            String response = readFully(stream != null ? stream : new java.io.ByteArrayInputStream(new byte[0]));
+            if (code != 200) {
+                return new SimpleHttpServer.HttpResponse(200, "application/json", "{\"success\":false,\"error\":\"Telegram API: HTTP " + code + "\"}");
+            }
+            Map<String, Object> root = gson.fromJson(response, Map.class);
+            if (root == null || !Boolean.TRUE.equals(root.get("ok"))) {
+                return new SimpleHttpServer.HttpResponse(200, "application/json", "{\"success\":false,\"error\":\"Telegram API Fehler\"}");
+            }
+            Object res = root.get("result");
+            if (!(res instanceof List) || ((List<?>) res).isEmpty()) {
+                return new SimpleHttpServer.HttpResponse(200, "application/json", "{\"success\":false,\"error\":\"Zuerst in Telegram dem Bot eine Nachricht senden (z.B. /start), dann erneut klicken.\"}");
+            }
+            List<?> updates = (List<?>) res;
+            String chatIdFound = null;
+            for (int i = updates.size() - 1; i >= 0; i--) {
+                Object u = updates.get(i);
+                if (!(u instanceof Map)) continue;
+                Object msg = ((Map<?, ?>) u).get("message");
+                if (!(msg instanceof Map)) continue;
+                Object chat = ((Map<?, ?>) msg).get("chat");
+                if (!(chat instanceof Map)) continue;
+                Object id = ((Map<?, ?>) chat).get("id");
+                if (id instanceof Number) {
+                    chatIdFound = String.valueOf(((Number) id).longValue());
+                    break;
+                }
+            }
+            if (chatIdFound == null || chatIdFound.isEmpty()) {
+                return new SimpleHttpServer.HttpResponse(200, "application/json", "{\"success\":false,\"error\":\"Keine Chat-ID in den Nachrichten gefunden.\"}");
+            }
+            return new SimpleHttpServer.HttpResponse(200, "application/json", "{\"success\":true,\"chatId\":\"" + chatIdFound.replace("\\", "\\\\").replace("\"", "\\\"") + "\"}");
+        } catch (Exception e) {
+            Log.e(TAG, "Telegram getUpdates (Chat-ID) fehlgeschlagen", e);
+            String msg = e.getMessage() != null ? e.getMessage().replace("\\", "\\\\").replace("\"", "'") : "Fehler";
+            return new SimpleHttpServer.HttpResponse(200, "application/json", "{\"success\":false,\"error\":\"" + msg + "\"}");
+        } finally {
+            if (conn != null) try { conn.disconnect(); } catch (Exception ignored) {}
+        }
+    }
+
     /** Fernsteuern-Konfiguration (Internet-Polling, Zeitserver, Serial-GPS) aus io_config lesen. */
     private SimpleHttpServer.HttpResponse handleGetFernsteuernConfig() {
         try {
@@ -1745,7 +1836,8 @@ public class ConfigWebServer {
                 Object v = body.get("internetPollingMs");
                 c.internetPollingMs = v instanceof Number ? ((Number) v).intValue() : Integer.parseInt(String.valueOf(v));
             }
-            c.timeServerEinAus = body.containsKey("timeServerEinAus") ? String.valueOf(body.get("timeServerEinAus")).trim() : "";
+            c.timeServerEinAus = body.containsKey("timeServerEinAus") ? String.valueOf(body.get("timeServerEinAus")).trim().toUpperCase(java.util.Locale.ROOT) : "EIN";
+            if (c.timeServerEinAus.isEmpty()) c.timeServerEinAus = "EIN";
             c.timeServerIp = body.containsKey("timeServerIp") ? String.valueOf(body.get("timeServerIp")).trim() : "";
             c.timeServerMaxOffsetMinuten = body.containsKey("timeServerMaxOffsetMinuten") ? String.valueOf(body.get("timeServerMaxOffsetMinuten")).trim() : "";
             c.timeServerAbfrageIntervallMs = body.containsKey("timeServerAbfrageIntervallMs") ? String.valueOf(body.get("timeServerAbfrageIntervallMs")).trim() : "";
@@ -1802,6 +1894,106 @@ public class ConfigWebServer {
             return new SimpleHttpServer.HttpResponse(200, "application/json", gson.toJson(result));
         } catch (Exception e) {
             Log.e(TAG, "System AUTO_TIME PUT fehlgeschlagen", e);
+            return new SimpleHttpServer.HttpResponse(500, "application/json", "{\"error\":\"" + (e.getMessage() != null ? e.getMessage().replace("\"", "'") : "Fehler") + "\"}");
+        }
+    }
+
+    /** Systemeinstellung "Zeit aus Internet" sofort kurz AUS/EIN schalten. */
+    private SimpleHttpServer.HttpResponse handlePostSystemAutoTimeToggleNow() {
+        try {
+            boolean ok = TimeSyncHelper.toggleAutoTimeSync(context, false);
+            Map<String, Object> result = new HashMap<>();
+            result.put("success", ok);
+            result.put("enabled", TimeSyncHelper.isAutoTimeSyncEnabled(context));
+            result.put("canSet", TimeSyncHelper.hasWriteSecureSettingsPermission(context));
+            result.put("message", ok ? "Zeit aus Internet wurde kurz AUS/EIN geschaltet." : "Nicht möglich (WRITE_SECURE_SETTINGS fehlt).");
+            return new SimpleHttpServer.HttpResponse(200, "application/json", gson.toJson(result));
+        } catch (Exception e) {
+            Log.e(TAG, "System AUTO_TIME TOGGLE NOW fehlgeschlagen", e);
+            return new SimpleHttpServer.HttpResponse(500, "application/json", "{\"error\":\"" + (e.getMessage() != null ? e.getMessage().replace("\"", "'") : "Fehler") + "\"}");
+        }
+    }
+
+    /** Launcher-Auswahl öffnen (Startseite: Samsung oder Turmtechnik). Nutzt HOME-Intent mit Chooser. */
+    private SimpleHttpServer.HttpResponse handleGetOpenHomeSettings() {
+        try {
+            Handler mainHandler = new Handler(Looper.getMainLooper());
+            mainHandler.post(() -> {
+                try {
+                    Intent homeIntent = new Intent(Intent.ACTION_MAIN);
+                    homeIntent.addCategory(Intent.CATEGORY_HOME);
+                    homeIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    Intent chooser = Intent.createChooser(homeIntent, "Startseite wählen");
+                    chooser.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    context.startActivity(chooser);
+                } catch (Exception e) {
+                    Log.e(TAG, "Launcher-Auswahl öffnen fehlgeschlagen", e);
+                }
+            });
+            Map<String, Object> result = new HashMap<>();
+            result.put("success", true);
+            result.put("message", "Launcher-Auswahl wird geöffnet. Wählen Sie Samsung oder Turmtechnik und ggf. „Immer verwenden“.");
+            return new SimpleHttpServer.HttpResponse(200, "application/json", gson.toJson(result));
+        } catch (Exception e) {
+            Log.e(TAG, "Open home settings fehlgeschlagen", e);
+            return new SimpleHttpServer.HttpResponse(500, "application/json", "{\"error\":\"" + (e.getMessage() != null ? e.getMessage().replace("\"", "'") : "Fehler") + "\"}");
+        }
+    }
+
+    /** System-Einstellung „App darf Systemeinstellungen ändern“ öffnen – Nutzer erteilt die Berechtigung einmalig, danach wird nicht mehr abgefragt (WRITE_SETTINGS). */
+    private SimpleHttpServer.HttpResponse handleGetOpenWriteSettings() {
+        try {
+            Handler mainHandler = new Handler(Looper.getMainLooper());
+            mainHandler.post(() -> {
+                try {
+                    Intent intent = new Intent(Settings.ACTION_MANAGE_WRITE_SETTINGS);
+                    intent.setData(Uri.parse("package:" + context.getPackageName()));
+                    intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    context.startActivity(intent);
+                } catch (Exception e) {
+                    Log.e(TAG, "Write-Settings-Bildschirm öffnen fehlgeschlagen", e);
+                }
+            });
+            Map<String, Object> result = new HashMap<>();
+            result.put("success", true);
+            result.put("message", "Einstellungen werden geöffnet. Schalter „Berechtigung erteilen“ bzw. „Systemeinstellungen ändern“ aktivieren – danach fragt die App nicht mehr.");
+            return new SimpleHttpServer.HttpResponse(200, "application/json", gson.toJson(result));
+        } catch (Exception e) {
+            Log.e(TAG, "Open write settings fehlgeschlagen", e);
+            return new SimpleHttpServer.HttpResponse(500, "application/json", "{\"error\":\"" + (e.getMessage() != null ? e.getMessage().replace("\"", "'") : "Fehler") + "\"}");
+        }
+    }
+
+    /** Prüft, ob die App die Berechtigung „Systemeinstellungen ändern“ (WRITE_SETTINGS) hat. */
+    private SimpleHttpServer.HttpResponse handleGetCanWriteSettings() {
+        try {
+            boolean canWrite = Settings.System.canWrite(context);
+            Map<String, Object> result = new HashMap<>();
+            result.put("canWrite", canWrite);
+            return new SimpleHttpServer.HttpResponse(200, "application/json", gson.toJson(result));
+        } catch (Exception e) {
+            Log.e(TAG, "CanWriteSettings prüfen fehlgeschlagen", e);
+            return new SimpleHttpServer.HttpResponse(500, "application/json", "{\"error\":\"" + (e.getMessage() != null ? e.getMessage().replace("\"", "'") : "Fehler") + "\"}");
+        }
+    }
+
+    /** Einstellungen „Datum & Uhrzeit“ öffnen (für manuelle „Zeit aus Internet“-Einstellung, wenn WRITE_SECURE_SETTINGS fehlt). */
+    private SimpleHttpServer.HttpResponse handleGetOpenTimeSettings() {
+        try {
+            Handler mainHandler = new Handler(Looper.getMainLooper());
+            mainHandler.post(() -> {
+                try {
+                    TimeSyncHelper.openTimeSettings(context);
+                } catch (Exception e) {
+                    Log.e(TAG, "Datum- und Uhrzeit-Einstellungen öffnen fehlgeschlagen", e);
+                }
+            });
+            Map<String, Object> result = new HashMap<>();
+            result.put("success", true);
+            result.put("message", "Einstellungen „Datum & Uhrzeit“ werden geöffnet. Dort „Zeit aus Internet“ ein- oder ausschalten.");
+            return new SimpleHttpServer.HttpResponse(200, "application/json", gson.toJson(result));
+        } catch (Exception e) {
+            Log.e(TAG, "Open time settings fehlgeschlagen", e);
             return new SimpleHttpServer.HttpResponse(500, "application/json", "{\"error\":\"" + (e.getMessage() != null ? e.getMessage().replace("\"", "'") : "Fehler") + "\"}");
         }
     }
@@ -5349,6 +5541,8 @@ public class ConfigWebServer {
                 "            <div class=\"mb-3\">\n" +
                 "                <label class=\"form-label\">Bot-Token &amp; Chat-ID</label>\n" +
                 "                <div class=\"row g-2 align-items-end\"><div class=\"col-md-5\"><input type=\"text\" class=\"form-control\" id=\"anlageTelegramBotToken\" placeholder=\"Bot-Token (von @BotFather)\" autocomplete=\"off\"></div><div class=\"col-md-4\"><input type=\"text\" class=\"form-control\" id=\"anlageTelegramChatId\" placeholder=\"Chat-ID\"></div><div class=\"col-md-3\"><button type=\"button\" class=\"btn btn-outline-secondary\" id=\"telegramTestBtn\" onclick=\"testTelegram()\">Test</button><span id=\"telegramTestStatus\" class=\"ms-1 small\"></span></div></div>\n" +
+                "                <div class=\"row g-2 mt-1\"><div class=\"col-md-12\"><button type=\"button\" class=\"btn btn-outline-secondary btn-sm\" id=\"telegramGetChatIdBtn\" onclick=\"getTelegramChatId()\">Chat-ID ermitteln</button><span id=\"telegramChatIdStatus\" class=\"ms-2 small\"></span></div></div>\n" +
+                "                <small class=\"form-text text-muted d-block mt-0 mb-1\">Chat-ID ermitteln: Zuerst in Telegram dem Bot eine Nachricht senden (z.&nbsp;B. /start), dann auf „Chat-ID ermitteln“ klicken – die ID wird ins Feld übernommen.</small>\n" +
                 "                <small class=\"form-text text-muted\">Bot bei @BotFather anlegen, Token ohne Leerzeichen kopieren. Mit deinem eigenen Telegram-Konto dem Bot /start schreiben. Chat-ID aus getUpdates. Befehle: <code>reboot</code> (App-Neustart), <code>backup</code> (Backup-Datei senden), <code>melodie &lt;Name&gt;</code> oder <code>start &lt;Name&gt;</code> (Melodie starten), <code>.db</code>-Datei als Anhang = Restore – nur von der konfigurierten Chat-ID. Nach Test „Anlagendaten speichern“ klicken.</small>\n" +
                 "                <label class=\"form-label mt-2\">Bei Melodie-Start senden</label>\n" +
                 "                <select class=\"form-select\" id=\"anlageMelodieStartSenden\" style=\"max-width:220px\">\n" +
@@ -5379,10 +5573,19 @@ public class ConfigWebServer {
                 "            <p class=\"text-muted small\">Android-Systemeinstellung: Zeit automatisch aus Internet (NTP).</p>\n" +
                 "            <div class=\"mb-3\">\n" +
                 "                <div class=\"form-check\"><input type=\"checkbox\" class=\"form-check-input\" id=\"systemAutoTime\"><label class=\"form-check-label\" for=\"systemAutoTime\">Zeit aus Internet (automatisch)</label></div>\n" +
-                "                <p id=\"systemAutoTimeHint\" class=\"small text-muted mt-1\" style=\"display:none;\">Ohne WRITE_SECURE_SETTINGS (z. B. per ADB) kann die App die Einstellung nicht ändern. Bitte unter Android: Einstellungen → Datum &amp; Uhrzeit.</p>\n" +
+                "                <p id=\"systemAutoTimeHint\" class=\"small text-muted mt-1\" style=\"display:none;\">Ohne WRITE_SECURE_SETTINGS kann die App die Einstellung nicht direkt ändern. <button type=\"button\" class=\"btn btn-outline-secondary btn-sm ms-1\" onclick=\"openTimeSettings()\">Einstellungen öffnen (Datum &amp; Uhrzeit)</button></p>\n" +
                 "            </div>\n" +
-                "            <button class=\"btn btn-outline-primary\" onclick=\"saveSystemAutoTime()\">Übernehmen</button>\n" +
-                "            <span id=\"systemAutoTimeStatus\" class=\"ms-2\"></span>\n" +
+                "            <div class=\"d-flex flex-wrap gap-2 align-items-center\">\n" +
+                "                <button class=\"btn btn-outline-primary\" onclick=\"saveSystemAutoTime()\">Übernehmen</button>\n" +
+                "                <button class=\"btn btn-outline-secondary\" onclick=\"testSystemAutoTimeToggle()\">Jetzt AUS/EIN testen</button>\n" +
+                "                <span id=\"systemAutoTimeStatus\" class=\"ms-1\"></span>\n" +
+                "            </div>\n" +
+                "            <p class=\"text-muted small mt-3 mb-2\">Berechtigung „Systemeinstellungen ändern“</p>\n" +
+                "            <p class=\"small mb-2\">Einmal erteilen, damit die App nicht jedes Mal abgefragt wird. <span id=\"canWriteSettingsStatus\"></span> Für „Zeit aus Internet“ ohne Abfrage ist ggf. zusätzlich einmalig per ADB nötig: <code>adb shell pm grant tom.turmtechnik android.permission.WRITE_SECURE_SETTINGS</code></p>\n" +
+                "            <button type=\"button\" class=\"btn btn-outline-secondary btn-sm\" onclick=\"openWriteSettings()\">Berechtigung erteilen</button>\n" +
+                "            <p class=\"text-muted small mt-3 mb-2\">Startseite (beim Einschalten / Home-Taste)</p>\n" +
+                "            <p class=\"small mb-2\">Zwischen <strong>Samsung</strong> (normale Tablet-Startseite) und <strong>Turmtechnik</strong> (diese App als Startseite) wechseln.</p>\n" +
+                "            <button type=\"button\" class=\"btn btn-outline-secondary\" onclick=\"openHomeAppSettings()\">Launcher wechseln (Samsung / Turmtechnik)</button>\n" +
                 "        </div>\n" +
                 "        <div class=\"tt-card\">\n" +
                 "            <h2>Fernsteuern</h2>\n" +
@@ -5422,13 +5625,19 @@ public class ConfigWebServer {
                 "        async function loadAnlagenvorlage() { document.getElementById('anlageBaustelle').value = 'Neue Anlage'; document.getElementById('anlageInstallationsdatum').value = datumHeute(); document.getElementById('anlageAnzahlGlocken').value = '8'; document.getElementById('anlageAnzahlKloeppelfaenger').value = '7'; document.getElementById('anlageAnzahlNebenuhren').value = '2'; document.getElementById('anlageAnzahlHammer').value = '2'; document.getElementById('anlageAutostartDerApp').checked = true; document.getElementById('anlageLogAbgelaufeneMelodien').checked = false; document.getElementById('anlageLogFehlerCrashes').checked = false; document.getElementById('anlageRebootVerbindungsausfall').checked = false; document.getElementById('anlageAlarmActivityWecken').checked = true; document.getElementById('anlageWebUiVollbildTest').checked = false; document.getElementById('anlagePlatinenDemoModus').checked = false; document.getElementById('anlageBildschirmschonerMinuten').value = '5'; document.getElementById('anlageBildschirmAusMinuten').value = '60'; document.getElementById('anlageMondSternzeichenAnzeigen').checked = true; document.getElementById('anlageSternzeichenAlsSymbol').checked = true; document.getElementById('anlageBewegungserkennungEin').checked = false; document.getElementById('anlageBewegungserkennungEmpfindlichkeit').value = '50'; document.getElementById('anlageBewegungserkennungIntervall').value = '2'; document.getElementById('anlageBewegungserkennungNurBildschirmAus').checked = true; document.getElementById('anlageTelegramBotToken').value = ''; document.getElementById('anlageTelegramChatId').value = ''; var ms = document.getElementById('anlageMelodieStartSenden'); if (ms) ms.value = 'aus'; await saveAnlagendaten(); try { await fetch('/api/beschriftung-tasten-reset-neuanlage', { method: 'POST' }); } catch(e) { console.warn('Layout-Reset:', e); } loadAnlagendaten(); }\n" +
                 "        async function saveAnlagendaten() { var el = document.getElementById('anlagendatenStatus'); el.textContent = 'Speichere...'; el.className = 'ms-2 text-muted'; try { var payload = { baustelleName: document.getElementById('anlageBaustelle').value.trim(), installationsdatum: document.getElementById('anlageInstallationsdatum').value, anzahlGlocken: document.getElementById('anlageAnzahlGlocken').value.trim(), anzahlKloeppelfaenger: document.getElementById('anlageAnzahlKloeppelfaenger').value.trim(), anzahlNebenuhren: document.getElementById('anlageAnzahlNebenuhren').value.trim(), anzahlHammer: document.getElementById('anlageAnzahlHammer').value.trim(), autostartDerApp: document.getElementById('anlageAutostartDerApp').checked, logAbgelaufeneMelodien: document.getElementById('anlageLogAbgelaufeneMelodien').checked, logFehlerCrashes: document.getElementById('anlageLogFehlerCrashes').checked, rebootBeiVerbindungsausfall: document.getElementById('anlageRebootVerbindungsausfall').checked, alarmActivityWecken: document.getElementById('anlageAlarmActivityWecken').checked, webUiVollbildTest: document.getElementById('anlageWebUiVollbildTest').checked, platinenDemoModus: document.getElementById('anlagePlatinenDemoModus').checked, bildschirmschonerVerzoegerungMinuten: document.getElementById('anlageBildschirmschonerMinuten').value || '5', bildschirmAusMinuten: document.getElementById('anlageBildschirmAusMinuten').value || '60', mondSternzeichenAnzeigen: document.getElementById('anlageMondSternzeichenAnzeigen').checked, sternzeichenAlsSymbol: document.getElementById('anlageSternzeichenAlsSymbol').checked, bewegungserkennungEin: document.getElementById('anlageBewegungserkennungEin').checked, bewegungserkennungEmpfindlichkeit: parseInt(document.getElementById('anlageBewegungserkennungEmpfindlichkeit').value, 10) || 50, bewegungserkennungIntervallSekunden: parseInt(document.getElementById('anlageBewegungserkennungIntervall').value, 10) || 2, bewegungserkennungNurBeiBildschirmAus: document.getElementById('anlageBewegungserkennungNurBildschirmAus').checked, telegramBotToken: document.getElementById('anlageTelegramBotToken').value.trim(), telegramChatId: document.getElementById('anlageTelegramChatId').value.trim(), melodieStartSenden: (document.getElementById('anlageMelodieStartSenden') && document.getElementById('anlageMelodieStartSenden').value) ? document.getElementById('anlageMelodieStartSenden').value : 'aus' }; var r = await fetch('/api/anlagendaten', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) }); var j = await r.json(); if (j.success) { el.textContent = 'Gespeichert.'; el.className = 'ms-2 text-success'; } else { el.textContent = j.error || 'Fehler'; el.className = 'ms-2 text-danger'; } } catch (e) { el.textContent = 'Fehler: ' + e.message; el.className = 'ms-2 text-danger'; } }\n" +
                 "        async function testTelegram() { var btn = document.getElementById('telegramTestBtn'); var st = document.getElementById('telegramTestStatus'); if (btn) btn.disabled = true; if (st) { st.textContent = 'Sende...'; st.className = 'ms-1 small text-muted'; } try { var r = await fetch('/api/telegram-test', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ telegramBotToken: document.getElementById('anlageTelegramBotToken').value.trim(), telegramChatId: document.getElementById('anlageTelegramChatId').value.trim() }) }); var j = await r.json(); if (st) { st.textContent = j.success ? 'OK' : (j.error || 'Fehler'); st.className = j.success ? 'ms-1 small text-success' : 'ms-1 small text-danger'; } } catch (e) { if (st) { st.textContent = 'Fehler'; st.className = 'ms-1 small text-danger'; } } if (btn) btn.disabled = false; }\n" +
-                "        async function loadFernsteuern() { try { var r = await fetch('/api/fernsteuern-config'); var j = await r.json(); document.getElementById('fernsteuernInternetPollingMs').value = j.internetPollingMs != null ? j.internetPollingMs : ''; document.getElementById('fernsteuernTimeServerEinAus').value = j.timeServerEinAus != null ? j.timeServerEinAus : ''; document.getElementById('fernsteuernTimeServerIp').value = j.timeServerIp != null ? j.timeServerIp : ''; document.getElementById('fernsteuernTimeServerMaxOffset').value = j.timeServerMaxOffsetMinuten != null ? j.timeServerMaxOffsetMinuten : ''; document.getElementById('fernsteuernTimeServerIntervall').value = j.timeServerAbfrageIntervallMs != null ? j.timeServerAbfrageIntervallMs : ''; document.getElementById('fernsteuernSerialGPSEinAus').value = j.serialGPSEinAus === true ? 'true' : 'false'; document.getElementById('fernsteuernSerialGPSIp').value = j.serialGPSIp != null ? j.serialGPSIp : ''; document.getElementById('fernsteuernSerialGPSPort').value = j.serialGPSPort != null ? j.serialGPSPort : ''; } catch (e) { console.warn('Fernsteuern laden:', e); } }\n" +
+                "        async function getTelegramChatId() { var btn = document.getElementById('telegramGetChatIdBtn'); var st = document.getElementById('telegramChatIdStatus'); var token = document.getElementById('anlageTelegramBotToken').value.trim(); if (!token) { if (st) { st.textContent = 'Zuerst Bot-Token eintragen.'; st.className = 'ms-2 small text-warning'; } return; } if (btn) btn.disabled = true; if (st) { st.textContent = 'Lese Nachrichten...'; st.className = 'ms-2 small text-muted'; } try { var r = await fetch('/api/telegram-get-chat-id', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ telegramBotToken: token }) }); var j = await r.json(); if (j.success && j.chatId) { document.getElementById('anlageTelegramChatId').value = j.chatId; if (st) { st.textContent = 'Chat-ID: ' + j.chatId; st.className = 'ms-2 small text-success'; } } else { if (st) { st.textContent = j.error || 'Fehler'; st.className = 'ms-2 small text-danger'; } } } catch (e) { if (st) { st.textContent = 'Fehler'; st.className = 'ms-2 small text-danger'; } } if (btn) btn.disabled = false; }\n" +
+                "        async function loadFernsteuern() { try { var r = await fetch('/api/fernsteuern-config'); var j = await r.json(); document.getElementById('fernsteuernInternetPollingMs').value = j.internetPollingMs != null ? j.internetPollingMs : ''; document.getElementById('fernsteuernTimeServerEinAus').value = (j.timeServerEinAus != null && String(j.timeServerEinAus).trim() !== '') ? j.timeServerEinAus : 'EIN'; document.getElementById('fernsteuernTimeServerIp').value = j.timeServerIp != null ? j.timeServerIp : ''; document.getElementById('fernsteuernTimeServerMaxOffset').value = j.timeServerMaxOffsetMinuten != null ? j.timeServerMaxOffsetMinuten : ''; document.getElementById('fernsteuernTimeServerIntervall').value = j.timeServerAbfrageIntervallMs != null ? j.timeServerAbfrageIntervallMs : ''; document.getElementById('fernsteuernSerialGPSEinAus').value = j.serialGPSEinAus === true ? 'true' : 'false'; document.getElementById('fernsteuernSerialGPSIp').value = j.serialGPSIp != null ? j.serialGPSIp : ''; document.getElementById('fernsteuernSerialGPSPort').value = j.serialGPSPort != null ? j.serialGPSPort : ''; } catch (e) { console.warn('Fernsteuern laden:', e); } }\n" +
                 "        async function saveFernsteuern() { var el = document.getElementById('fernsteuernStatus'); el.textContent = 'Speichere...'; el.className = 'ms-2 text-muted'; try { var payload = { internetPollingMs: parseInt(document.getElementById('fernsteuernInternetPollingMs').value, 10) || 300000, timeServerEinAus: document.getElementById('fernsteuernTimeServerEinAus').value.trim(), timeServerIp: document.getElementById('fernsteuernTimeServerIp').value.trim(), timeServerMaxOffsetMinuten: document.getElementById('fernsteuernTimeServerMaxOffset').value.trim(), timeServerAbfrageIntervallMs: document.getElementById('fernsteuernTimeServerIntervall').value.trim(), serialGPSEinAus: document.getElementById('fernsteuernSerialGPSEinAus').value === 'true', serialGPSIp: document.getElementById('fernsteuernSerialGPSIp').value.trim(), serialGPSPort: parseInt(document.getElementById('fernsteuernSerialGPSPort').value, 10) || 0 }; var r = await fetch('/api/fernsteuern-config', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) }); var j = await r.json(); if (j.success) { el.textContent = 'Gespeichert.'; el.className = 'ms-2 text-success'; } else { el.textContent = j.error || 'Fehler'; el.className = 'ms-2 text-danger'; } } catch (e) { el.textContent = 'Fehler: ' + e.message; el.className = 'ms-2 text-danger'; } }\n" +
                 "        async function loadAnlagenstandort() { try { var r = await fetch('/api/anlagenstandort'); var j = await r.json(); document.getElementById('anlagenstandortOrt').value = j.ort != null ? j.ort : ''; document.getElementById('anlagenstandortPlz').value = j.plz != null ? j.plz : ''; document.getElementById('anlagenstandortBreitengrad').value = j.breitengrad != null ? j.breitengrad : ''; document.getElementById('anlagenstandortLaengengrad').value = j.laengengrad != null ? j.laengengrad : ''; document.getElementById('anlagenstandortAnpassungSA').value = j.anpassungSonnenaufgangMinuten != null ? j.anpassungSonnenaufgangMinuten : '0'; document.getElementById('anlagenstandortAnpassungSU').value = j.anpassungSonnenuntergangMinuten != null ? j.anpassungSonnenuntergangMinuten : '0'; document.getElementById('anlagenstandortRunden').value = j.rundenMinuten != null ? j.rundenMinuten : '5'; } catch (e) { console.warn('Anlagenstandort laden:', e); } }\n" +
                 "        async function saveAnlagenstandort() { var el = document.getElementById('anlagenstandortStatus'); el.textContent = 'Speichere...'; el.className = 'ms-2 text-muted'; try { var payload = { ort: document.getElementById('anlagenstandortOrt').value.trim(), plz: document.getElementById('anlagenstandortPlz').value.trim(), breitengrad: document.getElementById('anlagenstandortBreitengrad').value.trim(), laengengrad: document.getElementById('anlagenstandortLaengengrad').value.trim(), anpassungSonnenaufgangMinuten: document.getElementById('anlagenstandortAnpassungSA').value.trim() || '0', anpassungSonnenuntergangMinuten: document.getElementById('anlagenstandortAnpassungSU').value.trim() || '0', rundenMinuten: document.getElementById('anlagenstandortRunden').value.trim() || '5' }; var r = await fetch('/api/anlagenstandort', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) }); var j = await r.json(); if (j.success) { el.textContent = 'Gespeichert.'; el.className = 'ms-2 text-success'; } else { el.textContent = j.error || 'Fehler'; el.className = 'ms-2 text-danger'; } } catch (e) { el.textContent = 'Fehler: ' + e.message; el.className = 'ms-2 text-danger'; } }\n" +
                 "        async function loadSystemAutoTime() { try { var r = await fetch('/api/system-auto-time'); var j = await r.json(); document.getElementById('systemAutoTime').checked = j.enabled === true; document.getElementById('systemAutoTimeHint').style.display = j.canSet === false ? 'block' : 'none'; } catch (e) { console.warn('System AUTO_TIME laden:', e); } }\n" +
-                "        async function saveSystemAutoTime() { var el = document.getElementById('systemAutoTimeStatus'); el.textContent = 'Speichere...'; el.className = 'ms-2 text-muted'; try { var r = await fetch('/api/system-auto-time', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ enabled: document.getElementById('systemAutoTime').checked }) }); var j = await r.json(); el.textContent = j.message || (j.success ? 'Übernommen.' : 'Fehler'); el.className = j.success ? 'ms-2 text-success' : 'ms-2 text-warning'; if (j.success) loadSystemAutoTime(); } catch (e) { el.textContent = 'Fehler: ' + e.message; el.className = 'ms-2 text-danger'; } }\n" +
-                "        loadAnlagendaten(); loadFernsteuern(); loadAnlagenstandort(); loadSystemAutoTime();\n" +
+                "        async function saveSystemAutoTime() { var el = document.getElementById('systemAutoTimeStatus'); el.textContent = 'Speichere...'; el.className = 'ms-2 text-muted'; var hint = document.getElementById('systemAutoTimeHint'); try { var r = await fetch('/api/system-auto-time', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ enabled: document.getElementById('systemAutoTime').checked }) }); var j = await r.json(); el.textContent = j.message || (j.success ? 'Übernommen.' : 'Fehler'); el.className = j.success ? 'ms-2 text-success' : 'ms-2 text-warning'; if (j.success) loadSystemAutoTime(); else if (hint) hint.style.display = 'block'; } catch (e) { el.textContent = 'Fehler: ' + e.message; el.className = 'ms-2 text-danger'; if (hint) hint.style.display = 'block'; } }\n" +
+                "        async function testSystemAutoTimeToggle() { var el = document.getElementById('systemAutoTimeStatus'); el.textContent = 'Teste...'; el.className = 'ms-2 text-muted'; var hint = document.getElementById('systemAutoTimeHint'); try { var r = await fetch('/api/system-auto-time-toggle-now', { method: 'POST' }); var j = await r.json(); el.textContent = j.message || (j.success ? 'AUS/EIN getestet.' : 'Fehler'); el.className = j.success ? 'ms-2 text-success' : 'ms-2 text-warning'; if (j.success) loadSystemAutoTime(); else if (hint) hint.style.display = 'block'; } catch (e) { el.textContent = 'Fehler: ' + e.message; el.className = 'ms-2 text-danger'; if (hint) hint.style.display = 'block'; } }\n" +
+                "        async function openHomeAppSettings() { try { var r = await fetch('/api/open-home-settings'); var j = await r.json(); if (j.success) { alert(j.message || 'Einstellungen werden geöffnet.'); } else { alert('Fehler: ' + (j.error || r.status)); } } catch (e) { alert('Fehler: ' + e.message); } }\n" +
+                "        async function loadCanWriteSettings() { try { var r = await fetch('/api/can-write-settings'); var j = await r.json(); var el = document.getElementById('canWriteSettingsStatus'); if (el) el.innerHTML = j.canWrite ? '<span class=\"text-success\">Berechtigung erteilt.</span>' : '<span class=\"text-muted\">Noch nicht erteilt.</span>'; } catch (e) { var el = document.getElementById('canWriteSettingsStatus'); if (el) el.textContent = ''; } }\n" +
+                "        async function openWriteSettings() { try { var r = await fetch('/api/open-write-settings'); var j = await r.json(); if (j.success) { alert(j.message || 'Einstellungen werden geöffnet. Schalter aktivieren.'); setTimeout(loadCanWriteSettings, 500); } else { alert('Fehler: ' + (j.error || r.status)); } } catch (e) { alert('Fehler: ' + e.message); } }\n" +
+                "        async function openTimeSettings() { try { var r = await fetch('/api/open-time-settings'); var j = await r.json(); if (j.success) { setTimeout(loadSystemAutoTime, 300); } else { alert('Fehler: ' + (j.error || r.status)); } } catch (e) { alert('Fehler: ' + e.message); } }\n" +
+                "        loadAnlagendaten(); loadFernsteuern(); loadAnlagenstandort(); loadSystemAutoTime(); loadCanWriteSettings();\n" +
                 "    </script>\n" +
                 "</body>\n" +
                 "</html>";
@@ -11667,7 +11876,7 @@ public class ConfigWebServer {
                 "                        <label for=\"scanRelaisInput\" class=\"form-label\">Scan-Relais (ms):</label>\n" +
                 "                        <div class=\"input-group\">\n" +
                 "                            <input type=\"number\" class=\"form-control\" id=\"scanRelaisInput\" \n" +
-                "                                   min=\"100\" max=\"10000\" step=\"10\" placeholder=\"1000\">\n" +
+                "                                   min=\"100\" max=\"10000\" step=\"10\" placeholder=\"1000\" oninput=\"updateAntwortZeitPreview()\" onkeyup=\"updateAntwortZeitPreview()\" onchange=\"updateAntwortZeitPreview()\">\n" +
                 "                            <button class=\"btn btn-primary\" onclick=\"saveScanRelais()\">Speichern</button>\n" +
                 "                        </div>\n" +
                 "                    </div>\n" +
@@ -11772,11 +11981,13 @@ public class ConfigWebServer {
                 "        let currentModus = 'wifi';\n" +
                 "        let scanRelaisMS = 1000;\n" +
                 "        let antwortZeitMS = 50;\n" +
+                "        let scanRelaisDirty = false;\n" +
                 "        \n" +
                 "        function updateAntwortZeitPreview() {\n" +
                 "            const input = document.getElementById('scanRelaisInput');\n" +
                 "            const antwortInput = document.getElementById('antwortZeitInput');\n" +
                 "            if (!input || !antwortInput) return;\n" +
+                "            scanRelaisDirty = true;\n" +
                 "            const value = parseInt(input.value, 10);\n" +
                 "            if (isNaN(value) || value < 100) {\n" +
                 "                antwortInput.value = '';\n" +
@@ -11795,8 +12006,14 @@ public class ConfigWebServer {
                 "                scanRelaisMS = data.scanRelaisMS || 1000;\n" +
                 "                antwortZeitMS = data.antwortZeitMS || (scanRelaisMS / 20);\n" +
                 "                \n" +
-                "                document.getElementById('scanRelaisInput').value = scanRelaisMS;\n" +
-                "                document.getElementById('antwortZeitInput').value = antwortZeitMS + ' ms';\n" +
+                "                const scanInput = document.getElementById('scanRelaisInput');\n" +
+                "                const antwortInput = document.getElementById('antwortZeitInput');\n" +
+                "                if (scanInput && document.activeElement !== scanInput && !scanRelaisDirty) {\n" +
+                "                    scanInput.value = scanRelaisMS;\n" +
+                "                }\n" +
+                "                if (antwortInput && document.activeElement !== scanInput && !scanRelaisDirty) {\n" +
+                "                    antwortInput.value = antwortZeitMS + ' ms';\n" +
+                "                }\n" +
                 "            } catch (error) {\n" +
                 "                console.error('Fehler beim Laden des Scan-Relais-Werts:', error);\n" +
                 "            }\n" +
@@ -11810,7 +12027,8 @@ public class ConfigWebServer {
                 "                const data = await response.json();\n" +
                 "                const antwortZeit = data.antwortZeitMS != null ? data.antwortZeitMS : (data.scanRelaisMS / 20);\n" +
                 "                const antwortInput = document.getElementById('antwortZeitInput');\n" +
-                "                if (antwortInput) antwortInput.value = antwortZeit + ' ms';\n" +
+                "                const scanInput = document.getElementById('scanRelaisInput');\n" +
+                "                if (antwortInput && document.activeElement !== scanInput && !scanRelaisDirty) antwortInput.value = antwortZeit + ' ms';\n" +
                 "            } catch (e) {}\n" +
                 "        }\n" +
                 "        \n" +
@@ -11840,6 +12058,7 @@ public class ConfigWebServer {
                 "                scanRelaisMS = data.scanRelaisMS;\n" +
                 "                antwortZeitMS = data.antwortZeitMS;\n" +
                 "                \n" +
+                "                scanRelaisDirty = false;\n" +
                 "                document.getElementById('scanRelaisInput').value = scanRelaisMS;\n" +
                 "                document.getElementById('antwortZeitInput').value = antwortZeitMS + ' ms';\n" +
                 "                showStatus('Scan-Relais-Wert erfolgreich gespeichert: ' + scanRelaisMS + ' ms', 'success');\n" +
@@ -11873,13 +12092,18 @@ public class ConfigWebServer {
                 "                });\n" +
                 "                \n" +
                 "                // Lade auch Scan-Relais-Wert\n" +
+                "                const scanInput = document.getElementById('scanRelaisInput');\n" +
                 "                if (config.scanRelaisMS !== undefined) {\n" +
                 "                    scanRelaisMS = config.scanRelaisMS;\n" +
-                "                    document.getElementById('scanRelaisInput').value = scanRelaisMS;\n" +
+                "                    if (scanInput && document.activeElement !== scanInput && !scanRelaisDirty) {\n" +
+                "                        scanInput.value = scanRelaisMS;\n" +
+                "                    }\n" +
                 "                }\n" +
                 "                if (config.antwortZeitMS !== undefined) {\n" +
                 "                    antwortZeitMS = config.antwortZeitMS;\n" +
-                "                    document.getElementById('antwortZeitInput').value = antwortZeitMS + ' ms';\n" +
+                "                    if (document.activeElement !== scanInput && !scanRelaisDirty) {\n" +
+                "                        document.getElementById('antwortZeitInput').value = antwortZeitMS + ' ms';\n" +
+                "                    }\n" +
                 "                } else {\n" +
                 "                    updateAntwortZeitPreview();\n" +
                 "                }\n" +
@@ -12607,7 +12831,10 @@ public class ConfigWebServer {
                 "            const scanInput = document.getElementById('scanRelaisInput');\n" +
                 "            if (scanInput) {\n" +
                 "                scanInput.addEventListener('input', updateAntwortZeitPreview);\n" +
+                "                scanInput.addEventListener('keyup', updateAntwortZeitPreview);\n" +
                 "                scanInput.addEventListener('change', updateAntwortZeitPreview);\n" +
+                "                scanInput.addEventListener('focus', () => { scanRelaisDirty = true; });\n" +
+                "                scanInput.addEventListener('blur', () => { if (scanInput.value === String(scanRelaisMS)) scanRelaisDirty = false; });\n" +
                 "                scanInput.addEventListener('keydown', (event) => {\n" +
                 "                    if (event.key === 'Enter') {\n" +
                 "                        event.preventDefault();\n" +

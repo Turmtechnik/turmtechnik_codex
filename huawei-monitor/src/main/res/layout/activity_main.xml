@@ -1,0 +1,327 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/surface">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="20dp">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/app_name"
+            android:textColor="@color/ink"
+            android:textSize="28sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:text="@string/app_subtitle"
+            android:textColor="@color/muted"
+            android:textSize="15sp" />
+
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/card_power"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            app:cardBackgroundColor="@color/card"
+            app:cardCornerRadius="24dp"
+            app:cardElevation="0dp"
+            app:strokeColor="@color/cardStroke"
+            app:strokeWidth="1dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="20dp">
+
+                <TextView
+                    android:id="@+id/text_headline"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/feed_in_title"
+                    android:textColor="@color/muted"
+                    android:textSize="16sp" />
+
+                <TextView
+                    android:id="@+id/text_power"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:text="@string/zero_power"
+                    android:textColor="@color/ink"
+                    android:textSize="42sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/text_details"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:text="@string/details_placeholder"
+                    android:textColor="@color/muted"
+                    android:textSize="14sp" />
+
+                <TextView
+                    android:id="@+id/text_status"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:text="@string/status_idle"
+                    android:textColor="@color/ink"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/text_last_update"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:text="@string/no_last_update"
+                    android:textColor="@color/muted" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/button_toggle_fullscreen"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="14dp"
+                    android:text="@string/fullscreen_button"
+                    android:textColor="@color/ink"
+                    app:backgroundTint="@color/cardAlt" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/card_dashboard"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            app:cardBackgroundColor="@color/card"
+            app:cardCornerRadius="24dp"
+            app:cardElevation="0dp"
+            app:strokeColor="@color/cardStroke"
+            app:strokeWidth="1dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="20dp">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/dashboard_title"
+                    android:textColor="@color/ink"
+                    android:textSize="18sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/text_phase_voltages"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="14dp"
+                    android:text="@string/dashboard_voltages_placeholder"
+                    android:textColor="@color/ink"
+                    android:textSize="15sp" />
+
+                <TextView
+                    android:id="@+id/text_phase_currents"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:text="@string/dashboard_currents_placeholder"
+                    android:textColor="@color/ink"
+                    android:textSize="15sp" />
+
+                <TextView
+                    android:id="@+id/text_power_breakdown"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:text="@string/dashboard_power_placeholder"
+                    android:textColor="@color/ink"
+                    android:textSize="15sp" />
+
+                <TextView
+                    android:id="@+id/text_energy_counters"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:text="@string/dashboard_energy_placeholder"
+                    android:textColor="@color/ink"
+                    android:textSize="15sp" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/card_settings"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            app:cardBackgroundColor="@color/card"
+            app:cardCornerRadius="24dp"
+            app:cardElevation="0dp"
+            app:strokeColor="@color/cardStroke"
+            app:strokeWidth="1dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="20dp">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/settings_title"
+                    android:textColor="@color/ink"
+                    android:textSize="18sp"
+                    android:textStyle="bold" />
+
+                <EditText
+                    android:id="@+id/edit_host"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:background="@drawable/input_background"
+                    android:hint="@string/hint_host"
+                    android:inputType="textUri"
+                    android:minHeight="52dp"
+                    android:padding="14dp"
+                    android:textColor="@color/ink"
+                    android:textColorHint="@color/muted" />
+
+                <EditText
+                    android:id="@+id/edit_port"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:background="@drawable/input_background"
+                    android:hint="@string/hint_port"
+                    android:inputType="number"
+                    android:minHeight="52dp"
+                    android:padding="14dp"
+                    android:textColor="@color/ink"
+                    android:textColorHint="@color/muted" />
+
+                <EditText
+                    android:id="@+id/edit_unit_id"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:background="@drawable/input_background"
+                    android:hint="@string/hint_unit_id"
+                    android:inputType="number"
+                    android:minHeight="52dp"
+                    android:padding="14dp"
+                    android:textColor="@color/ink"
+                    android:textColorHint="@color/muted" />
+
+                <EditText
+                    android:id="@+id/edit_register"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:background="@drawable/input_background"
+                    android:hint="@string/hint_register"
+                    android:inputType="number"
+                    android:minHeight="52dp"
+                    android:padding="14dp"
+                    android:textColor="@color/ink"
+                    android:textColorHint="@color/muted" />
+
+                <EditText
+                    android:id="@+id/edit_interval"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:background="@drawable/input_background"
+                    android:hint="@string/hint_interval"
+                    android:inputType="number"
+                    android:minHeight="52dp"
+                    android:padding="14dp"
+                    android:textColor="@color/ink"
+                    android:textColorHint="@color/muted" />
+
+                <CheckBox
+                    android:id="@+id/checkbox_invert_sign"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:text="@string/invert_sign_label"
+                    android:textColor="@color/ink" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:orientation="horizontal">
+
+                    <Button
+                        android:id="@+id/button_preset_smart_meter"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/preset_smart_meter" />
+
+                    <Space
+                        android:layout_width="10dp"
+                        android:layout_height="1dp" />
+
+                    <Button
+                        android:id="@+id/button_preset_inverter"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/preset_inverter" />
+                </LinearLayout>
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/button_find_hosts"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:text="@string/find_hosts_button"
+                    android:textColor="@color/ink"
+                    app:backgroundTint="@color/cardAlt" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:orientation="horizontal">
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/button_start"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/start_button"
+                        app:backgroundTint="@color/accent" />
+
+                    <Space
+                        android:layout_width="10dp"
+                        android:layout_height="1dp" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/button_stop"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/stop_button"
+                        android:textColor="@color/ink"
+                        app:backgroundTint="@color/accentSoft" />
+                </LinearLayout>
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+    </LinearLayout>
+</ScrollView>
